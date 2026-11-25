@@ -1,0 +1,118 @@
+--- a/option/tailscale.go
++++ b/option/tailscale.go
+@@ -13,6 +13,8 @@
+ )
+ 
+ type TailscaleEndpointOptions struct {
++	BywayRelays              []string `json:"byway_relays,omitempty"`
++	BywayFollowControlRelays bool     `json:"byway_follow_control_relays,omitempty"`
+ 	DialerOptions
+ 	StateDirectory             string                     `json:"state_directory,omitempty"`
+ 	AuthKey                    string                     `json:"auth_key,omitempty"`
+--- a/protocol/tailscale/endpoint.go
++++ b/protocol/tailscale/endpoint.go
+@@ -84,6 +84,7 @@
+ }
+ 
+ type Endpoint struct {
++	byway *bywayPrivatePolicy
+ 	endpoint.Adapter
+ 	ctx               context.Context
+ 	router            adapter.Router
+@@ -188,7 +189,12 @@
+ 	}
+ 	taildropDirectory = filemanager.BasePath(ctx, os.ExpandEnv(taildropDirectory))
+ 	taildropDirectory, _ = filepath.Abs(taildropDirectory)
++	if options.BywayFollowControlRelays && len(options.BywayRelays) != 0 {
++		return nil, E.New("cannot combine following control relays with an expected relay list")
++	}
++	private := newBywayPrivatePolicy(options.BywayRelays, options.BywayFollowControlRelays)
+ 	return &Endpoint{
++		byway: private,
+ 		Adapter:           endpoint.NewAdapter(C.TypeTailscale, tag, []string{N.NetworkTCP, N.NetworkUDP, N.NetworkICMP}, nil),
+ 		ctx:               ctx,
+ 		router:            router,
+@@ -210,6 +216,9 @@
+ 			Ephemeral:     options.Ephemeral,
+ 			AuthKey:       options.AuthKey,
+ 			ControlURL:    options.ControlURL,
++			BywayDERPFilter: private.filterFunc(),
++			BywayDERPOnly: options.BywayRelays != nil && !options.BywayFollowControlRelays,
++			BywayRootCAs: adapter.RootPoolFromContext(ctx),
+ 			Port:          options.ListenPort,
+ 			AdvertiseTags: options.AdvertiseTags,
+ 			Dialer:        &endpointDialer{Dialer: outboundDialer, logger: logger},
+@@ -594,7 +603,9 @@
+ 					return true
+ 				}
+ 				reportedAuthURL = authURL
+-				t.logger.Info("Waiting for authentication: ", authURL)
++				if t.byway == nil {
++					t.logger.Info("Waiting for authentication: ", authURL)
++				}
+ 				if t.platformInterface != nil && t.platformInterface.UsePlatformNotification() {
+ 					err := t.platformInterface.SendNotification(&adapter.Notification{
+ 						Identifier: "tailscale-authentication",
+@@ -771,7 +782,9 @@
+ 	}
+ }
+ 
+-func (t *Endpoint) DialContext(ctx context.Context, network string, destination M.Socksaddr) (net.Conn, error) {
++func (t *Endpoint) DialContext(ctx context.Context, network string, destination M.Socksaddr) (bywayConn net.Conn, bywayErr error) {
++	if !t.byway.allowed() { return nil, errBywayRelayPolicy }
++	defer func() { bywayConn = t.byway.guardConnection(bywayConn) }()
+ 	switch network {
+ 	case N.NetworkTCP:
+ 		t.logger.InfoContext(ctx, "outbound connection to ", destination)
+@@ -868,7 +881,9 @@
+ 	return udpConn, nil
+ }
+ 
+-func (t *Endpoint) ListenPacketWithDestination(ctx context.Context, destination M.Socksaddr) (net.PacketConn, netip.Addr, error) {
++func (t *Endpoint) ListenPacketWithDestination(ctx context.Context, destination M.Socksaddr) (bywayPacket net.PacketConn, bywayAddr netip.Addr, bywayErr error) {
++	if !t.byway.allowed() { return nil, netip.Addr{}, errBywayRelayPolicy }
++	defer func() { bywayPacket = t.byway.guardPacket(bywayPacket) }()
+ 	t.logger.InfoContext(ctx, "outbound packet connection to ", destination)
+ 	if destination.IsDomain() {
+ 		destinationAddresses, err := t.dnsRouter.Lookup(ctx, destination.Fqdn, adapter.DNSQueryOptions{})
+@@ -907,6 +922,11 @@
+ }
+ 
+ func (t *Endpoint) NewConnectionEx(ctx context.Context, conn net.Conn, source M.Socksaddr, destination M.Socksaddr, onClose N.CloseHandlerFunc) {
++	if !t.byway.allowed() {
++		N.CloseOnHandshakeFailure(conn, onClose, errBywayRelayPolicy)
++		return
++	}
++	conn = t.byway.guardConnection(conn)
+ 	var metadata adapter.InboundContext
+ 	metadata.Inbound = t.Tag()
+ 	metadata.InboundType = t.Type()
+--- a/protocol/tailscale/port.go
++++ b/protocol/tailscale/port.go
+@@ -37,6 +37,7 @@
+ }
+ 
+ func (t *Endpoint) JudgeFlow(network uint8, source netip.AddrPort, destination netip.AddrPort, firstPacket []byte) tun.FlowVerdict {
++	if !t.byway.allowed() { return tun.FlowVerdict{Action: tun.ActionReject} }
+ 	inet4Address, inet6Address := t.PortAddresses()
+ 	if destination.Addr() == inet4Address || destination.Addr() == inet6Address {
+ 		return tun.FlowVerdict{Action: tun.ActionAccept}
+@@ -111,6 +112,7 @@
+ }
+ 
+ func (t *Endpoint) WritePackets(packets [][]byte) error {
++	if !t.byway.allowed() { return errBywayRelayPolicy }
+ 	if !t.started.Load() {
+ 		return E.New("Tailscale is not ready yet")
+ 	}
+--- a/experimental/clashapi/server.go
++++ b/experimental/clashapi/server.go
+@@ -117,6 +117,8 @@
+ 		r.Get("/logs", getLogs(s.ctx, logFactory))
+ 		r.Get("/traffic", traffic(s.ctx, trafficManager))
+ 		r.Get("/version", version)
++		r.Get("/byway/private-network", s.bywayPrivateStatus)
++		r.Post("/byway/private-network", s.bywayPrivateAction)
+ 		r.Mount("/configs", configRouter(s, logFactory))
+ 		r.Mount("/proxies", proxyRouter(s, s.router))
+ 		r.Mount("/rules", ruleRouter(s.router))

@@ -1,0 +1,88 @@
+name: Byway
+options:
+  minimumXcodeGenVersion: 2.40.0
+packages:
+  Yams:
+    url: https://github.com/jpsim/Yams.git
+    exactVersion: 6.2.2
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    IPHONEOS_DEPLOYMENT_TARGET: 17.0
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+    BYWAY_BUNDLE_ID: cn.splaz.byway
+    TARGETED_DEVICE_FAMILY: "1,2"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  Byway:
+    attributes:
+      SystemCapabilities:
+        com.apple.ApplicationGroups:
+          enabled: 1
+        com.apple.NetworkExtensions:
+          enabled: 1
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - path: Shared
+        excludes: [Web]
+      - path: Shared/Web
+        buildPhase: resources
+      - path: Tunnel/Resources/geoip-cn.srs
+        buildPhase: resources
+      - path: docs/mobile-ai.md
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BYWAY_BUNDLE_ID)
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/App.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        OTHER_LDFLAGS: ["$(inherited)", "-lresolv"]
+    dependencies:
+      - package: Yams
+      - framework: Vendor/Libbox.xcframework
+        embed: false
+      - target: BywayTunnel
+        embed: true
+  BywayTunnel:
+    attributes:
+      SystemCapabilities:
+        com.apple.ApplicationGroups:
+          enabled: 1
+        com.apple.NetworkExtensions:
+          enabled: 1
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Tunnel
+        excludes: [Resources]
+      - path: Tunnel/Resources
+        buildPhase: resources
+      - path: Shared
+        excludes: [Web]
+      - path: Shared/Web
+        buildPhase: resources
+      - path: docs/mobile-ai.md
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BYWAY_BUNDLE_ID).tunnel
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Tunnel/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Tunnel/Tunnel.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        OTHER_LDFLAGS: ["$(inherited)", "-lresolv"]
+    dependencies:
+      - package: Yams
+      - sdk: UIKit.framework
+      - framework: Vendor/Libbox.xcframework
+        embed: false
+schemes:
+  Byway:
+    build:
+      targets:
+        Byway: all

@@ -1,0 +1,52 @@
+:root {
+  color-scheme: light dark;
+  font: 16px/1.5 system-ui, sans-serif;
+  --surface: #ffffff;
+  --canvas: #f0f5f3;
+  --ink: #132920;
+  --muted: #52675e;
+  --line: #c7d7cf;
+  --accent: #0d684d;
+  --accent-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #182b24;
+    --canvas: #11211a;
+    --ink: #e6f2eb;
+    --muted: #b1c7b9;
+    --line: #415b4d;
+    --accent: #a4efc4;
+    --accent-ink: #123325;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--canvas); color: var(--ink); }
+main { max-width: 58rem; margin: auto; padding: 1.4rem 1rem 2rem; }
+header, .identity, .actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+header, .identity { justify-content: space-between; }
+header { margin-bottom: 1rem; }
+h1 { margin: 0; font-size: 1.65rem; }
+h2 { margin: 0 0 .45rem; font-size: 1.08rem; overflow-wrap: anywhere; }
+#device-name { font-size: 1.55rem; }
+.panel { padding: 1.1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
+#login { max-width: 32rem; }
+#discovery { margin-top: .75rem; }
+.overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: .75rem 0; }
+@media (max-width: 38rem) { .overview { grid-template-columns: minmax(0, 1fr); } }
+.muted, dt { color: var(--muted); }
+p { margin: .35rem 0 .75rem; overflow-wrap: anywhere; }
+label { display: block; margin-bottom: .3rem; font-size: .9rem; }
+input, button { font: inherit; min-height: 2.65rem; border: 1px solid var(--line); border-radius: .5rem; }
+input { min-width: 0; flex: 1 1 12rem; background: var(--canvas); color: var(--ink); padding: .4rem .65rem; }
+button { background: var(--surface); color: var(--ink); padding: .4rem .75rem; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button:disabled { opacity: .6; cursor: wait; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+dl { margin: 0; }
+dl div { display: grid; grid-template-columns: minmax(5rem, auto) minmax(0, 1fr); gap: .75rem; padding: .5rem 0; }
+dl div + div { border-top: 1px solid var(--line); }
+dd { margin: 0; text-align: end; overflow-wrap: anywhere; }
+#notice { margin-top: .8rem; min-height: 1.5rem; }
+.visually-hidden { position: fixed; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }

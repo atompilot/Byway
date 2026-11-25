@@ -1,0 +1,19 @@
+[Unit]
+Description=Byway hotspot gateway
+Requires=byway-hotspot-firewall@wlan0.service
+Wants=network-online.target byway-device-api.service
+After=byway-hotspot-firewall@wlan0.service NetworkManager.service network-online.target
+
+[Service]
+Environment=BYWAY_HOTSPOT_PROFILE=byway-hotspot
+ExecStartPre=/usr/local/lib/byway/sing-box check -c /etc/byway-hotspot/config.json
+ExecStart=/usr/local/lib/byway/sing-box run -c /etc/byway-hotspot/config.json
+ExecStartPost=/bin/sh -ec 'if ! /usr/bin/nmcli -g GENERAL.CONNECTION device show wlan0 | /bin/grep -Fxq -- "$$1"; then /usr/bin/nmcli --wait 25 connection up id "$$1" ifname wlan0; fi' hotspot ${BYWAY_HOTSPOT_PROFILE}
+Restart=on-failure
+RestartSec=3s
+StateDirectory=byway-hotspot
+StateDirectoryMode=0700
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

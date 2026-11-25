@@ -1,0 +1,14 @@
+[Unit]
+Description=Byway hotspot device API
+PartOf=byway-hotspot.service
+After=byway-hotspot.service
+
+[Service]
+ExecStart=/usr/local/bin/byway-gateway-config serve-device-api /etc/byway-hotspot/config.json /var/lib/byway-hotspot
+Restart=on-failure
+RestartSec=3s
+RuntimeDirectory=byway-device-api
+RuntimeDirectoryMode=0755
+StateDirectory=byway-hotspot
+StateDirectoryMode=0700
+UMask=0077

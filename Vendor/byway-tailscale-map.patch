@@ -1,0 +1,144 @@
+--- a/tsnet/tsnet.go
++++ b/tsnet/tsnet.go
+@@ -140,6 +140,7 @@
+ 	"context"
+ 	crand "crypto/rand"
+ 	"crypto/tls"
++	"crypto/x509"
+ 	"encoding/hex"
+ 	"errors"
+ 	"fmt"
+@@ -208,6 +209,10 @@
+ //
+ // Its exported fields may be changed until the first method call.
+ type Server struct {
++	// BywayDERPFilter is set before Start and filters the data-plane DERP map.
++	BywayDERPFilter func(*tailcfg.DERPMap) *tailcfg.DERPMap
++	BywayDERPOnly bool
++	BywayRootCAs *x509.CertPool
+ 	// Dir specifies the name of the directory to use for
+ 	// state. If empty, a directory is selected automatically
+ 	// under os.UserConfigDir (https://golang.org/pkg/os/#UserConfigDir).
+@@ -842,6 +847,7 @@
+ 	}
+ 
+ 	sys := tsd.NewSystem()
++	sys.ExtraRootCAs = s.BywayRootCAs
+ 	s.sys = sys
+ 	if err := s.startLogger(&closePool, sys.HealthTracker.Get(), tsLogf); err != nil {
+ 		return err
+@@ -957,6 +963,10 @@
+ 		return fmt.Errorf("NewLocalBackend: %v", err)
+ 	}
+ 	lb.SetTCPHandlerForFunnelFlow(s.getTCPHandlerForFunnelFlow)
++	lb.BywayDERPFilter = s.BywayDERPFilter
++	if s.BywayDERPOnly {
++		lb.MagicConn().SetBywayDERPOnly()
++	}
+ 	lb.SetVarRoot(s.rootPath)
+ 	lb.SetHTTPTestClient(s.HTTPClient)
+ 	if s.PeerDNSQueryHandler != nil {
+--- a/derp/derphttp/derphttp_client.go
++++ b/derp/derphttp/derphttp_client.go
+@@ -659,7 +659,8 @@
+ func (c *Client) tlsClient(nc net.Conn, node *tailcfg.DERPNode) *tls.Conn {
+ 	var tlsConf *tls.Config
+ 	if c.TLSConfig != nil {
+-		tlsConf = c.TLSConfig
++		tlsConf = c.TLSConfig.Clone()
++		if tlsConf.ServerName == "" { tlsConf.ServerName = c.tlsServerName(node) }
+ 	} else {
+ 		tlsConf = tlsdial.Config(c.HealthTracker, c.TLSConfig)
+ 		// node is allowed to be nil here, tlsServerName falls back to using the URL
+--- a/wgengine/magicsock/derp.go
++++ b/wgengine/magicsock/derp.go
+@@ -814,7 +814,7 @@
+ 	defer c.mu.Unlock()
+ 
+ 	derpAddr := debugUseDERPAddr()
+-	if derpAddr != "" {
++	if derpAddr != "" && !c.bywayDERPOnly.Load() {
+ 		derpPort := 443
+ 		if debugUseDERPHTTP() {
+ 			// Match the port for -dev in derper.go
+--- a/wgengine/magicsock/magicsock.go
++++ b/wgengine/magicsock/magicsock.go
+@@ -157,6 +157,7 @@
+ 
+ // A Conn routes UDP packets and actively manages a list of its endpoints.
+ type Conn struct {
++	bywayDERPOnly atomic.Bool
+ 	// This block mirrors the contents and field order of the Options
+ 	// struct. Initialized once at construction, then constant.
+ 
+@@ -3060,11 +3061,13 @@
+ 	c.setNetworkMapInternal(self, peers, true)
+ }
+ 
++func (c *Conn) SetBywayDERPOnly() { c.bywayDERPOnly.Store(true) }
++
+ // setNetworkMapInternal is the shared implementation of SetNetworkMap and SetNetworkMapCached.
+ func (c *Conn) setNetworkMapInternal(self tailcfg.NodeView, peers []tailcfg.NodeView, isCached bool) {
+ 	peersChanged, selfWasValid := c.updateNodes(self, peers)
+ 
+-	relayClientEnabled := self.Valid() &&
++	relayClientEnabled := !c.bywayDERPOnly.Load() && self.Valid() &&
+ 		!self.HasCap(tailcfg.NodeAttrDisableRelayClient) &&
+ 		!self.HasCap(tailcfg.NodeAttrOnlyTCP443)
+ 
+--- a/ipn/ipnlocal/local.go
++++ b/ipn/ipnlocal/local.go
+@@ -222,6 +222,7 @@
+ // into LocalBackend to advance the state machine, and advancing the
+ // state machine generates events back out to zero or more components.
+ type LocalBackend struct {
++	BywayDERPFilter func(*tailcfg.DERPMap) *tailcfg.DERPMap
+ 	// Elements that are thread-safe or constant after construction.
+ 	ctx         context.Context         // canceled by [LocalBackend.Shutdown]
+ 	ctxCancel   context.CancelCauseFunc // cancels ctx
+@@ -2071,11 +2072,11 @@
+ 			// that the guard in maybeSetNearestDERP prevents changing the
+ 			// DERP home before we reconnect to the control plane. If the cache has
+ 			// nothing in it, skip this, and let the node pick a DERP itself.
+-			b.MagicConn().SetDERPMapWithoutReSTUN(st.NetMap.DERPMap)
++			b.MagicConn().SetDERPMapWithoutReSTUN(b.bywayDERPMap(st.NetMap.DERPMap))
+ 			b.health.SetOutOfPollNetMap()
+ 			b.MagicConn().ForceSetNearestDERP(cachedHome)
+ 		} else {
+-			b.MagicConn().SetDERPMap(st.NetMap.DERPMap)
++			b.MagicConn().SetDERPMap(b.bywayDERPMap(st.NetMap.DERPMap))
+ 		}
+ 
+ 		b.MagicConn().SetOnlyTCP443(b.onlyTCP443 || st.NetMap.HasCap(tailcfg.NodeAttrOnlyTCP443))
+@@ -3966,7 +3967,7 @@
+ 	}
+ 	b.e.SetSelfNode(self)
+ 	if nm != nil {
+-		b.MagicConn().SetDERPMap(nm.DERPMap)
++		b.MagicConn().SetDERPMap(b.bywayDERPMap(nm.DERPMap))
+ 	}
+ 	b.setNetMapLocked(nm)
+ }
+@@ -5574,7 +5575,7 @@
+ 	}
+ 
+ 	if netMap != nil {
+-		b.MagicConn().SetDERPMap(netMap.DERPMap)
++		b.MagicConn().SetDERPMap(b.bywayDERPMap(netMap.DERPMap))
+ 	}
+ 
+ 	if !oldp.WantRunning() && newp.WantRunning && cc != nil {
+@@ -7724,6 +7725,13 @@
+ 	return nil
+ }
+ 
++func (b *LocalBackend) bywayDERPMap(dm *tailcfg.DERPMap) *tailcfg.DERPMap {
++	if b.BywayDERPFilter != nil {
++		return b.BywayDERPFilter(dm)
++	}
++	return dm
++}
++
+ // DERPMap returns the current DERPMap in use, or nil if not connected.
+ func (b *LocalBackend) DERPMap() *tailcfg.DERPMap {
+ 	return b.currentNode().DERPMap()

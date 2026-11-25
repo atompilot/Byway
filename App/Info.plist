@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Byway</string>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>BywayAppGroup</key>
+    <string>group.$(BYWAY_BUNDLE_ID)</string>
+    <key>BywayTunnelIdentifier</key>
+    <string>$(BYWAY_BUNDLE_ID).tunnel</string>
+    <key>NSCameraUsageDescription</key>
+    <string>扫描节点二维码，将链接导入 Byway。</string>
+    <key>NSBonjourServices</key>
+    <array><string>_http._tcp</string></array>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>在你开启局域网控制后，允许同一 Wi‑Fi 内的设备访问 Byway 的管理接口。</string>
+</dict>
+</plist>

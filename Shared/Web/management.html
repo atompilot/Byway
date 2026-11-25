@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Byway 管理</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/management.css">
+  <script src="/management.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Byway</h1>
+      <button id="copy" type="button">复制网页链接</button>
+    </header>
+    <section id="login" class="panel" aria-labelledby="login-title">
+      <h2 id="login-title">连接设备</h2>
+      <p class="muted" id="endpoint"></p>
+      <form id="login-form" method="post">
+        <label for="token">访问令牌</label>
+        <div class="actions">
+          <input id="token" type="password" required autocomplete="off" spellcheck="false">
+          <button class="primary" type="submit">连接</button>
+        </div>
+      </form>
+    </section>
+    <section id="dashboard" hidden aria-labelledby="device-name">
+      <div class="panel identity">
+        <div>
+          <h2 id="device-name"></h2>
+          <p class="muted" id="device-code"></p>
+        </div>
+        <div class="actions">
+          <button id="refresh" type="button">刷新</button>
+          <button id="disconnect" type="button">断开网页连接</button>
+        </div>
+      </div>
+      <div class="overview">
+        <section class="panel">
+          <h2>代理状态</h2>
+          <dl>
+            <div><dt>连接</dt><dd id="connected"></dd></div>
+            <div><dt>当前节点</dt><dd id="node"></dd></div>
+            <div><dt>分流配置</dt><dd id="routing"></dd></div>
+          </dl>
+        </section>
+        <section class="panel">
+          <h2>设备信息</h2>
+          <dl>
+            <div><dt>设备</dt><dd id="hardware"></dd></div>
+            <div><dt>系统版本</dt><dd id="system"></dd></div>
+            <div><dt>Byway 版本</dt><dd id="version"></dd></div>
+          </dl>
+        </section>
+      </div>
+      <section class="panel">
+        <h2>修改设备名称</h2>
+        <form id="rename-form" method="post">
+          <label for="name">设备名称</label>
+          <div class="actions">
+            <input id="name" type="text" required>
+            <button class="primary" type="submit">保存</button>
+          </div>
+        </form>
+      </section>
+      <section id="discovery" class="panel" hidden>
+        <h2>局域网发现</h2>
+        <p id="discovery-status" class="muted"></p>
+        <div class="actions">
+          <button id="discovery-toggle" type="button"></button>
+          <a id="discovery-ip" hidden>打开 IP 地址</a>
+        </div>
+      </section>
+    </section>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <input id="copy-fallback" class="visually-hidden" type="text" readonly tabindex="-1" aria-label="管理网页链接">
+  </main>
+</body>
+</html>

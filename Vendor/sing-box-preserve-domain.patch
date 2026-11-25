@@ -1,0 +1,41 @@
+--- a/option/rule_action.go
++++ b/option/rule_action.go
+@@ -165,6 +165,7 @@
+ type RawRouteOptionsActionOptions struct {
+ 	OverrideAddress string `json:"override_address,omitempty"`
+ 	OverridePort    uint16 `json:"override_port,omitempty"`
++	PreserveDomain  bool   `json:"preserve_domain,omitempty"`
+ 
+ 	NetworkStrategy *NetworkStrategy `json:"network_strategy,omitempty"`
+ 	FallbackDelay   uint32           `json:"fallback_delay,omitempty"`
+--- a/route/rule/rule_action.go
++++ b/route/rule/rule_action.go
+@@ -30,6 +30,7 @@
+ 	return RuleActionRouteOptions{
+ 		OverrideAddress:           M.ParseSocksaddrHostPort(options.OverrideAddress, 0),
+ 		OverridePort:              options.OverridePort,
++		PreserveDomain:             options.PreserveDomain,
+ 		NetworkStrategy:           (*C.NetworkStrategy)(options.NetworkStrategy),
+ 		FallbackDelay:             time.Duration(options.FallbackDelay),
+ 		UDPDisableDomainUnmapping: options.UDPDisableDomainUnmapping,
+@@ -201,6 +202,7 @@
+ type RuleActionRouteOptions struct {
+ 	OverrideAddress           M.Socksaddr
+ 	OverridePort              uint16
++	PreserveDomain            bool
+ 	NetworkStrategy           *C.NetworkStrategy
+ 	NetworkType               []C.InterfaceType
+ 	FallbackNetworkType       []C.InterfaceType
+--- a/route/route.go
++++ b/route/route.go
+@@ -661,6 +661,10 @@
+ 				metadata.DestinationAddresses = nil
+ 			}
+ 			applyRouteOptionsOverride(metadata, routeOptions)
++			if routeOptions.PreserveDomain && metadata.Destination.IsDomain() {
++				// DNS answers used to match rules do not replace the hostname sent to the proxy.
++				metadata.DestinationAddresses = nil
++			}
+ 			if routeOptions.NetworkStrategy != nil {
+ 				metadata.NetworkStrategy = routeOptions.NetworkStrategy
+ 			}

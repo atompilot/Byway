@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+    <Compile Include="../../Windows/NodeImport.cs" Link="NodeImport.cs" />
+    <Compile Include="../../Windows/NodeRow.cs" Link="NodeRow.cs" />
+    <Compile Include="../../Windows/ProbeResult.cs" Link="ProbeResult.cs" />
+    <Compile Include="../../Windows/NodeGroups.cs" Link="NodeGroups.cs" />
+    <Compile Include="../../Windows/Subscription.cs" Link="Subscription.cs" />
+    <Compile Include="../../Windows/SubscriptionInfo.cs" Link="SubscriptionInfo.cs" />
+    <Compile Include="../../Windows/ShareCodes.cs" Link="ShareCodes.cs" />
+    <Compile Include="../../Windows/ShadowrocketConfiguration.cs" Link="ShadowrocketConfiguration.cs" />
+    <Compile Include="../../Windows/ProxyCoreConfiguration.cs" Link="ProxyCoreConfiguration.cs" />
+    <Compile Include="../../Windows/PrivateNetwork.cs" Link="PrivateNetwork.cs" />
+    <Compile Include="../../Windows/ClashConfiguration.cs" Link="ClashConfiguration.cs" />
+    <Compile Include="../../Windows/ClashDns.cs" Link="ClashDns.cs" />
+    <Compile Include="../../Windows/ClashYaml.cs" Link="ClashYaml.cs" />
+    <Compile Include="../../Windows/RoutingMode.cs" Link="RoutingMode.cs" />
+    <Compile Include="../../Windows/MixedListener.cs" Link="MixedListener.cs" />
+    <Compile Include="../../Windows/TrafficHistory.cs" Link="TrafficHistory.cs" />
+  </ItemGroup>
+</Project>

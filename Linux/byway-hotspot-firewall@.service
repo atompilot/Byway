@@ -1,0 +1,12 @@
+[Unit]
+Description=Byway transparent routing for hotspot %I
+Before=NetworkManager.service byway-hotspot.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/byway/hotspot-firewall.sh up %I
+ExecStop=/usr/local/lib/byway/hotspot-firewall.sh down %I
+
+[Install]
+WantedBy=multi-user.target
