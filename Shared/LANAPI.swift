@@ -91,6 +91,7 @@ struct LANResponse: Sendable {
 struct LANAPI: Sendable {
     let backend: any LANBackend
     var deviceStore: @Sendable () throws -> DeviceIdentityStore = { try DeviceIdentityStore.local() }
+    var profileStore: ProfileStore?
 
     func handle(_ request: LANRequest) async -> LANResponse {
         do {
@@ -160,7 +161,7 @@ struct LANAPI: Sendable {
                    let id = UUID(uuidString: String(segments[3])) {
                     return try await nodeRoute(request, id: id, action: segments.count == 5 ? String(segments[4]) : nil)
                 }
-                return try await MobileAPI(backend: backend).handle(request)
+                return try await MobileAPI(backend: backend, profileStore: profileStore).handle(request)
             }
         } catch let error as LANFailure {
             return LANResponse(error)

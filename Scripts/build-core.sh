@@ -38,7 +38,7 @@ tailscale_source=$(go mod download -json "github.com/sagernet/tailscale@$tailsca
 cp -R "$tailscale_source" "$work/tailscale"
 chmod -R u+w "$work/tailscale"
 (cd "$work/tailscale" && git apply "$root/Vendor/byway-tailscale-map.patch")
-go mod edit -replace "github.com/sagernet/tailscale=$work/tailscale"
+go mod edit -replace github.com/sagernet/tailscale=../tailscale
 cp "$root/Vendor/byway_private_endpoint.go" protocol/tailscale/
 cp "$root/Vendor/byway_private_endpoint_test.go" protocol/tailscale/
 cp "$root/Vendor/byway_private_clash.go" experimental/clashapi/

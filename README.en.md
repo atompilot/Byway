@@ -29,11 +29,13 @@ The desktop and mobile apps show traffic history and connection diagnostics. Quo
 
 ### Before building
 
-To build for Mac, Windows, iPhone, or iPad, follow the [GeoIP data notice](Tunnel/Resources/GeoIP-NOTICE.txt) to download the pinned upstream file. Verify its SHA-256 and save it as `Tunnel/Resources/geoip-cn.srs`. Run the build commands below from the repository root.
+To build for Windows, iPhone, or iPad, follow the [GeoIP data notice](Tunnel/Resources/GeoIP-NOTICE.txt) to download the pinned upstream file. Verify its SHA-256 and save it as `Tunnel/Resources/geoip-cn.srs`. Run the build commands below from the repository root.
 
 ### Mac
 
 If the release package contains `Byway.app`, move it to Applications and open it. Listen-only mode exposes a local HTTP and SOCKS5 port at `127.0.0.1:7890` by default. System proxy mode points apps that follow the system proxy at that port. TUN mode captures traffic through a virtual network interface. System proxy and TUN modes require administrator approval. The Mac app can import QR codes from images.
+
+For routing configurations that use `GEOIP,CN`, download and verify the file described in the [GeoIP data notice](Tunnel/Resources/GeoIP-NOTICE.txt). Save it to `~/Library/Application Support/Byway/geoip-cn.srs`, then enable the routing configuration again.
 
 To build from source, install Xcode, XcodeGen 2.40+, Go 1.25.5+, Git, and Python 3. Build the iOS and simulator slices before adding the macOS slice.
 

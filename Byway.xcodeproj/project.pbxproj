@@ -138,7 +138,6 @@
 		DDAB97892CA3FF4C338FFDD1 /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = 20985DFF20380592C276BE22 /* management.html */; };
 		DF99D83A6ADCC2D064158963 /* iPadWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C7C0A704A460F5127BEA1 /* iPadWorkspace.swift */; };
 		DFB2BF3030BF6EA61B11B673 /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 61CF91D1D6A7807D8B5C486D /* Yams */; };
-		E125F5DBC7A5DC5D657A05A0 /* geoip-cn.srs in Resources */ = {isa = PBXBuildFile; fileRef = 0763ECA1B3BC08E255C4AAF2 /* geoip-cn.srs */; };
 		E1EE6EC8460A857831803F33 /* GlobalRoutingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E726B66FEFA7E25761959A /* GlobalRoutingView.swift */; };
 		E29BB98BE7001C8AB208479D /* BywayTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 21E58EB81BD0E26817F53B79 /* BywayTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E2D17478230F199402C6300B /* NodeManagementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518097F5EFDEB7AECC9D8B00 /* NodeManagementViews.swift */; };
@@ -626,7 +625,6 @@
 				A68FB799F0E86B28B437E2F2 /* InfoPlist.strings in Resources */,
 				72B92DF6B3ABA8D95878BEB2 /* byway-en.json in Resources */,
 				D85EDB7067322C51DDF463BE /* byway-es.json in Resources */,
-				E125F5DBC7A5DC5D657A05A0 /* geoip-cn.srs in Resources */,
 				2A4430A6B984C35E950ED6A2 /* management.css in Resources */,
 				53BEB83C19DEC41F77D4BE40 /* management.html in Resources */,
 				1A2D9DAAF8EB8B23F1230F4F /* management.js in Resources */,

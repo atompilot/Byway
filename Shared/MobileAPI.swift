@@ -2,6 +2,7 @@ import Foundation
 
 struct MobileAPI: Sendable {
     let backend: any LANBackend
+    var profileStore: ProfileStore?
 
     func handle(_ request: LANRequest) async throws -> LANResponse {
         guard let url = URLComponents(string: request.target) else { throw LANFailure(400, L10n.text("请求路径无效")) }
@@ -77,9 +78,12 @@ struct MobileAPI: Sendable {
             let node = snapshot.profile.nodes.first(where: { $0.id == snapshot.activeID })?.name
             let config = try input.id.map(snapshot.profile.savedRouting.configuration)
             let routing = snapshot.profile.routingSettings
+            let geoIPRuleSetURL = (profileStore ?? (try? ProfileStore.open()))?.geoIPRuleSetURL
+                ?? ProfileStore.bundledGeoIPRuleSetURL
             let match = try await Task.detached {
                 if let config {
-                    return try RoutingImportDocument(config.text).parsed.test(host: input.host, node: node, port: input.port)
+                    return try RoutingImportDocument(config.text).parsed.test(host: input.host, node: node, port: input.port,
+                                                                             geoIPRuleSetURL: geoIPRuleSetURL)
                 }
                 return try ShadowrocketConfiguration.defaultTest(host: input.host, routing: routing, node: node)
             }.value

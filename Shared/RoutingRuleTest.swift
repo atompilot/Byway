@@ -30,6 +30,7 @@ extension ShadowrocketConfiguration {
     }
 
     func test(host input: String, node: String?, port: Int? = nil,
+              geoIPRuleSetURL: URL? = ProfileStore.bundledGeoIPRuleSetURL,
               resolving: (String) -> [String] = Self.resolve) throws -> RoutingRuleMatch {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let host = text.hasSuffix(".") ? String(text.dropLast()) : text
@@ -40,6 +41,7 @@ extension ShadowrocketConfiguration {
         }
         var resolved = literal == nil ? [] : [host]
         var didResolve = literal != nil
+        var geoIPDatabase: GeoIPChina?
         if literal?.count == 16 && !ipv6 {
             return result(.reject, rule: L10n.text("IPv6 已禁用"), line: nil)
         }
@@ -61,7 +63,10 @@ extension ShadowrocketConfiguration {
                     if !ipv6 { resolved = resolved.filter { Self.ip($0)?.count == 4 } }
                 }
                 if rule.kind == .geoIP, !resolved.isEmpty {
-                    guard let database = GeoIPChina.database else {
+                    if geoIPDatabase == nil {
+                        geoIPDatabase = geoIPRuleSetURL.flatMap { try? Data(contentsOf: $0) }.flatMap(GeoIPChina.init)
+                    }
+                    guard let database = geoIPDatabase else {
                         throw LANFailure(503, L10n.text("当前设备缺少 GEOIP,CN 数据"))
                     }
                     matched = resolved.compactMap(Self.ip).contains { database.contains($0) }
@@ -132,10 +137,8 @@ extension ShadowrocketConfiguration {
 }
 
 private struct GeoIPChina: Sendable {
-    // The bundled SRS is a single version-1 IP-set rule. Refuse other layouts
+    // The supported SRS is a single version-1 IP-set rule. Refuse other layouts
     // instead of guessing when the resource changes.
-    static let database: GeoIPChina? = Bundle.main.url(forResource: "geoip-cn", withExtension: "srs")
-        .flatMap { try? Data(contentsOf: $0) }.flatMap(Self.init)
     let ranges: [(Data, Data)]
 
     init?(_ source: Data) {

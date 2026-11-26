@@ -1,4 +1,7 @@
 import Foundation
+#if os(macOS)
+import CryptoKit
+#endif
 
 extension Data.WritingOptions {
     /// macOS 没有文件保护等级，iPhone 上仍使用限时的数据保护。
@@ -13,6 +16,27 @@ extension Data.WritingOptions {
 
 struct ProfileStore: Sendable {
     let directory: URL
+
+    static var bundledGeoIPRuleSetURL: URL? { Bundle.main.url(forResource: "geoip-cn", withExtension: "srs") }
+
+    var geoIPRuleSetURL: URL? {
+        #if os(macOS)
+        let local = directory.appending(path: "geoip-cn.srs")
+        let expectedSize = 34_259
+        let attributes = try? local.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        if attributes?.isRegularFile == true, attributes?.isSymbolicLink == false, attributes?.fileSize == expectedSize,
+           let handle = try? FileHandle(forReadingFrom: local) {
+            defer { try? handle.close() }
+            // Accept only the upstream revision listed in GeoIP-NOTICE.txt.
+            if let data = try? handle.read(upToCount: expectedSize + 1), data.count == expectedSize,
+               SHA256.hash(data: data).map({ String(format: "%02x", $0) }).joined()
+                == "29ed29ad2fee7a60dc1a94d73d6812a277e02aff46822689c8368be9caf45ed8" {
+                return local
+            }
+        }
+        #endif
+        return Self.bundledGeoIPRuleSetURL
+    }
 
     static func open() throws -> Self {
         #if os(macOS)

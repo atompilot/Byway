@@ -29,11 +29,13 @@ Byway 是一个开源代理客户端，面向 iPhone、iPad、Mac、Windows 和 
 
 ### 构建前准备
 
-从源码构建 Mac、Windows、iPhone 或 iPad 版时，按 [GeoIP 数据说明](Tunnel/Resources/GeoIP-NOTICE.txt) 从上游下载固定版本的数据，核对 SHA-256 后存为 `Tunnel/Resources/geoip-cn.srs`。以下构建命令在仓库根目录运行。
+从源码构建 Windows、iPhone 或 iPad 版时，按 [GeoIP 数据说明](Tunnel/Resources/GeoIP-NOTICE.txt) 从上游下载固定版本的数据，核对 SHA-256 后存为 `Tunnel/Resources/geoip-cn.srs`。以下构建命令在仓库根目录运行。
 
 ### Mac
 
 如果下载的发行包中有 `Byway.app`，将它移到「应用程序」并打开。仅监听模式提供本机 HTTP 和 SOCKS5 混合端口，默认地址为 `127.0.0.1:7890`。系统代理会把使用系统代理的应用指向该端口。全流量模式通过虚拟网卡接管。系统代理和全流量模式需要管理员授权。Mac 可从图片导入二维码。
+
+使用 `GEOIP,CN` 分流规则时，按 [GeoIP 数据说明](Tunnel/Resources/GeoIP-NOTICE.txt) 下载并校验规则文件，将它保存到 `~/Library/Application Support/Byway/geoip-cn.srs`。重新启用该分流配置即可使用。
 
 从源码构建需要 Xcode、XcodeGen 2.40+、Go 1.25.5+、Git 和 Python 3。先构建 iOS 和模拟器切片，再追加 macOS 切片。
 

@@ -12,7 +12,7 @@ actor TunnelRuntime: LANBackend {
             return try? encoder.encode(MobileManagementReply(status: response.status, payload: response.body))
         }
         if let request = try? decoder.decode(MobileManagementRequest.self, from: messageData) {
-            let response = await LANAPI(backend: self).handle(request.management)
+            let response = await LANAPI(backend: self, profileStore: store).handle(request.management)
             let data = try? encoder.encode(MobileManagementReply(status: response.status, payload: response.body))
             if let completion = response.afterReply {
                 Task {
@@ -73,7 +73,8 @@ actor TunnelRuntime: LANBackend {
         guard engine == nil, !stopping else { throw BywayError.message(L10n.text("隧道已启动")) }
         let monitor = RoutingNetworkMonitor()
         let network = monitor.initial ?? .other
-        let config = try profile.engineConfiguration(network: network, privateStateRoot: store.directory,
+        let config = try profile.engineConfiguration(geoIPPath: store.geoIPRuleSetURL?.path,
+                                                     network: network, privateStateRoot: store.directory,
                                                      inbound: inbound)
         let folder = FileManager.default.temporaryDirectory.appending(path: "byway-engine", directoryHint: .isDirectory)
         #if os(iOS)
@@ -254,7 +255,7 @@ actor TunnelRuntime: LANBackend {
                     try? store.saveLANEndpoint(LANPublishedEndpoint(settingsID: settings.id, endpoint: endpoint))
                 } handle: { [weak self] request in
                     guard let self else { return LANResponse(LANFailure(503, L10n.text("VPN 已停止"))) }
-                    return await LANAPI(backend: self).handle(request)
+                    return await LANAPI(backend: self, profileStore: store).handle(request)
                 }
                 return true
             } catch {
@@ -484,10 +485,13 @@ actor TunnelRuntime: LANBackend {
         next.selectedID = selected
         var previous = profile
         previous.selectedID = active
-        let before = try previous.engineConfiguration(network: network, privateStateRoot: store.directory,
-                                                      inbound: inbound)
-        let after = try next.engineConfiguration(network: destinationNetwork, privateStateRoot: store.directory,
-                                                 inbound: inbound)
+        let geoIPPath = store.geoIPRuleSetURL?.path
+        let after = try next.engineConfiguration(geoIPPath: geoIPPath,
+                                                  network: destinationNetwork, privateStateRoot: store.directory,
+                                                  inbound: inbound)
+        let before = try? previous.engineConfiguration(geoIPPath: geoIPPath,
+                                                        network: network, privateStateRoot: store.directory,
+                                                        inbound: inbound)
         let reload = before != after
         if reload {
             var validationError: NSError?
@@ -514,6 +518,7 @@ actor TunnelRuntime: LANBackend {
             if selectionChanged, let active { try? store.saveActiveNode(active) }
             if reload {
                 do {
+                    guard let before else { throw BywayError.message(L10n.text("无法确认原配置已恢复")) }
                     try reloadEngine(engine, configuration: before)
                     guard selectedID() == active else { throw BywayError.message(L10n.text("无法确认原配置已恢复")) }
                 } catch {

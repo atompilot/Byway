@@ -106,8 +106,6 @@ targets:
       - path: Tunnel/TunnelPlatform.swift
       - path: Tunnel/TunnelDiagnostics.swift
       - path: Tunnel/RoutingNetworkMonitor.swift
-      - path: Tunnel/Resources/geoip-cn.srs
-        buildPhase: resources
       - path: docs/mobile-ai.md
         buildPhase: resources
       - path: Mac

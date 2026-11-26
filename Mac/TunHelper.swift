@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import NetworkExtension
 
@@ -247,7 +248,7 @@ enum TunHelper {
         /// 退出前给标准错误一点刷盘时间，避免日志丢在进程结束里。
         static func exit(_ code: Int32) -> Never {
             fflush(stderr)
-            exit(code)
+            Darwin.exit(code)
         }
     }
 }

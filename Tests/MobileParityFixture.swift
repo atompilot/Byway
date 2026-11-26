@@ -4,6 +4,9 @@ import Foundation
 struct MobileParityFixture {
     static func main() throws {
         try migrateRouting()
+        #if os(macOS)
+        try macGeoIPRules()
+        #endif
         try capturePrivateNetworkRoutes()
         try migratePrivateNetworkRelayMode()
         try refreshSubscription()
@@ -12,6 +15,32 @@ struct MobileParityFixture {
         try recordTrafficHistory()
         print("Mobile routing and private network migration, subscription reconciliation, node import, share codes and traffic history passed.")
     }
+
+    #if os(macOS)
+    private static func macGeoIPRules() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ProfileStore(directory: directory)
+        let configuration = try ShadowrocketConfiguration("[Rule]\nGEOIP,CN,DIRECT\nFINAL,PROXY")
+        let ruleSet = directory.appending(path: "geoip-cn.srs")
+        precondition(store.geoIPRuleSetURL == ProfileStore.bundledGeoIPRuleSetURL)
+        do {
+            _ = try configuration.test(host: "114.114.114.114", node: nil, geoIPRuleSetURL: nil)
+            preconditionFailure("A GEOIP rule must report missing data")
+        } catch let error as LANFailure {
+            precondition(error.status == 503)
+        }
+        try Data(repeating: 0, count: 34_259).write(to: ruleSet)
+        precondition(store.geoIPRuleSetURL == ProfileStore.bundledGeoIPRuleSetURL)
+        if let upstreamFile = ProcessInfo.processInfo.environment["BYWAY_TEST_GEOIP_RULESET"] {
+            try Data(contentsOf: URL(fileURLWithPath: upstreamFile)).write(to: ruleSet, options: .atomic)
+            precondition(store.geoIPRuleSetURL == ruleSet)
+            let match = try configuration.test(host: "114.114.114.114", node: nil, geoIPRuleSetURL: store.geoIPRuleSetURL)
+            precondition(match.policy == "DIRECT" && match.rule.uppercased() == "GEOIP,CN,DIRECT")
+        }
+    }
+    #endif
 
     private static func migrateRouting() throws {
         let first = "[Rule]\nDOMAIN-SUFFIX,example.org,DIRECT\nFINAL,PROXY"
