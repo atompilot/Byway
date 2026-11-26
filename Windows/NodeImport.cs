@@ -46,11 +46,11 @@ internal static class NodeImport
     internal static ImportBatch Read(Stream stream)
     {
         if (stream.Length > 4 * 1024 * 1024)
-            throw new InvalidDataException("节点导出文件不能超过 4 MB。");
+            throw new InvalidDataException(L10n.Text("节点导出文件不能超过 4 MB。"));
         using var reader = new StreamReader(stream);
         using var document = JsonDocument.Parse(reader.ReadToEnd());
         if (document.RootElement.ValueKind != JsonValueKind.Array)
-            throw new InvalidDataException("请选择 Shadowrocket 导出的节点 JSON 文件。");
+            throw new InvalidDataException(L10n.Text("请选择 Shadowrocket 导出的节点 JSON 文件。"));
 
         List<ImportEntry> entries = [];
         int subscriptions = 0;
@@ -58,7 +58,7 @@ internal static class NodeImport
         {
             string name = Text(entry, "title").Trim();
             if (name.Length == 0)
-                name = $"第 {entries.Count + subscriptions + 1} 条";
+                name = L10n.Format($"第 {entries.Count + subscriptions + 1} 条");
             name = new string(name.Where(c => !char.IsControl(c)).Take(80).ToArray());
             try
             {
@@ -69,7 +69,7 @@ internal static class NodeImport
                     continue;
                 }
                 if (!type.Equals("VLESS", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("当前支持 TCP / RAW VLESS 节点。");
+                    throw new InvalidDataException(L10n.Text("当前支持 TCP / RAW VLESS 节点。"));
                 entries.Add(new(name, ParseVless(entry, name), null));
             }
             catch (InvalidDataException error)
@@ -85,14 +85,14 @@ internal static class NodeImport
         string host = Text(entry, "host").Trim().Trim('[', ']');
         if (Uri.CheckHostName(host) == UriHostNameType.Unknown ||
             !int.TryParse(Text(entry, "port"), out int port) || port is < 1 or > 65535)
-            throw new InvalidDataException("需要有效的主机和端口。");
+            throw new InvalidDataException(L10n.Text("需要有效的主机和端口。"));
         // Shadowrocket's uuid identifies the export record. Its password is the VLESS user ID.
         if (!Guid.TryParse(Text(entry, "password"), out Guid uuid))
-            throw new InvalidDataException("需要有效的 VLESS UUID。");
+            throw new InvalidDataException(L10n.Text("需要有效的 VLESS UUID。"));
         if (!new[] { "", "none", "tcp", "raw" }.Contains(Text(entry, "obfs").ToLowerInvariant()) ||
             !new[] { "", "none" }.Contains(Text(entry, "plugin").ToLowerInvariant()) ||
             !new[] { "", "none" }.Contains(Text(entry, "proto").ToLowerInvariant()))
-            throw new InvalidDataException("此节点使用了暂未支持的传输选项。");
+            throw new InvalidDataException(L10n.Text("此节点使用了暂未支持的传输选项。"));
 
         Guid id = Guid.NewGuid();
         var outbound = new JsonObject
@@ -104,7 +104,7 @@ internal static class NodeImport
         if (flow.Length != 0)
         {
             if (flow != "xtls-rprx-vision")
-                throw new InvalidDataException("此 VLESS 流控类型暂未支持。");
+                throw new InvalidDataException(L10n.Text("此 VLESS 流控类型暂未支持。"));
             outbound["flow"] = flow;
         }
 

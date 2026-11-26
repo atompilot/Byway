@@ -33,7 +33,7 @@ internal static class LanFirewall
         }
         catch (Exception error) when (error is COMException or UnauthorizedAccessException)
         {
-            throw new InvalidOperationException("无法读取 Windows 防火墙规则。", error);
+            throw new InvalidOperationException(L10n.Text("无法读取 Windows 防火墙规则。"), error);
         }
         finally
         {
@@ -47,7 +47,7 @@ internal static class LanFirewall
         if (IsAuthorized())
             return;
         if (!interactive)
-            throw new ApiError(403, "当前版本需要 Windows 防火墙授权。请在 Byway 的「AI」页开启局域网控制。");
+            throw new ApiError(403, L10n.Text("当前版本需要 Windows 防火墙授权。请在 Byway 的「AI」页开启局域网控制。"));
 
         if (Program.IsElevated)
             Provision();
@@ -57,23 +57,23 @@ internal static class LanFirewall
             info.ArgumentList.Add(ProvisionArgument);
             try
             {
-                using var helper = Process.Start(info) ?? throw new InvalidOperationException("无法启动 Windows 防火墙授权。");
+                using var helper = Process.Start(info) ?? throw new InvalidOperationException(L10n.Text("无法启动 Windows 防火墙授权。"));
                 await helper.WaitForExitAsync();
                 if (helper.ExitCode != 0)
-                    throw new InvalidOperationException("Windows 防火墙未能授权当前 Byway。请检查防火墙或组织策略。");
+                    throw new InvalidOperationException(L10n.Text("Windows 防火墙未能授权当前 Byway。请检查防火墙或组织策略。"));
             }
             catch (Win32Exception error) when (error.NativeErrorCode == Cancelled)
             {
-                throw new InvalidOperationException("已取消 Windows 授权，局域网控制未开启。");
+                throw new InvalidOperationException(L10n.Text("已取消 Windows 授权，局域网控制未开启。"));
             }
             catch (Win32Exception error)
             {
-                throw new InvalidOperationException("无法请求 Windows 防火墙授权。", error);
+                throw new InvalidOperationException(L10n.Text("无法请求 Windows 防火墙授权。"), error);
             }
         }
 
         if (!IsAuthorized())
-            throw new InvalidOperationException("Windows 防火墙尚未放行当前版本。");
+            throw new InvalidOperationException(L10n.Text("Windows 防火墙尚未放行当前版本。"));
     }
 
     internal static int RunProvisioning()
@@ -117,7 +117,7 @@ internal static class LanFirewall
         }
         catch (Exception error) when (error is COMException or UnauthorizedAccessException)
         {
-            throw new InvalidOperationException("Windows 防火墙未能授权当前 Byway。请检查防火墙或组织策略。", error);
+            throw new InvalidOperationException(L10n.Text("Windows 防火墙未能授权当前 Byway。请检查防火墙或组织策略。"), error);
         }
         finally
         {
@@ -149,8 +149,8 @@ internal static class LanFirewall
 
     private static object Create(string progId)
     {
-        var type = Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException("Windows 防火墙服务不可用。");
-        return Activator.CreateInstance(type) ?? throw new InvalidOperationException("无法访问 Windows 防火墙服务。");
+        var type = Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException(L10n.Text("Windows 防火墙服务不可用。"));
+        return Activator.CreateInstance(type) ?? throw new InvalidOperationException(L10n.Text("无法访问 Windows 防火墙服务。"));
     }
 
     private static void Release(object? instance)

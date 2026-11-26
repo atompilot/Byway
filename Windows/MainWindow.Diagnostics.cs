@@ -26,9 +26,9 @@ public partial class MainWindow
     private async Task DisconnectAsync(Guid? id)
     {
         if (active is not { } core)
-            throw new ApiError(409, "当前没有运行中的代理。");
+            throw new ApiError(409, L10n.Text("当前没有运行中的代理。"));
         if (!await core.CloseConnectionsAsync(id))
-            throw new ApiError(404, "连接已结束或暂时无法断开。");
+            throw new ApiError(404, L10n.Text("连接已结束或暂时无法断开。"));
     }
 
     private void OpenConnectionsClick(object sender, RoutedEventArgs e)
@@ -37,9 +37,9 @@ public partial class MainWindow
         var actions = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
         DockPanel.SetDock(actions, Dock.Top);
         panel.Children.Add(actions);
-        var refresh = new Button { Content = "刷新", Margin = new Thickness(0, 0, 8, 0) };
-        var disconnect = new Button { Content = "断开选中", Margin = new Thickness(0, 0, 8, 0) };
-        var disconnectAll = new Button { Content = "断开全部", Margin = new Thickness(0, 0, 8, 0) };
+        var refresh = new Button { Content = L10n.Text("刷新"), Margin = new Thickness(0, 0, 8, 0) };
+        var disconnect = new Button { Content = L10n.Text("断开选中"), Margin = new Thickness(0, 0, 8, 0) };
+        var disconnectAll = new Button { Content = L10n.Text("断开全部"), Margin = new Thickness(0, 0, 8, 0) };
         var status = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
         actions.Children.Add(refresh);
         actions.Children.Add(disconnect);
@@ -48,16 +48,16 @@ public partial class MainWindow
         var grid = new DataGrid { IsReadOnly = true, AutoGenerateColumns = false, CanUserAddRows = false,
             SelectionMode = DataGridSelectionMode.Single };
         AutomationProperties.SetAutomationId(grid, "ActiveConnectionList");
-        grid.Columns.Add(Column("目标", nameof(EngineConnection.Target), new(1, DataGridLengthUnitType.Star)));
-        grid.Columns.Add(Column("来源", nameof(EngineConnection.Source), 125));
-        grid.Columns.Add(Column("协议", nameof(EngineConnection.Network), 60));
-        grid.Columns.Add(Column("规则", nameof(EngineConnection.Rule), 145));
-        grid.Columns.Add(Column("策略链", nameof(EngineConnection.Chain), 175));
-        grid.Columns.Add(Column("实际出口", nameof(EngineConnection.Exit), 145));
-        grid.Columns.Add(Column("上传（字节）", nameof(EngineConnection.Upload), 90));
-        grid.Columns.Add(Column("下载（字节）", nameof(EngineConnection.Download), 90));
+        grid.Columns.Add(Column(L10n.Text("目标"), nameof(EngineConnection.Target), new(1, DataGridLengthUnitType.Star)));
+        grid.Columns.Add(Column(L10n.Text("来源"), nameof(EngineConnection.Source), 125));
+        grid.Columns.Add(Column(L10n.Text("协议"), nameof(EngineConnection.Network), 60));
+        grid.Columns.Add(Column(L10n.Text("规则"), nameof(EngineConnection.Rule), 145));
+        grid.Columns.Add(Column(L10n.Text("策略链"), nameof(EngineConnection.Chain), 175));
+        grid.Columns.Add(Column(L10n.Text("实际出口"), nameof(EngineConnection.Exit), 145));
+        grid.Columns.Add(Column(L10n.Text("上传（字节）"), nameof(EngineConnection.Upload), 90));
+        grid.Columns.Add(Column(L10n.Text("下载（字节）"), nameof(EngineConnection.Download), 90));
         panel.Children.Add(grid);
-        var window = DiagnosticWindow("连接列表", panel);
+        var window = DiagnosticWindow(L10n.Text("连接列表"), panel);
         bool pending = false;
         async Task Read()
         {
@@ -70,13 +70,13 @@ public partial class MainWindow
                 var rows = await ReadActiveConnectionsAsync();
                 if (rows is null)
                 {
-                    status.Text = "暂时无法读取连接。";
+                    status.Text = L10n.Text("暂时无法读取连接。");
                     return;
                 }
                 grid.ItemsSource = rows;
                 grid.SelectedItem = rows.FirstOrDefault(row => row.Id == selectedId);
                 disconnectAll.IsEnabled = rows.Length > 0;
-                status.Text = $"当前 {rows.Length} 条连接";
+                status.Text = L10n.Format($"当前 {rows.Length} 条连接");
             }
             finally { pending = false; }
         }
@@ -91,7 +91,7 @@ public partial class MainWindow
         };
         disconnectAll.Click += async (_, _) =>
         {
-            if (MessageBox.Show(window, "断开当前所有代理连接？", "断开连接", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBox.Show(window, L10n.Text("断开当前所有代理连接？"), L10n.Text("断开连接"), MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 await RunAsync(() => DisconnectAsync(null));
             await Read();
         };
@@ -106,7 +106,7 @@ public partial class MainWindow
     private void OpenEngineLogClick(object sender, RoutedEventArgs e)
     {
         var panel = new DockPanel { Margin = new Thickness(18) };
-        var copy = new Button { Content = "复制日志", HorizontalAlignment = HorizontalAlignment.Left,
+        var copy = new Button { Content = L10n.Text("复制日志"), HorizontalAlignment = HorizontalAlignment.Left,
             Margin = new Thickness(0, 0, 0, 10) };
         DockPanel.SetDock(copy, Dock.Top);
         panel.Children.Add(copy);
@@ -120,7 +120,7 @@ public partial class MainWindow
                 System.Windows.Clipboard.SetText(view.Text);
             return Task.CompletedTask;
         });
-        var window = DiagnosticWindow("内核日志", panel);
+        var window = DiagnosticWindow(L10n.Text("内核日志"), panel);
         void Read() => view.Text = string.Join(Environment.NewLine,
             engineLog.Snapshot().Select(row => $"{row.Time:HH:mm:ss} {row.Text}"));
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };

@@ -22,7 +22,7 @@ internal static class LoginStartup
         using var key = Registry.CurrentUser.CreateSubKey(RunKey, writable: true);
         string? previous = key.GetValue(ValueName) as string;
         if (previous is not null && !previous.EndsWith("\\Byway.exe\" --login", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Windows 中的 Byway 登录启动项由其他程序设置。");
+            throw new InvalidOperationException(L10n.Text("Windows 中的 Byway 登录启动项由其他程序设置。"));
         try
         {
             Write(key, enabled ? Command : null);

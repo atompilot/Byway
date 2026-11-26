@@ -1,0 +1,161 @@
+--- a/experimental/libbox/service.go
++++ b/experimental/libbox/service.go
+@@ -7,6 +7,7 @@
+ 	"errors"
+ 	"net"
+ 	"net/netip"
++	"os"
+ 	"runtime"
+ 	"strconv"
+ 	"sync"
+@@ -25,6 +26,11 @@
+ 
+ var _ adapter.PlatformInterface = (*platformInterfaceWrapper)(nil)
+ 
++// Byway: the macOS build runs the proxy core in a privileged helper process.
++// Networking, TUN and interface discovery use the native sing-tun implementation
++// there, while the iOS build keeps using the Network Extension hooks.
++const bywayNativePlatform = runtime.GOOS != "ios"
++
+ type platformInterfaceWrapper struct {
+ 	iif                    PlatformInterface
+ 	networkManager         adapter.NetworkManager
+@@ -43,6 +49,9 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformAutoDetectInterfaceControl() bool {
++	if bywayNativePlatform {
++		return false
++	}
+ 	return w.iif.UsePlatformAutoDetectInterfaceControl()
+ }
+ 
+@@ -51,7 +60,7 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformInterface() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) OpenInterface(options *tun.Options, platformOptions option.TunPlatformOptions) (tun.Tun, error) {
+@@ -105,7 +114,7 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformDefaultInterfaceMonitor() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) CreateDefaultInterfaceMonitor(logger logger.Logger) tun.DefaultInterfaceMonitor {
+@@ -116,10 +125,13 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformNetworkInterfaces() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) NetworkInterfaces() ([]adapter.NetworkInterface, error) {
++	if bywayNativePlatform {
++		return nil, nil
++	}
+ 	interfaceIterator, err := w.iif.GetInterfaces()
+ 	if err != nil {
+ 		return nil, err
+@@ -157,14 +169,23 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UnderNetworkExtension() bool {
++	if bywayNativePlatform {
++		return false
++	}
+ 	return w.iif.UnderNetworkExtension()
+ }
+ 
+ func (w *platformInterfaceWrapper) NetworkExtensionIncludeAllNetworks() bool {
++	if bywayNativePlatform {
++		return false
++	}
+ 	return w.iif.IncludeAllNetworks()
+ }
+ 
+ func (w *platformInterfaceWrapper) ClearDNSCache() {
++	if bywayNativePlatform {
++		return
++	}
+ 	w.iif.ClearDNSCache()
+ }
+ 
+@@ -173,10 +194,13 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformWIFIMonitor() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) ReadWIFIState(ctx context.Context) adapter.WIFIState {
++	if bywayNativePlatform {
++		return adapter.WIFIState{}
++	}
+ 	wifiState := w.iif.ReadWIFIState()
+ 	if wifiState == nil {
+ 		return adapter.WIFIState{}
+@@ -185,7 +209,7 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformConnectionOwnerFinder() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) FindConnectionOwner(request *adapter.FindConnectionOwnerRequest) (*adapter.ConnectionOwner, error) {
+@@ -206,7 +230,7 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformNotification() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) SendNotification(notification *adapter.Notification) error {
+@@ -218,7 +242,7 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformNeighborResolver() bool {
+-	return true
++	return !bywayNativePlatform
+ }
+ 
+ func (w *platformInterfaceWrapper) StartNeighborMonitor(listener adapter.NeighborUpdateListener) error {
+@@ -230,6 +254,9 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformShell() bool {
++	if bywayNativePlatform {
++		return false
++	}
+ 	return w.iif.UsePlatformShell()
+ }
+ 
+@@ -268,10 +295,19 @@
+ }
+ 
+ func (w *platformInterfaceWrapper) TailscaleHostname() string {
++	if bywayNativePlatform {
++		if name, err := os.Hostname(); err == nil && name != "" {
++			return name
++		}
++		return "byway"
++	}
+ 	return w.iif.TailscaleHostname()
+ }
+ 
+ func (w *platformInterfaceWrapper) UsePlatformBridge() bool {
++	if bywayNativePlatform {
++		return false
++	}
+ 	return w.iif.UsePlatformBridge()
+ }
+ 

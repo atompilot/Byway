@@ -16,7 +16,7 @@ internal sealed class ClashDns
     private readonly Dictionary<string, string[]> hosts = new(StringComparer.OrdinalIgnoreCase);
     private bool preferV4;
 
-    internal string Summary => upstreams.Count == 0 ? "system" : $"{upstreams.Count} 个主 DNS · {policies.Count} 项策略";
+    internal string Summary => upstreams.Count == 0 ? "system" : L10n.Format($"{upstreams.Count} 个主 DNS · {policies.Count} 项策略");
     internal bool NeedsBootstrapListener => bootstrap.Count > 1 && AllUpstreams().Any(item => item.IsDomain);
     internal bool NeedsLookupListener => hosts.Count > 0 || upstreams.Count > 0;
 
@@ -32,12 +32,12 @@ internal sealed class ClashDns
             {
                 string domain = Scalar(pair.Key, "hosts").ToLowerInvariant();
                 if (Uri.CheckHostName(domain) != UriHostNameType.Dns)
-                    throw new InvalidDataException("Clash hosts 当前仅支持精确域名。");
+                    throw new InvalidDataException(L10n.Text("Clash hosts 当前仅支持精确域名。"));
                 string[] ips = Values(pair.Value, "hosts");
                 if (ips.Length == 0 || ips.Any(value => !IPAddress.TryParse(value, out _)))
-                    throw new InvalidDataException("Clash hosts 当前仅支持 IPv4 和 IPv6 地址。");
+                    throw new InvalidDataException(L10n.Text("Clash hosts 当前仅支持 IPv4 和 IPv6 地址。"));
                 if (!result.hosts.TryAdd(domain, ips))
-                    throw new InvalidDataException("Clash hosts 包含重复域名。");
+                    throw new InvalidDataException(L10n.Text("Clash hosts 包含重复域名。"));
             }
         }
         if (!yaml.Flag("enable"))
@@ -45,7 +45,7 @@ internal sealed class ClashDns
         yaml.CheckFields("dns", "enable", "ipv6", "use-hosts", "default-nameserver", "nameserver",
             "nameserver-policy", "enhanced-mode", "listen");
         if (yaml.Text("enhanced-mode", "redir-host") != "redir-host")
-            throw new InvalidDataException("此 Clash DNS 配置使用 Fake-IP，当前仅支持 redir-host。");
+            throw new InvalidDataException(L10n.Text("此 Clash DNS 配置使用 Fake-IP，当前仅支持 redir-host。"));
         result.preferV4 = !yaml.Flag("ipv6");
         result.bootstrap.AddRange(Texts(yaml.Get("default-nameserver"), "default-nameserver")
             .Select((value, index) => ParseResolver(value, $"bootstrap-{index + 1}", mustBeIp: true)));
@@ -66,16 +66,16 @@ internal sealed class ClashDns
                         domain = domain[1..];
                 }
                 if (Uri.CheckHostName(domain.TrimStart('.')) != UriHostNameType.Dns)
-                    throw new InvalidDataException("Clash nameserver-policy 含有暂不支持的域名匹配。");
+                    throw new InvalidDataException(L10n.Text("Clash nameserver-policy 含有暂不支持的域名匹配。"));
                 var resolvers = Values(pair.Value, "nameserver-policy").Select((value, index) =>
                     ParseResolver(value, $"policy-{result.policies.Count + 1}-{index + 1}")).ToList();
                 if (resolvers.Count == 0)
-                    throw new InvalidDataException("Clash nameserver-policy 缺少上游。");
+                    throw new InvalidDataException(L10n.Text("Clash nameserver-policy 缺少上游。"));
                 result.policies.Add((field, domain, resolvers));
             }
         }
         if (result.upstreams.Count == 0)
-            throw new InvalidDataException("Clash 启用 DNS 后需要配置 nameserver。");
+            throw new InvalidDataException(L10n.Text("Clash 启用 DNS 后需要配置 nameserver。"));
         return result;
     }
 
@@ -160,10 +160,10 @@ internal sealed class ClashDns
         if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.UserInfo.Length > 0 ||
             uri.HostNameType == UriHostNameType.Unknown || uri.Fragment.Length > 0 || uri.Query.Length > 0 ||
             uri.Scheme is not ("udp" or "tcp" or "tls" or "https"))
-            throw new InvalidDataException("Clash DNS 当前支持 UDP、TCP、DoT 和 DoH 上游。");
+            throw new InvalidDataException(L10n.Text("Clash DNS 当前支持 UDP、TCP、DoT 和 DoH 上游。"));
         string host = uri.IdnHost.Trim('[', ']');
         if (mustBeIp && !IPAddress.TryParse(host, out _))
-            throw new InvalidDataException("Clash default-nameserver 必须使用 IP 地址。");
+            throw new InvalidDataException(L10n.Text("Clash default-nameserver 必须使用 IP 地址。"));
         int port = uri.Port > 0 ? uri.Port : uri.Scheme switch { "tls" => 853, "https" => 443, _ => 53 };
         return new(uri.Scheme, tag, host, port, uri.Scheme == "https" ? uri.AbsolutePath : null);
     }

@@ -24,30 +24,30 @@ internal sealed record PrivateNetworkInput(string Provider, string ControlURL, s
             url.UserInfo.Length == 0 && url.Query.Length == 0 && url.Fragment.Length == 0)
             control = url.GetLeftPart(UriPartial.Authority);
         else
-            throw new InvalidDataException("请填写有效的 HTTPS 协调服务器地址。");
+            throw new InvalidDataException(L10n.Text("请填写有效的 HTTPS 协调服务器地址。"));
 
         var hosts = RelayHosts ?? [];
         switch (RelayMode)
         {
             case TailscaleDefault:
                 if (Provider != "tailscale" || hosts.Length != 0)
-                    throw new InvalidDataException("跟随 Tailscale 配置仅适用于 Tailscale 账号，请留空中继域名。");
+                    throw new InvalidDataException(L10n.Text("跟随 Tailscale 配置仅适用于 Tailscale 账号，请留空中继域名。"));
                 break;
             case Strict:
                 hosts = hosts.Select(host => (host ?? "").Trim().TrimEnd('.').ToLowerInvariant())
                     .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
                 if (hosts.Length is < 1 or > 16 || hosts.Any(host => host.Length > 253 || !Host.IsMatch(host)))
-                    throw new InvalidDataException("请填写 1 到 16 个有效的中继域名。");
+                    throw new InvalidDataException(L10n.Text("请填写 1 到 16 个有效的中继域名。"));
                 break;
             default:
-                throw new InvalidDataException("未知的中继模式。");
+                throw new InvalidDataException(L10n.Text("未知的中继模式。"));
         }
         string name = (DeviceName ?? "").Trim().ToLowerInvariant();
         if (name.Length != 0 && !Name.IsMatch(name))
-            throw new InvalidDataException("设备名请使用英文字母、数字或短横线。");
+            throw new InvalidDataException(L10n.Text("设备名请使用英文字母、数字或短横线。"));
         var ports = (InboundTcpPorts ?? []).Distinct().Order().ToArray();
         if (ports.Length > 32 || ports.Any(port => port is < 1 or > 65535 or 8766 or 8767 || port == mixedPort))
-            throw new InvalidDataException("请填写有效的服务端口，Byway 自用端口不可开放。");
+            throw new InvalidDataException(L10n.Text("请填写有效的服务端口，Byway 自用端口不可开放。"));
         return new(Provider, control, hosts, name, ports, RelayMode);
     }
 }
@@ -65,7 +65,7 @@ internal sealed record PrivateNetworkRuntime(string State, string? Network, stri
     PrivateNetworkPeer[] Peers, PrivateNetworkRelayAudit? Relays, string? AuthURL);
 internal sealed record PrivateNetworkPeer(string Id, string Name, string DnsName, string Os, string[] Addresses, bool Online)
 {
-    public string ListLabel => $"{Name}  ·  {(Online ? "在线" : "离线")}";
+    public string ListLabel => $"{Name}  ·  {(Online ? L10n.Text("在线") : L10n.Text("离线"))}";
 }
 internal sealed record PrivateNetworkProbe(string Path, string Region, double LatencyMs, string ObservedAt);
 internal sealed record PrivateNetworkStatus(PrivateNetworkInput? Configuration, bool Enabled, PrivateNetworkRuntime? Runtime,

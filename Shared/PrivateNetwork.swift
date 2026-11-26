@@ -3,7 +3,7 @@ import Foundation
 struct PrivateNetworkInput: Codable, Equatable, Sendable {
     enum Provider: String, Codable, CaseIterable, Sendable {
         case headscale, tailscale
-        var title: String { self == .headscale ? "自托管 Headscale" : "Tailscale 账号" }
+        var title: String { self == .headscale ? L10n.text("自托管 Headscale") : L10n.text("Tailscale 账号") }
     }
 
     enum RelayMode: String, Codable, CaseIterable, Sendable {
@@ -11,8 +11,8 @@ struct PrivateNetworkInput: Codable, Equatable, Sendable {
 
         var title: String {
             switch self {
-            case .tailscaleDefault: "跟随 Tailscale 配置"
-            case .strict: "严格匹配自定义中继"
+            case .tailscaleDefault: L10n.text("跟随 Tailscale 配置")
+            case .strict: L10n.text("严格匹配自定义中继")
             }
         }
     }
@@ -52,14 +52,14 @@ struct PrivateNetworkInput: Codable, Equatable, Sendable {
                   url.scheme?.lowercased() == "https", let host = url.host, Self.validHost(host),
                   url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
                   url.path.isEmpty || url.path == "/", let normalized = url.url else {
-                throw LANFailure(422, "请填写有效的 HTTPS 协调服务器地址")
+                throw LANFailure(422, L10n.text("请填写有效的 HTTPS 协调服务器地址"))
             }
             result.controlURL = normalized.absoluteString.hasSuffix("/") ? String(normalized.absoluteString.dropLast()) : normalized.absoluteString
         }
         switch relayMode {
         case .tailscaleDefault:
             guard provider == .tailscale, relayHosts.isEmpty else {
-                throw LANFailure(422, "跟随 Tailscale 配置仅适用于 Tailscale 账号，请留空中继域名")
+                throw LANFailure(422, L10n.text("跟随 Tailscale 配置仅适用于 Tailscale 账号，请留空中继域名"))
             }
         case .strict:
             result.relayHosts = Array(Set(relayHosts.map {
@@ -67,14 +67,14 @@ struct PrivateNetworkInput: Codable, Equatable, Sendable {
                     .replacingOccurrences(of: "\\.$", with: "", options: .regularExpression)
             })).sorted()
             guard (1...16).contains(result.relayHosts.count), result.relayHosts.allSatisfy(Self.validHost) else {
-                throw LANFailure(422, "请填写 1 到 16 个有效的中继域名")
+                throw LANFailure(422, L10n.text("请填写 1 到 16 个有效的中继域名"))
             }
         }
         result.deviceName = deviceName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard result.deviceName.isEmpty || result.deviceName.range(
             of: "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", options: .regularExpression
         ) != nil else {
-            throw LANFailure(422, "设备名请使用英文字母、数字或短横线")
+            throw LANFailure(422, L10n.text("设备名请使用英文字母、数字或短横线"))
         }
         return result
     }
@@ -109,7 +109,7 @@ struct PrivateNetworkSettings: Codable, Equatable, Sendable {
     func update(_ input: PrivateNetworkInput) throws -> Self {
         let validated = try input.validated()
         guard validated.provider == self.input.provider, validated.controlURL == self.input.controlURL else {
-            throw LANFailure(409, "请先退出当前私网，再更换协调服务器")
+            throw LANFailure(409, L10n.text("请先退出当前私网，再更换协调服务器"))
         }
         var next = self
         next.input = validated
@@ -143,16 +143,16 @@ struct PrivateNetworkSettingsView: Codable, Equatable, Sendable {
     }
 
     var state: String {
-        if configuration == nil { return "未配置" }
-        if !enabled { return "已暂停" }
-        guard let runtime else { return "等待 VPN" }
+        if configuration == nil { return L10n.text("未配置") }
+        if !enabled { return L10n.text("已暂停") }
+        guard let runtime else { return L10n.text("等待 VPN") }
         switch runtime.state {
-        case "NeedsLogin": return "等待登录"
-        case "NeedsMachineAuth": return "等待管理员授权"
-        case "RelayMismatch": return "中继清单不符"
-        case "Running" where runtime.relays?.verified == true: return "已连接"
-        case "Stopped": return "已断开"
-        default: return "正在连接"
+        case "NeedsLogin": return L10n.text("等待登录")
+        case "NeedsMachineAuth": return L10n.text("等待管理员授权")
+        case "RelayMismatch": return L10n.text("中继清单不符")
+        case "Running" where runtime.relays?.verified == true: return L10n.text("已连接")
+        case "Stopped": return L10n.text("已断开")
+        default: return L10n.text("正在连接")
         }
     }
 }
@@ -190,10 +190,10 @@ struct PrivateNetworkProbe: Codable, Equatable, Sendable {
     var summary: String {
         let kind: String
         switch path {
-        case "direct": kind = "直连"
-        case "derp": kind = region.isEmpty ? "中继" : "中继 \(region)"
-        case "peerRelay": kind = "设备中继"
-        default: kind = "路径未知"
+        case "direct": kind = L10n.text("直连")
+        case "derp": kind = region.isEmpty ? L10n.text("中继") : L10n.text("中继 {0}", region)
+        case "peerRelay": kind = L10n.text("设备中继")
+        default: kind = L10n.text("路径未知")
         }
         return "\(kind) · \(Int(latencyMs.rounded())) ms"
     }
@@ -210,7 +210,7 @@ enum PrivateNetworkChange: Sendable {
             if let current { return try current.update(input) }
             return PrivateNetworkSettings(identity: UUID(), input: try input.validated(), enabled: false)
         case .enable(let enabled):
-            guard var current else { throw LANFailure(409, "请先配置私网") }
+            guard var current else { throw LANFailure(409, L10n.text("请先配置私网")) }
             current.enabled = enabled
             return current
         case .leave:

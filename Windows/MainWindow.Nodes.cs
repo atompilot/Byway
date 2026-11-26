@@ -16,7 +16,7 @@ public partial class MainWindow
     {
         var known = RowsInScope(LocalNodes).Find(row => NodeImport.SameNode(row.Node, node));
         if (known is null && !await Core.CheckAsync(node))
-            throw new InvalidDataException($"「{node.Name}」未通过代理内核校验。");
+            throw new InvalidDataException(L10n.Format($"「{node.Name}」未通过代理内核校验。"));
 
         Node saved = known?.Node ?? node;
         var next = profile with
@@ -32,8 +32,8 @@ public partial class MainWindow
         }
         CommitProfile(next, destination?.Id ?? Guid.Empty);
         RevealNode(saved.Id);
-        Status.Text = addedToGroup ? $"已将「{saved.Name}」添加到「{destination!.Name}」。"
-            : known is null ? $"已添加「{saved.Name}」。" : $"「{saved.Name}」已在节点列表中。";
+        Status.Text = addedToGroup ? L10n.Format($"已将「{saved.Name}」添加到「{destination!.Name}」。")
+            : known is null ? L10n.Format($"已添加「{saved.Name}」。") : L10n.Format($"「{saved.Name}」已在节点列表中。");
         return saved;
     }
 
@@ -51,7 +51,7 @@ public partial class MainWindow
     {
         bool endpointChanged = !NodeImport.SameEndpoint(current, edited);
         if (endpointChanged && !await Core.CheckAsync(edited))
-            throw new InvalidDataException("新连接配置未通过代理内核校验，已保留原节点。");
+            throw new InvalidDataException(L10n.Text("新连接配置未通过代理内核校验，已保留原节点。"));
 
         bool currentConnection = endpointChanged && active?.Source?.Id == current.Id;
         var groups = Groups.Select(group => group.IsSubscription && group.Members.Contains(current.Id)
@@ -63,7 +63,7 @@ public partial class MainWindow
         };
         CommitProfile(next, Scope.Id);
         RevealNode(edited.Id);
-        Status.Text = $"已保存「{edited.Name}」。" + (currentConnection ? " 下次连接使用新配置。" : "");
+        Status.Text = L10n.Format($"已保存「{edited.Name}」。") + (currentConnection ? L10n.Text(" 下次连接使用新配置。") : "");
     }
 
     private async void DeleteNodeClick(object sender, RoutedEventArgs e)
@@ -74,12 +74,12 @@ public partial class MainWindow
         Node node = row.Node;
         if (active?.Source?.Id == node.Id)
         {
-            ShowError("该节点正在使用。请先切换节点或停用代理。");
+            ShowError(L10n.Text("该节点正在使用。请先切换节点或停用代理。"));
             return;
         }
         string detail = Groups.Any(group => group.IsSubscription && group.Members.Contains(node.Id))
-            ? "从本机删除，刷新订阅时也会保留这项改动。" : "也会从包含它的节点组中移除。";
-        if (MessageBox.Show(this, $"删除「{node.Name}」？{detail}", "删除节点",
+            ? L10n.Text("从本机删除，刷新订阅时也会保留这项改动。") : L10n.Text("也会从包含它的节点组中移除。");
+        if (MessageBox.Show(this, L10n.Format($"删除「{node.Name}」？{detail}"), L10n.Text("删除节点"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
             return;
         await RunAsync(() =>
@@ -103,7 +103,7 @@ public partial class MainWindow
         }).ToList();
         Guid? selection = selected?.Node.Id == node.Id ? remaining.FirstOrDefault()?.Id : selected?.Node.Id;
         CommitProfile(profile with { Nodes = remaining, Groups = groups, Selected = selection }, Scope.Id);
-        Status.Text = $"已删除「{node.Name}」。";
+        Status.Text = L10n.Format($"已删除「{node.Name}」。");
     }
 
     private void RevealNode(Guid id)

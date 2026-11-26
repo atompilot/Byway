@@ -21,7 +21,7 @@ struct RoutingLibrary: Codable, Equatable, Sendable {
 
     func configuration(_ id: UUID) throws -> SavedRoutingConfiguration {
         guard let configuration = configurations.first(where: { $0.id == id }) else {
-            throw LANFailure(404, "分流配置不存在")
+            throw LANFailure(404, L10n.text("分流配置不存在"))
         }
         return configuration
     }
@@ -47,21 +47,21 @@ extension BywayProfile {
         switch edit {
         case let .save(id, name, text, acceptWarnings, activate):
             let existing = try id.map(library.configuration)
-            guard let text = text ?? existing?.text else { throw LANFailure(400, "请提供分流配置文本") }
+            guard let text = text ?? existing?.text else { throw LANFailure(400, L10n.text("请提供分流配置文本")) }
             let name = (name ?? existing?.name ?? "Shadowrocket 配置").trimmingCharacters(in: .whitespacesAndNewlines)
             guard (1...80).contains(name.count),
                   name.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }) else {
-                throw LANFailure(422, "配置名称需要 1 至 80 个字符")
+                throw LANFailure(422, L10n.text("配置名称需要 1 至 80 个字符"))
             }
             let importDocument = try RoutingImportDocument(text)
             guard existing?.text == text || acceptWarnings || (importDocument.warnings + importDocument.parsed.warnings).isEmpty else {
-                throw LANFailure(422, "配置含有兼容提示，请先预览并确认")
+                throw LANFailure(422, L10n.text("配置含有兼容提示，请先预览并确认"))
             }
             let record = SavedRoutingConfiguration(id: id ?? UUID(), name: name, text: text)
             if let index = library.configurations.firstIndex(where: { $0.id == record.id }) {
                 library.configurations[index] = record
             } else {
-                guard library.configurations.count < 32 else { throw LANFailure(422, "最多可保存 32 份分流配置") }
+                guard library.configurations.count < 32 else { throw LANFailure(422, L10n.text("最多可保存 32 份分流配置")) }
                 library.configurations.append(record)
             }
             if activate { library.activeID = record.id }

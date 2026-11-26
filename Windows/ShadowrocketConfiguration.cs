@@ -91,7 +91,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
     internal static ShadowrocketConfiguration Parse(string text)
     {
         if (string.IsNullOrWhiteSpace(text) || Encoding.UTF8.GetByteCount(text) > MaxBytes)
-            throw new InvalidDataException("请提供不超过 128 KB 的 UTF-8 分流配置。");
+            throw new InvalidDataException(L10n.Text("请提供不超过 128 KB 的 UTF-8 分流配置。"));
 
         var config = new ShadowrocketConfiguration();
         string section = "";
@@ -110,7 +110,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
                 section = line[1..^1].Trim().ToLowerInvariant();
                 hasRuleSection |= section == "rule";
                 if (section is not ("general" or "rule" or "host" or "url rewrite"))
-                    config.Warn($"保留 [{section}]，Windows 当前不执行此段。");
+                    config.Warn(L10n.Format($"保留 [{section}]，Windows 当前不执行此段。"));
                 continue;
             }
 
@@ -132,16 +132,16 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
                         case "always-real-ip": break;
                         case "private-ip-answer":
                             if (!Flag(value, number))
-                                config.Warn("private-ip-answer=false 已保留，Windows 保留 DNS 的私有 IP。");
+                                config.Warn(L10n.Text("private-ip-answer=false 已保留，Windows 保留 DNS 的私有 IP。"));
                             break;
                         case "dns-direct-system": useSystemForDirect = Flag(value, number); break;
                         case "dns-direct-fallback-proxy":
                             if (Flag(value, number))
-                                config.Warn("dns-direct-fallback-proxy 已保留，Windows 不会在直连解析失败时自动改走代理。");
+                                config.Warn(L10n.Text("dns-direct-fallback-proxy 已保留，Windows 不会在直连解析失败时自动改走代理。"));
                             break;
                         case "udp-policy-not-supported-behaviour":
                             if (!value.Equals("REJECT", StringComparison.OrdinalIgnoreCase))
-                                config.Warn("不支持 UDP 转发的节点将拒绝该连接。");
+                                config.Warn(L10n.Text("不支持 UDP 转发的节点将拒绝该连接。"));
                             break;
                         case "tun-excluded-routes":
                             config.TunExcludedRoutes.AddRange(value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
@@ -149,35 +149,35 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
                             break;
                         case "bypass-system":
                         case "icmp-auto-reply":
-                            config.Warn($"{key} 已保留，Windows 当前不执行。");
+                            config.Warn(L10n.Format($"{key} 已保留，Windows 当前不执行。"));
                             break;
                         case "always-reject-url-rewrite":
                             if (Flag(value, number))
-                                config.Warn("always-reject-url-rewrite 已保留，Windows 当前不执行网址重写。");
+                                config.Warn(L10n.Text("always-reject-url-rewrite 已保留，Windows 当前不执行网址重写。"));
                             break;
-                        default: config.Warn($"{key} 已保留，Windows 当前不执行。"); break;
+                        default: config.Warn(L10n.Format($"{key} 已保留，Windows 当前不执行。")); break;
                     }
                     break;
                 }
                 case "rule":
                     if (hasFinal)
-                        throw Invalid(number, "FINAL 后仍有分流规则。");
+                        throw Invalid(number, L10n.Text("FINAL 后仍有分流规则。"));
                     hasFinal = config.AddRule(line, number);
                     break;
                 case "host":
                     config.AddHost(line, number);
                     break;
                 case "url rewrite":
-                    config.Warn("[URL Rewrite] 已保留，Windows 当前不执行网址重写。");
+                    config.Warn(L10n.Text("[URL Rewrite] 已保留，Windows 当前不执行网址重写。"));
                     break;
             }
         }
         if (!hasRuleSection || config.Rules.Count == 0 && !hasFinal)
-            throw new InvalidDataException("请提供包含可用规则或 FINAL 的 [Rule] 段。");
+            throw new InvalidDataException(L10n.Text("请提供包含可用规则或 FINAL 的 [Rule] 段。"));
         if (fallback is not null && !fallback.Equals(config.Dns, StringComparison.OrdinalIgnoreCase))
-            config.Warn("备用 DNS 已保留，Windows 当前使用主 DNS。");
+            config.Warn(L10n.Text("备用 DNS 已保留，Windows 当前使用主 DNS。"));
         if (useSystemForDirect && config.Dns != "system")
-            config.Warn("dns-direct-system 已保留，Windows 对直连域名也使用导入的主 DNS。");
+            config.Warn(L10n.Text("dns-direct-system 已保留，Windows 对直连域名也使用导入的主 DNS。"));
         return config;
     }
 
@@ -188,7 +188,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         if (kind == "FINAL")
         {
             if (fields.Length != 2 || !Policy(fields[1], out var final))
-                throw Invalid(number, "FINAL 需要指定 DIRECT、PROXY 或 REJECT。");
+                throw Invalid(number, L10n.Text("FINAL 需要指定 DIRECT、PROXY 或 REJECT。"));
             Final = final;
             explicitFinal = new("FINAL", PolicyName(final), line, number);
             return true;
@@ -205,16 +205,16 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         };
         if (field is null)
         {
-            Warn($"第 {number} 行 {kind} 已保留，Windows 当前不执行。");
+            Warn(L10n.Format($"第 {number} 行 {kind} 已保留，Windows 当前不执行。"));
             return false;
         }
         bool isAddress = field is "ip_cidr" or "rule_set";
         bool noResolve = fields.Length == 4 && fields[3].Equals("no-resolve", StringComparison.OrdinalIgnoreCase);
         if (fields.Length != 3 && !(isAddress && noResolve) || fields.Length < 2 || fields[1].Length == 0)
-            throw Invalid(number, "规则格式无效。");
+            throw Invalid(number, L10n.Text("规则格式无效。"));
         if (!Policy(fields[2], out var policy))
         {
-            Warn($"第 {number} 行的策略已保留。当前支持 DIRECT、PROXY 和 REJECT。");
+            Warn(L10n.Format($"第 {number} 行的策略已保留。当前支持 DIRECT、PROXY 和 REJECT。"));
             return false;
         }
 
@@ -228,7 +228,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         {
             if (value != "cn")
             {
-                Warn($"第 {number} 行 GEOIP 已保留，Windows 当前支持 GEOIP,CN。");
+                Warn(L10n.Format($"第 {number} 行 GEOIP 已保留，Windows 当前支持 GEOIP,CN。"));
                 return false;
             }
             value = "geoip-cn";
@@ -246,7 +246,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         string host = Domain(key, number);
         string[] addresses = Values(value).Select(ip => ParseIp(ip, number).ToString()).ToArray();
         if (!Hosts.TryAdd(host, addresses))
-            throw Invalid(number, "Host 重复定义。");
+            throw Invalid(number, L10n.Text("Host 重复定义。"));
     }
 
     private void AddBypass(string value, string line, int number)
@@ -261,7 +261,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
             else if (item.StartsWith("*.", StringComparison.Ordinal) && !item[2..].Contains('*'))
                 Bypass.Add(new("domain_suffix", "." + Domain(item[2..], number), RoutePolicy.Direct));
             else if (item.Contains('*') || item.Equals("<local>", StringComparison.OrdinalIgnoreCase))
-                Warn($"skip-proxy 中的特殊匹配已保留。第 {number} 行仅应用域名、*. 后缀、IP 和 CIDR。");
+                Warn(L10n.Format($"skip-proxy 中的特殊匹配已保留。第 {number} 行仅应用域名、*. 后缀、IP 和 CIDR。"));
             else
                 Bypass.Add(new("domain", Domain(item, number), RoutePolicy.Direct));
             if (Bypass.Count > index)
@@ -276,7 +276,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
             (address.AddressFamily == AddressFamily.InterNetwork || address.ScopeId == 0))
             return address.ToString();
         try { return Domain(host, 1); }
-        catch (InvalidDataException) { throw new InvalidDataException("请输入有效的域名或 IP 地址。"); }
+        catch (InvalidDataException) { throw new InvalidDataException(L10n.Text("请输入有效的域名或 IP 地址。")); }
     }
 
     internal static string InsertRule(string text, string? type, string? value, string? policy, bool noResolve)
@@ -285,18 +285,18 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         type = type?.Trim().ToUpperInvariant();
         value = value?.Trim();
         if (type is not ("DOMAIN" or "DOMAIN-SUFFIX" or "DOMAIN-KEYWORD" or "IP-CIDR" or "GEOIP"))
-            throw new InvalidDataException("请选择支持的规则类型。");
+            throw new InvalidDataException(L10n.Text("请选择支持的规则类型。"));
         if (policy is null || !Policy(policy.Trim(), out var routePolicy))
-            throw new InvalidDataException("请选择 PROXY、DIRECT 或 REJECT。");
+            throw new InvalidDataException(L10n.Text("请选择 PROXY、DIRECT 或 REJECT。"));
         if (string.IsNullOrWhiteSpace(value) || value.Length > 253 || value.Any(c => char.IsControl(c) || c is ',' or '#' or ';'))
-            throw new InvalidDataException("请输入一条有效的规则值。");
+            throw new InvalidDataException(L10n.Text("请输入一条有效的规则值。"));
         if (type == "IP-CIDR" && IPAddress.TryParse(value, out var ip))
             value = $"{ip}/{(ip.AddressFamily == AddressFamily.InterNetwork ? 32 : 128)}";
         string line = $"{type},{value},{PolicyName(routePolicy)}" + (noResolve ? ",no-resolve" : "");
         var candidate = new ShadowrocketConfiguration();
         candidate.AddRule(line, 1);
         if (candidate.Rules.Count != 1)
-            throw new InvalidDataException(candidate.Warnings.FirstOrDefault() ?? "无法使用这条规则。");
+            throw new InvalidDataException(candidate.Warnings.FirstOrDefault() ?? L10n.Text("无法使用这条规则。"));
         if (original.Rules.FirstOrDefault() is { } first &&
             first with { Source = null } == candidate.Rules[0] with { Source = null })
             return text;
@@ -316,7 +316,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
                 trimmed[1..^1].Trim().Equals("rule", StringComparison.OrdinalIgnoreCase))
                 return text.Insert(offset, line + text[end..offset]);
         }
-        throw new InvalidDataException("分流配置缺少 [Rule] 段。");
+        throw new InvalidDataException(L10n.Text("分流配置缺少 [Rule] 段。"));
     }
 
     private static string PolicyName(RoutePolicy policy) => policy.ToString().ToUpperInvariant();
@@ -325,16 +325,16 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
     {
         int delimiter = line.IndexOf('=');
         if (delimiter < 1)
-            throw Invalid(number, "设置需要键和值。");
+            throw Invalid(number, L10n.Text("设置需要键和值。"));
         string key = line[..delimiter].Trim().ToLowerInvariant();
         string value = line[(delimiter + 1)..].Trim();
         if (key.Length == 0 || value.Length == 0 && key != "skip-proxy")
-            throw Invalid(number, "设置需要键和值。");
+            throw Invalid(number, L10n.Text("设置需要键和值。"));
         return (key, value);
     }
 
     private static bool Flag(string value, int number) =>
-        bool.TryParse(value, out bool flag) ? flag : throw Invalid(number, "设置需要 true 或 false。");
+        bool.TryParse(value, out bool flag) ? flag : throw Invalid(number, L10n.Text("设置需要 true 或 false。"));
 
     private static bool Policy(string value, out RoutePolicy policy)
     {
@@ -354,7 +354,7 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         if (Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == "https" && uri.Host.Length > 0 &&
             uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0 && uri.Port is > 0 and <= 65535)
             return uri.AbsoluteUri;
-        throw Invalid(number, "主 DNS 需要为 system、IP 地址或 HTTPS DNS 地址。");
+        throw Invalid(number, L10n.Text("主 DNS 需要为 system、IP 地址或 HTTPS DNS 地址。"));
     }
 
     private static string Domain(string value, int number)
@@ -366,14 +366,14 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
                 return host;
         }
         catch (ArgumentException) { }
-        throw Invalid(number, "域名格式无效。");
+        throw Invalid(number, L10n.Text("域名格式无效。"));
     }
 
     private static IPAddress ParseIp(string value, int number)
     {
         if (IPAddress.TryParse(value, out var ip) && (ip.AddressFamily == AddressFamily.InterNetwork || ip.ScopeId == 0))
             return ip;
-        throw Invalid(number, "IP 地址格式无效。");
+        throw Invalid(number, L10n.Text("IP 地址格式无效。"));
     }
 
     private static string Cidr(string value, int number)
@@ -382,11 +382,11 @@ internal sealed class ShadowrocketConfiguration : IRoutingConfiguration
         IPAddress ip = ParseIp(pieces[0], number);
         int max = ip.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
         if (pieces.Length != 2 || !int.TryParse(pieces[1], NumberStyles.None, CultureInfo.InvariantCulture, out int prefix) || prefix > max)
-            throw Invalid(number, "CIDR 地址格式无效。");
+            throw Invalid(number, L10n.Text("CIDR 地址格式无效。"));
         return $"{ip}/{prefix}";
     }
 
     private static string[] Values(string text) => text.Split(',', StringSplitOptions.TrimEntries);
     private void Warn(string message) { if (!warnings.Contains(message)) warnings.Add(message); }
-    private static InvalidDataException Invalid(int number, string message) => new($"第 {number} 行：{message}");
+    private static InvalidDataException Invalid(int number, string message) => new(L10n.Format($"第 {number} 行：{message}"));
 }

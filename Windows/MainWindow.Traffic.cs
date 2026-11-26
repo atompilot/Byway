@@ -28,10 +28,10 @@ public partial class MainWindow
     {
         if (active is not { } core)
         {
-            TrafficScope.Text = "此设备 · Byway 接管的流量";
+            TrafficScope.Text = L10n.Text("此设备 · Byway 接管的流量");
             return;
         }
-        string mode = $"此设备 · {CaptureName(core.Capture)}";
+        string mode = L10n.Format($"此设备 · {CaptureName(core.Capture)}");
         TrafficScope.Text = core.Source is { } source ? $"{mode} · {source.Name}" : mode;
     }
 
@@ -53,18 +53,18 @@ public partial class MainWindow
         historyZone = TimeZoneInfo.Local;
         var snapshot = trafficHistory.Read(historyPeriod, DateTimeOffset.UtcNow, historyZone);
         shownHistory = snapshot;
-        HistoryRange.Text = DescribeTrafficRange(snapshot, historyZone) + " · 按电脑本地时间";
+        HistoryRange.Text = DescribeTrafficRange(snapshot, historyZone) + L10n.Text(" · 按电脑本地时间");
         HistoryTotal.Text = HistoryVolume(snapshot.TotalBytes);
         HistoryDownload.Text = HistoryVolume(snapshot.DownloadBytes);
         HistoryUpload.Text = HistoryVolume(snapshot.UploadBytes);
         HistoryGranularity.Text = snapshot.Granularity switch
         {
-            "hour" => "按小时", "month" => "按月", "year" => "按年", _ => "按天"
+            "hour" => L10n.Text("按小时"), "month" => L10n.Text("按月"), "year" => L10n.Text("按年"), _ => L10n.Text("按天")
         };
-        HistoryLegend.Text = historyPeriod == TrafficPeriod.Today ? "斜线 无记录  ·  灰色 尚未到达" : "斜线 无记录";
-        HistoryNotice.Text = snapshot.StorageIssue ? "部分流量历史暂时无法读写。" :
-            snapshot.RecordedSinceUtc is null ? "开启代理后开始记录流量。" :
-            snapshot.DownloadBytes is null ? "所选范围暂无采样记录。" : "";
+        HistoryLegend.Text = historyPeriod == TrafficPeriod.Today ? L10n.Text("斜线 无记录  ·  灰色 尚未到达") : L10n.Text("斜线 无记录");
+        HistoryNotice.Text = snapshot.StorageIssue ? L10n.Text("部分流量历史暂时无法读写。") :
+            snapshot.RecordedSinceUtc is null ? L10n.Text("开启代理后开始记录流量。") :
+            snapshot.DownloadBytes is null ? L10n.Text("所选范围暂无采样记录。") : "";
         HistoryNotice.Visibility = HistoryNotice.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         HistoryChart.Show(snapshot, historyZone, selectDefault);
         RefreshTrafficBin();
@@ -81,7 +81,7 @@ public partial class MainWindow
         if (snapshot.Period == TrafficHistory.PeriodCode(TrafficPeriod.All))
         {
             if (snapshot.RecordedSinceUtc is not { } first)
-                return "尚无历史";
+                return L10n.Text("尚无历史");
             start = TimeZoneInfo.ConvertTime(first, zone);
             return $"{start:yyyy 年 M 月 d 日}–{end:yyyy 年 M 月 d 日}";
         }
@@ -93,14 +93,14 @@ public partial class MainWindow
         if (shownHistory is not { } snapshot)
             return;
         var bin = HistoryChart.SelectedBin;
-        HistoryBinLabel.Text = bin is not null ? TrafficHistoryChart.IntervalLabel(bin, snapshot, historyZone) : "选择时段";
+        HistoryBinLabel.Text = bin is not null ? TrafficHistoryChart.IntervalLabel(bin, snapshot, historyZone) : L10n.Text("选择时段");
         HistoryBinTotal.Text = HistoryVolume(bin?.TotalBytes);
         HistoryBinDownload.Text = HistoryVolume(bin?.DownloadBytes);
         HistoryBinUpload.Text = HistoryVolume(bin?.UploadBytes);
         HistoryBinNote.Text = bin?.State switch
         {
-            "future" => "尚未到达这个时段。",
-            "missing" => "这个时段没有采样记录。",
+            "future" => L10n.Text("尚未到达这个时段。"),
+            "missing" => L10n.Text("这个时段没有采样记录。"),
             _ => ""
         };
         HistoryBinNote.Visibility = HistoryBinNote.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;

@@ -20,8 +20,8 @@ internal sealed partial class EngineDiagnostics
             return;
         string message = Escape().Replace(line, "");
         foreach (string secret in secrets)
-            message = message.Replace(secret, "[已隐藏]", StringComparison.Ordinal);
-        message = Address().Replace(message, "[地址已隐藏]");
+            message = message.Replace(secret, L10n.Text("[已隐藏]"), StringComparison.Ordinal);
+        message = Address().Replace(message, L10n.Text("[地址已隐藏]"));
         queue.Enqueue(new(DateTimeOffset.Now, message.Length <= 500 ? message : message[..500]));
         while (queue.Count > 160)
             queue.TryDequeue(out _);

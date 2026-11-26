@@ -8,19 +8,19 @@ struct ConfigurationEditor: View {
     var body: some View {
         let library = controller.profile.savedRouting
         List {
-            Section("当前配置") {
+            Section(L10n.text("当前配置")) {
                 Button {
                     apply("PUT", "/v1/config/routing/active", body: ["useDefault": true])
                 } label: {
-                    LabeledContent("Byway 默认分流") {
+                    LabeledContent(L10n.text("Byway 默认分流")) {
                         if library.activeID == nil { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
                     }
                 }
-                NavigationLink("测试默认分流规则") {
+                NavigationLink(L10n.text("测试默认分流规则")) {
                     RoutingRuleTestView(controller: controller, configuration: nil)
                 }
             }
-            Section("已保存的配置") {
+            Section(L10n.text("已保存的配置")) {
                 ForEach(library.configurations) { configuration in
                     NavigationLink {
                         RoutingConfigurationDraft(controller: controller, configuration: configuration)
@@ -28,30 +28,31 @@ struct ConfigurationEditor: View {
                         HStack {
                             Text(configuration.name)
                             Spacer()
-                            if configuration.id == library.activeID { Text("当前").foregroundStyle(.secondary) }
+                            if configuration.id == library.activeID { Text(L10n.text("当前")).foregroundStyle(.secondary) }
                         }
                         .accessibilityElement(children: .combine)
                     }
                     .swipeActions(edge: .leading) {
-                        Button("启用") {
+                        Button(L10n.text("启用")) {
                             apply("PUT", "/v1/config/routing/active", body: ["id": configuration.id.uuidString])
                         }
                         .tint(.accentColor)
                     }
                     .swipeActions {
-                        Button("删除", role: .destructive) { apply("DELETE", "/v1/config/routing/" + configuration.id.uuidString) }
+                        Button(L10n.text("删除"), role: .destructive) { apply("DELETE", "/v1/config/routing/" + configuration.id.uuidString) }
                     }
                 }
                 NavigationLink {
                     RoutingConfigurationDraft(controller: controller, configuration: nil)
                 } label: {
-                    Label("导入分流配置", systemImage: "plus")
+                    Label(L10n.text("导入分流配置"), systemImage: "plus")
                 }
             }
             if let error { Text(error).foregroundStyle(.red) }
         }
-        .navigationTitle("分流配置")
-        .navigationBarTitleDisplayMode(.inline)
+        .bywaySettingsForm()
+        .navigationTitle(L10n.text("分流配置"))
+        .bywayInlineTitle()
     }
 
     private func apply(_ method: String, _ path: String, body: [String: Any]? = nil) {
@@ -85,28 +86,28 @@ private struct RoutingConfigurationDraft: View {
 
     var body: some View {
         Form {
-            Section("Shadowrocket 或 Clash 配置") {
-                TextField("配置名称", text: $name)
+            Section(L10n.text("Shadowrocket 或 Clash 配置")) {
+                TextField(L10n.text("配置名称"), text: $name)
                 Button {
                     showsFiles = true
-                } label: { Label("从文件导入", systemImage: "document") }
+                } label: { Label(L10n.text("从文件导入"), systemImage: "document") }
                 TextEditor(text: $text)
                     .font(.system(.footnote, design: .monospaced))
-                    .textInputAutocapitalization(.never)
+                    .bywayNoAutocapitalization()
                     .autocorrectionDisabled()
                     .frame(minHeight: 140)
                     .focused($editing)
-                    .accessibilityLabel("分流配置文本")
+                    .accessibilityLabel(L10n.text("分流配置文本"))
                     .accessibilityIdentifier("routing-config-text")
-                Button("预览分流规则") { showPreview() }
+                Button(L10n.text("预览分流规则")) { showPreview() }
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("routing-config-preview")
             }
             if let preview {
-                Section(preview.warnings.isEmpty ? "预览" : "兼容提示") {
-                    LabeledContent("可用规则", value: "\(preview.ruleCount) 条")
+                Section(preview.warnings.isEmpty ? L10n.text("预览") : L10n.text("兼容提示")) {
+                    LabeledContent(L10n.text("可用规则"), value: L10n.text("{0} 条", preview.ruleCount))
                     ForEach(preview.warnings, id: \.self) { Text($0).foregroundStyle(.secondary) }
-                    Button(preview.warnings.isEmpty ? "保存配置" : "确认兼容提示并保存") { save() }
+                    Button(preview.warnings.isEmpty ? L10n.text("保存配置") : L10n.text("确认兼容提示并保存")) { save() }
                         .disabled(saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("routing-config-apply")
                 }
@@ -114,9 +115,9 @@ private struct RoutingConfigurationDraft: View {
             if let configuration {
                 Section {
                     if controller.profile.savedRouting.activeID != configuration.id {
-                        Button("启用这份配置") { activate(configuration.id) }.disabled(saving)
+                        Button(L10n.text("启用这份配置")) { activate(configuration.id) }.disabled(saving)
                     }
-                    NavigationLink("测试规则或添加规则") {
+                    NavigationLink(L10n.text("测试规则或添加规则")) {
                         RoutingRuleTestView(controller: controller, configuration: configuration.id)
                     }
                 }
@@ -124,8 +125,8 @@ private struct RoutingConfigurationDraft: View {
             if saving { ProgressView() }
             if let error { Text(error).foregroundStyle(.red) }
         }
-        .navigationTitle(configuration == nil ? "导入分流配置" : "编辑分流配置")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(configuration == nil ? L10n.text("导入分流配置") : L10n.text("编辑分流配置"))
+        .bywayInlineTitle()
         .onChange(of: text) { _, _ in preview = nil }
         .onChange(of: controller.profile.savedRouting.configurations.first { $0.id == configuration?.id }?.text) { old, updated in
             if let old, let updated, text == old { text = updated }
@@ -189,22 +190,22 @@ private struct RoutingRuleTestView: View {
 
     var body: some View {
         Form {
-            Section("测试目标") {
-                TextField("域名或 IP 地址", text: $host)
-                    .textInputAutocapitalization(.never)
+            Section(L10n.text("测试目标")) {
+                TextField(L10n.text("域名或 IP 地址"), text: $host)
+                    .bywayNoAutocapitalization()
                     .autocorrectionDisabled()
-                    .keyboardType(.URL)
+                    .bywayKeyboardType(.url)
                     .onSubmit(test)
-                Button("测试规则", action: test).disabled(host.isEmpty || running)
+                Button(L10n.text("测试规则"), action: test).disabled(host.isEmpty || running)
             }
             if let match {
-                Section("命中结果") {
-                    LabeledContent("策略", value: match.policy)
-                    LabeledContent("规则", value: match.rule)
-                    if let line = match.lineNumber { LabeledContent("行号", value: "\(line)") }
-                    if let node = match.nodeName { LabeledContent("代理节点", value: node) }
+                Section(L10n.text("命中结果")) {
+                    LabeledContent(L10n.text("策略"), value: match.policy)
+                    LabeledContent(L10n.text("规则"), value: match.rule)
+                    if let line = match.lineNumber { LabeledContent(L10n.text("行号"), value: "\(line)") }
+                    if let node = match.nodeName { LabeledContent(L10n.text("代理节点"), value: node) }
                     if !match.resolvedAddresses.isEmpty {
-                        LabeledContent("解析地址", value: match.resolvedAddresses.joined(separator: ", "))
+                        LabeledContent(L10n.text("解析地址"), value: match.resolvedAddresses.joined(separator: ", "))
                     }
                 }
             }
@@ -213,17 +214,17 @@ private struct RoutingRuleTestView: View {
             }) {
                 Section {
                     if adding {
-                        Picker("匹配方式", selection: $kind) {
+                        Picker(L10n.text("匹配方式"), selection: $kind) {
                             ForEach(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD", "IP-CIDR", "IP-CIDR6", "GEOIP"], id: \.self) { Text($0) }
                         }
-                        if kind != "GEOIP" { TextField("匹配值", text: $value).textInputAutocapitalization(.never) }
+                        if kind != "GEOIP" { TextField(L10n.text("匹配值"), text: $value).bywayNoAutocapitalization() }
                         if kind.hasPrefix("IP-CIDR") { Toggle("no-resolve", isOn: $noResolve) }
-                        Picker("策略", selection: $policy) {
+                        Picker(L10n.text("策略"), selection: $policy) {
                             ForEach(["DIRECT", "PROXY", "REJECT"], id: \.self) { Text($0) }
                         }
-                        Button("保存并复测", action: addRule).disabled(running || (kind != "GEOIP" && value.isEmpty))
+                        Button(L10n.text("保存并复测"), action: addRule).disabled(running || (kind != "GEOIP" && value.isEmpty))
                     } else {
-                        Button("添加规则") {
+                        Button(L10n.text("添加规则")) {
                             value = host
                             adding = true
                         }
@@ -233,8 +234,8 @@ private struct RoutingRuleTestView: View {
             if running { ProgressView() }
             if let error { Text(error).foregroundStyle(.red) }
         }
-        .navigationTitle("测试规则")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("测试规则"))
+        .bywayInlineTitle()
         .onChange(of: host) { _, _ in match = nil }
     }
 
@@ -280,7 +281,7 @@ func readImportFile(_ url: URL, limit: Int) throws -> String {
     defer { try? handle.close() }
     let data = try handle.read(upToCount: limit + 1) ?? Data()
     guard data.count <= limit, let text = String(data: data, encoding: .utf8) else {
-        throw BywayError.message("请选择受支持大小的 UTF-8 文本文件")
+        throw BywayError.message(L10n.text("请选择受支持大小的 UTF-8 文本文件"))
     }
     return text
 }

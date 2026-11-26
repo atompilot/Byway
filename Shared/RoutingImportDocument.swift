@@ -20,14 +20,14 @@ struct RoutingImportDocument {
             return
         }
         guard text.utf8.count <= ShadowrocketConfiguration.maxBytes else {
-            throw BywayError.message("分流配置不能超过 1 MB")
+            throw BywayError.message(L10n.text("分流配置不能超过 1 MB"))
         }
         #if canImport(Yams)
         let converted = try Self.clash(text)
         parsed = try ShadowrocketConfiguration(converted.text)
         warnings = converted.warnings
         #else
-        throw BywayError.message("此构建缺少 Clash 配置解析器")
+        throw BywayError.message(L10n.text("此构建缺少 Clash 配置解析器"))
         #endif
     }
 
@@ -36,19 +36,19 @@ struct RoutingImportDocument {
         let root: [String: Any]
         do {
             guard let decoded = try Yams.load(yaml: input) as? [String: Any] else {
-                throw BywayError.message("Clash 配置需要包含规则")
+                throw BywayError.message(L10n.text("Clash 配置需要包含规则"))
             }
             root = decoded
         } catch {
-            throw BywayError.message("无法解析 Clash YAML")
+            throw BywayError.message(L10n.text("无法解析 Clash YAML"))
         }
         let mode = root["mode"] as? String ?? "rule"
         guard mode.lowercased() == "rule", let raw = (root["rules"] ?? root["Rules"]) as? [String], !raw.isEmpty else {
-            throw BywayError.message("请导入包含 rules 的 Clash 规则模式配置")
+            throw BywayError.message(L10n.text("请导入包含 rules 的 Clash 规则模式配置"))
         }
         for providers in ["proxy-providers", "rule-providers"] {
             if let value = root[providers], !(value is NSNull), (value as? [String: Any])?.isEmpty != true {
-                throw BywayError.message("此 Clash 配置依赖 \(providers)，当前无法保留其更新行为")
+                throw BywayError.message(L10n.text("此 Clash 配置依赖 {0}，当前无法保留其更新行为", providers))
             }
         }
         let proxyEntries = (root["proxies"] ?? root["Proxy"]) as? [[String: Any]] ?? []
@@ -58,28 +58,28 @@ struct RoutingImportDocument {
             guard let name = group["name"] as? String, group["type"] as? String == "select",
                   let first = (group["proxies"] as? [String])?.first,
                   !proxyNames.contains(name), groups[name] == nil else {
-                throw BywayError.message("Clash 导入支持带有成员的 select 手选策略组")
+                throw BywayError.message(L10n.text("Clash 导入支持带有成员的 select 手选策略组"))
             }
             groups[name] = first
         }
-        var warnings = ["Clash 的代理规则使用 Byway 当前节点。手选策略组使用配置中的第一个成员。"]
+        var warnings = [L10n.text("Clash 的代理规则使用 Byway 当前节点。手选策略组使用配置中的第一个成员。")]
         func policy(_ initial: String) throws -> String {
             var target = initial
             var seen = Set<String>()
             while let selected = groups[target] {
-                guard seen.insert(target).inserted else { throw BywayError.message("Clash 策略组引用成环") }
+                guard seen.insert(target).inserted else { throw BywayError.message(L10n.text("Clash 策略组引用成环")) }
                 target = selected
             }
             switch target {
             case "DIRECT", "REJECT": return target
             case "REJECT-DROP":
-                if !warnings.contains("REJECT-DROP 使用 Byway 的拒绝行为。") {
-                    warnings.append("REJECT-DROP 使用 Byway 的拒绝行为。")
+                if !warnings.contains(L10n.text("REJECT-DROP 使用 Byway 的拒绝行为。")) {
+                    warnings.append(L10n.text("REJECT-DROP 使用 Byway 的拒绝行为。"))
                 }
                 return "REJECT"
             case "PROXY": return "PROXY"
             default:
-                guard proxyNames.contains(target) else { throw BywayError.message("Clash 规则引用了未知出口") }
+                guard proxyNames.contains(target) else { throw BywayError.message(L10n.text("Clash 规则引用了未知出口")) }
                 return "PROXY"
             }
         }
@@ -90,7 +90,7 @@ struct RoutingImportDocument {
             if let first = (dns["nameserver"] as? [String])?.first, first.hasPrefix("https://") || first == "system" {
                 general.append("dns-server = " + first)
             }
-            warnings.append("Clash 的 DNS 优先读取首个 HTTPS DNS，其他 DNS 策略使用 Byway 设置。")
+            warnings.append(L10n.text("Clash 的 DNS 优先读取首个 HTTPS DNS，其他 DNS 策略使用 Byway 设置。"))
         }
         var hosts = ["[Host]"]
         if let entries = root["hosts"] as? [String: Any] {
@@ -106,17 +106,17 @@ struct RoutingImportDocument {
         let supported = Set(ShadowrocketConfiguration.Rule.Kind.allCases.map(\.rawValue))
         var rules = ["[Rule]"]
         for (index, line) in raw.enumerated() {
-            guard !line.contains(where: \.isNewline) else { throw BywayError.message("Clash 规则不能包含换行") }
+            guard !line.contains(where: \.isNewline) else { throw BywayError.message(L10n.text("Clash 规则不能包含换行")) }
             var fields = line.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             let kind = fields[0].uppercased()
             if kind == "MATCH" || kind == "FINAL" {
-                guard fields.count == 2, index == raw.count - 1 else { throw BywayError.message("Clash MATCH 必须是最后一条规则") }
+                guard fields.count == 2, index == raw.count - 1 else { throw BywayError.message(L10n.text("Clash MATCH 必须是最后一条规则")) }
                 rules.append("FINAL," + (try policy(fields[1])))
                 continue
             }
             guard supported.contains(kind), (3...4).contains(fields.count),
                   kind != "GEOIP" || fields[1].uppercased() == "CN" else {
-                throw BywayError.message("Clash 第 \(index + 1) 条规则暂不支持")
+                throw BywayError.message(L10n.text("Clash 第 {0} 条规则暂不支持", index + 1))
             }
             fields[0] = kind
             fields[2] = try policy(fields[2])

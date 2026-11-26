@@ -8,83 +8,159 @@
 
 /* Begin PBXBuildFile section */
 		01A04AFCE04542FBDF75F779 /* GlobalRoutingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E726B66FEFA7E25761959A /* GlobalRoutingView.swift */; };
+		03A8F5E12CBAF684FCBB6C6A /* byway-es.json in Resources */ = {isa = PBXBuildFile; fileRef = E560504802172846BEE4C59D /* byway-es.json */; };
+		041E041F3908063DB17DCC92 /* MobileDiagnosticsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B61973ADC1647D8CEB89C03 /* MobileDiagnosticsViews.swift */; };
 		05CCACA33CFDEFBD4C0ECBF6 /* RoutingLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB82240DA4829BC2FDFF991A /* RoutingLibrary.swift */; };
+		067C8EE55030CBBAD64E7CA0 /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D623B3326112BE922FF5B16 /* PlatformCompat.swift */; };
 		07C72CFFFDBE8A2727A34FED /* ShadowrocketConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB74B1544810262A50616D9 /* ShadowrocketConfiguration.swift */; };
-		0691F73A71FA8261634F8492 /* LANDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6510311BCCCDB19B997C03A6 /* LANDiscovery.swift */; };
-		8FC0392E5D45BC4001530C23 /* ManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD55AF7A7FEAE78200F05267 /* ManagementPage.swift */; };
+		08DC165E112B09B166FFFB05 /* byway-en.json in Resources */ = {isa = PBXBuildFile; fileRef = DC36348B8C58911000B1F46A /* byway-en.json */; };
+		0B92815362981739CF714C91 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32547A40402CF0FE123D17C0 /* L10n.swift */; };
+		0C3BF7458D354642B9BE2CED /* management.css in Resources */ = {isa = PBXBuildFile; fileRef = F7F5806F40C2725FC0A34D82 /* management.css */; };
+		0CD5E44C33550EFEB5D4BD08 /* SnapshotHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5354B4CE25FA5FD15FB6DFEE /* SnapshotHook.swift */; };
 		0DA25CB5BBAA028B75CD966F /* MobileAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03B0ECC8C81FB7216BEE8F57 /* MobileAPI.swift */; };
+		0E021EE7DCFFEC64584E01AC /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = 20985DFF20380592C276BE22 /* management.html */; };
+		113C8D287F6484C63FC871F4 /* management.js in Resources */ = {isa = PBXBuildFile; fileRef = 5AEDE5AA93A1EDE03C1D3DDA /* management.js */; };
+		13E353901AB637317B5031D6 /* LANModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9150432C6D3452A6877D838C /* LANModels.swift */; };
 		17D45EBC8534A56E383A4DAD /* LANServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CAFB00858638764FA6FDF0 /* LANServer.swift */; };
 		1959EA330742547F20CD926E /* GlobalRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08385E0E43AC769050DEAD7F /* GlobalRouting.swift */; };
+		1A2D9DAAF8EB8B23F1230F4F /* management.js in Resources */ = {isa = PBXBuildFile; fileRef = 5AEDE5AA93A1EDE03C1D3DDA /* management.js */; };
 		1C016234FDF703C6BC84998F /* PrivateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78ECE47A12C97C40D987814 /* PrivateNetwork.swift */; };
+		212F5961399C29DCD5FA1B55 /* TunnelRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC6D3E8EC04CB88B8EA721C /* TunnelRuntime.swift */; };
+		25ACA8F06014902432C5CE2E /* ManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324D908C39622C19B7CF21AC /* ManagementPage.swift */; };
 		26F1D37C9DEF2CCF8635DEB6 /* LANModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9150432C6D3452A6877D838C /* LANModels.swift */; };
 		29616212F9F2BA51E97FD6C0 /* RoutingNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799D2425D4AAA65751045783 /* RoutingNetworkMonitor.swift */; };
+		2A4430A6B984C35E950ED6A2 /* management.css in Resources */ = {isa = PBXBuildFile; fileRef = F7F5806F40C2725FC0A34D82 /* management.css */; };
 		2E1DFDBA1DD2FEEA7E92E674 /* RoutingImportDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA994505091C74377511104 /* RoutingImportDocument.swift */; };
+		2ED1AC2A43650174B7E6E4CF /* DNSSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F0A1AE25FD96B6E18F22 /* DNSSettings.swift */; };
 		31B83346A62A362897C2E473 /* LANServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CAFB00858638764FA6FDF0 /* LANServer.swift */; };
+		31F90EE03FF555384A80E3EC /* NodeSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3447F33080EE89B5CB358CB9 /* NodeSharing.swift */; };
+		324F7982C765FD4F20E6E29E /* RoutingNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799D2425D4AAA65751045783 /* RoutingNetworkMonitor.swift */; };
+		33E2CF491213AD65073F1F0F /* mobile-ai.md in Resources */ = {isa = PBXBuildFile; fileRef = 3353D303CCA047E035F51F19 /* mobile-ai.md */; };
+		35370A6319B29B02C1934DFF /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D623B3326112BE922FF5B16 /* PlatformCompat.swift */; };
+		36B19A5663412D53F27CC5FE /* RoutingImportDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA994505091C74377511104 /* RoutingImportDocument.swift */; };
 		36D2FBDB7BBB130DB5415CC6 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4244ED0CA88DC60A633126 /* ProfileStore.swift */; };
 		38A1E4C698B7CBC44CD41DBF /* DNSSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F0A1AE25FD96B6E18F22 /* DNSSettings.swift */; };
 		38EDC84D7B5B14BF550D8B79 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994DC642175D75C4A1E62CDA /* DeviceIdentity.swift */; };
+		3B2C4577D2356F0F73664BF6 /* RoutingRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F1B229EDDBAF7BAF1964E5 /* RoutingRuleTest.swift */; };
 		3EC90885B8E94B0E945ADEF6 /* TunnelDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2342411E588E4BE01C5E2648 /* TunnelDiagnostics.swift */; };
+		410178F673994BD61894FA16 /* management.js in Resources */ = {isa = PBXBuildFile; fileRef = 5AEDE5AA93A1EDE03C1D3DDA /* management.js */; };
 		41B7D1527E63D415A2E3F267 /* RoutingRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F1B229EDDBAF7BAF1964E5 /* RoutingRuleTest.swift */; };
 		427A57F3362CECF3C4B41E1B /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A93033CAD0DE9BE87E1A90 /* PacketTunnelProvider.swift */; };
 		4436816A89CFA4F8A1C7416D /* PrivateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78ECE47A12C97C40D987814 /* PrivateNetwork.swift */; };
+		44CAC8A033E02FD4EFAAC6BC /* MacEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0BD10D10AADCA5ADAB376F /* MacEngine.swift */; };
 		44F924677002E8037CAAA9AA /* GlobalRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08385E0E43AC769050DEAD7F /* GlobalRouting.swift */; };
 		467953F596CC8E864052C1BA /* LANModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9150432C6D3452A6877D838C /* LANModels.swift */; };
+		4927691C91912A568C73A03E /* LANAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF882FFF4A20344723E3B8E /* LANAPI.swift */; };
+		4AFB8DD5140EB54910976087 /* TunnelPlatform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4200D831B316E16551400B /* TunnelPlatform.swift */; };
 		50EF36D24D5C8EAABC5D49BB /* RoutingLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB82240DA4829BC2FDFF991A /* RoutingLibrary.swift */; };
-		A7D02B3D5E5C8A4201248CB9 /* LANDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6510311BCCCDB19B997C03A6 /* LANDiscovery.swift */; };
-		636045F987BC4C1D721D6BFB /* ManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD55AF7A7FEAE78200F05267 /* ManagementPage.swift */; };
 		510A9BEACBD89A21EDEB1B02 /* MobileAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03B0ECC8C81FB7216BEE8F57 /* MobileAPI.swift */; };
 		534AD13BAE198EAAB59BD0FC /* geoip-cn.srs in Resources */ = {isa = PBXBuildFile; fileRef = 0763ECA1B3BC08E255C4AAF2 /* geoip-cn.srs */; };
+		53BEB83C19DEC41F77D4BE40 /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = 20985DFF20380592C276BE22 /* management.html */; };
+		53C3F573BC2662E8BC034D74 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727A08CB361B529E36C680C6 /* Models.swift */; };
 		5666E9D4A01E832E70F2F35F /* MobileDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86A52B5B885CE213A683188 /* MobileDiagnostics.swift */; };
+		580CB6B420097C6FE9745B86 /* MacWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C551AD7B6FB2D8F4AAAE73B /* MacWorkspace.swift */; };
+		5863BE84A102170CBE4AFD31 /* TunnelRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC6D3E8EC04CB88B8EA721C /* TunnelRuntime.swift */; };
+		59733DCA623D0EEF53453BC0 /* LANControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02477781BC429FE83420043 /* LANControl.swift */; };
+		625238CA424D91160854706E /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32547A40402CF0FE123D17C0 /* L10n.swift */; };
+		63DEAC908CBB449BB83E0840 /* LANDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DB32B985C0403A6785B34A /* LANDiscovery.swift */; };
+		66A8C1EF0F8F1CC0BE96653F /* Libbox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4D3D0A09453E18652127FAF /* Libbox.xcframework */; };
+		6853E61902D88E6A3FBA82B1 /* TunEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8312F245DB83F23E25E3B9 /* TunEngine.swift */; };
+		6951FF9E54B0310178843AD1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8BB75212979652C0397B62E1 /* Assets.xcassets */; };
 		6A56D9505A08477CD2D334D4 /* MeasurementsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF846A34952FE6BF0B21110 /* MeasurementsViews.swift */; };
 		6E9F75B3BC32014CEE80FA50 /* MobileDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86A52B5B885CE213A683188 /* MobileDiagnostics.swift */; };
 		729008FD328021C7CA0BB321 /* LANControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02477781BC429FE83420043 /* LANControl.swift */; };
+		72B92DF6B3ABA8D95878BEB2 /* byway-en.json in Resources */ = {isa = PBXBuildFile; fileRef = DC36348B8C58911000B1F46A /* byway-en.json */; };
 		733CD39FB1E13BBD69D292B0 /* Libbox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4D3D0A09453E18652127FAF /* Libbox.xcframework */; };
 		79ECAF26B306DFA13A2D6855 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4244ED0CA88DC60A633126 /* ProfileStore.swift */; };
 		7A4A902D1DD3B8F7EC58FBD4 /* VPNController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F174F83DEECA990C7BBD6C9A /* VPNController.swift */; };
+		7B727A503EF565E559861A0D /* LANServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55CAFB00858638764FA6FDF0 /* LANServer.swift */; };
 		7C7481436A794F2D03D9318C /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727A08CB361B529E36C680C6 /* Models.swift */; };
 		801ED44CC2C217DB70764F84 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727A08CB361B529E36C680C6 /* Models.swift */; };
 		81A6BE5CC58ECEA79B38EEB4 /* NodeGroupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93808AC4BCE4438A8E6CEA8B /* NodeGroupViews.swift */; };
 		81AC86553A36724761136378 /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 626F3DACFB99025991E7B5CA /* Yams */; };
 		81BD43E4A58366FEA8B58234 /* Editors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4D4980C814DC1F92827E37 /* Editors.swift */; };
+		8353D6BC5404DFD80E6B7CBE /* PrivateNetworkPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350B15C066E4528E98432777 /* PrivateNetworkPage.swift */; };
 		8431AF84187A0B2770B8D8B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8BB75212979652C0397B62E1 /* Assets.xcassets */; };
+		843C8B022E8FBCFA7B9F58A5 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4244ED0CA88DC60A633126 /* ProfileStore.swift */; };
+		84514AEEA14B101D832D71F0 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994DC642175D75C4A1E62CDA /* DeviceIdentity.swift */; };
+		857285CEBDE59A048478CF7D /* PrivateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78ECE47A12C97C40D987814 /* PrivateNetwork.swift */; };
+		869CA6B7050FF599BE9A5342 /* management.css in Resources */ = {isa = PBXBuildFile; fileRef = F7F5806F40C2725FC0A34D82 /* management.css */; };
+		8905DEC1E969C67C8F78A14C /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ACFB40EDC3874C6EED0D13 /* DesignSystem.swift */; };
 		89FDDFA8D355AD007EA9406C /* GeoIP-NOTICE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0F9D29979FD740FCF81A5B68 /* GeoIP-NOTICE.txt */; };
-		60F03AF418557FBD47EE23F1 /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = E6D5147CC96B7D0CD601137A /* management.html */; };
-		08AF5D3EB16828CA86A266BD /* management.css in Resources */ = {isa = PBXBuildFile; fileRef = F8F2A337E6C5106B21DD85F6 /* management.css */; };
-		E56D030E71238D11E364ADCD /* management.js in Resources */ = {isa = PBXBuildFile; fileRef = 8DA4082C74B66DC59A8BE9E3 /* management.js */; };
+		8ADE5611357F1E25059729FF /* TunControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B99A3C92B501A49BFCF96A79 /* TunControl.swift */; };
+		8CC1D8FF8225C778FD3789CA /* MeasurementsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF846A34952FE6BF0B21110 /* MeasurementsViews.swift */; };
 		8D99B0F3E64F46DE09531408 /* mobile-ai.md in Resources */ = {isa = PBXBuildFile; fileRef = 3353D303CCA047E035F51F19 /* mobile-ai.md */; };
 		8FABDFF12E1685E0709B0B56 /* ConfigurationEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4EB2F5828A8D6FEB046873 /* ConfigurationEditor.swift */; };
 		909934C7EF7E31EDE749EE01 /* NodeSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2F2C9EF6B8B033251EAF77 /* NodeSubscriptions.swift */; };
 		910382578F581C3994199F6C /* NodeListSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A2AA8E85364E9CA9BF523 /* NodeListSections.swift */; };
 		93F2B5C4EB07F180FA001376 /* BywayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E99F15E484192F4B3317590 /* BywayApp.swift */; };
-		8BFDB3AAE41501D8D9BF1623 /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = E6D5147CC96B7D0CD601137A /* management.html */; };
-		9F8A592F3FDBA9A3A288D67A /* management.css in Resources */ = {isa = PBXBuildFile; fileRef = F8F2A337E6C5106B21DD85F6 /* management.css */; };
-		71503D052CCBB712B9E528E5 /* management.js in Resources */ = {isa = PBXBuildFile; fileRef = 8DA4082C74B66DC59A8BE9E3 /* management.js */; };
+		965695818E513394FF741DBF /* MacTun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FEC4FD1E5F6228A0C59688E /* MacTun.swift */; };
 		9790D0F0E09DC9E7D13F4F11 /* mobile-ai.md in Resources */ = {isa = PBXBuildFile; fileRef = 3353D303CCA047E035F51F19 /* mobile-ai.md */; };
 		97C2A7C7C91D6754D5B6ACBB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 585A54AD6FEBF33A646ABD49 /* UIKit.framework */; };
+		9A56A52ABCFBC95B900EC72A /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 6FA8C62B7409C883E6668774 /* Yams */; };
+		9A5F8211072C3FFC2483DF17 /* ManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324D908C39622C19B7CF21AC /* ManagementPage.swift */; };
+		9D8C6A7596FE0D8AD76A142C /* SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F71E10F0474B8673E0D5F7 /* SystemProxy.swift */; };
 		9D9E1AE8AB4F751A46A44CA6 /* NodeSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3447F33080EE89B5CB358CB9 /* NodeSharing.swift */; };
+		A20D6639A032615BD061D856 /* ConfigurationEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4EB2F5828A8D6FEB046873 /* ConfigurationEditor.swift */; };
 		A4DF395B5A48CDB83D02169D /* RoutingRuleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F1B229EDDBAF7BAF1964E5 /* RoutingRuleTest.swift */; };
+		A68FB799F0E86B28B437E2F2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8132CC4C0D7FB1C819B8D3DB /* InfoPlist.strings */; };
+		A7C9EBCF162E3D7185A0185A /* Measurements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28FC21D77015C29B2E2E70C /* Measurements.swift */; };
 		ADE281C48F5D7225CA528874 /* LANAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF882FFF4A20344723E3B8E /* LANAPI.swift */; };
 		AEE12C14007988B1CC9ABBBA /* LANAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF882FFF4A20344723E3B8E /* LANAPI.swift */; };
 		B0310284C0F40CB9BF8B6571 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994DC642175D75C4A1E62CDA /* DeviceIdentity.swift */; };
+		B1B3E749E086DA1C68A577ED /* NodeSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2F2C9EF6B8B033251EAF77 /* NodeSubscriptions.swift */; };
 		B1C69F939C2AD33E8BC3C240 /* TunnelPlatform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4200D831B316E16551400B /* TunnelPlatform.swift */; };
 		B4F5517329913AA239EFD62D /* NodeSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3447F33080EE89B5CB358CB9 /* NodeSharing.swift */; };
+		B6F0326CBCB8F9C8D7C8710F /* MobileDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86A52B5B885CE213A683188 /* MobileDiagnostics.swift */; };
+		B8497AE75BAFCB8CC7A4A03D /* RoutingLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB82240DA4829BC2FDFF991A /* RoutingLibrary.swift */; };
+		B8F4E056444203FB79E006FD /* NodeQRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD3CB48B79CE278B5E13CB9 /* NodeQRScanner.swift */; };
 		BA1F2213F83B4702268E0A6E /* NodeQRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD3CB48B79CE278B5E13CB9 /* NodeQRScanner.swift */; };
+		BA251F2E9596F3CF042CBFDF /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32547A40402CF0FE123D17C0 /* L10n.swift */; };
 		BBEB365591BB0316852F817B /* DNSSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F0A1AE25FD96B6E18F22 /* DNSSettings.swift */; };
+		BCEAD40072565F7E06786849 /* NodeManagementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518097F5EFDEB7AECC9D8B00 /* NodeManagementViews.swift */; };
 		C064157E40CBBFFA05737744 /* Measurements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28FC21D77015C29B2E2E70C /* Measurements.swift */; };
 		C6E43E500C2F9B85C2D316FB /* ShadowrocketConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB74B1544810262A50616D9 /* ShadowrocketConfiguration.swift */; };
+		C95F55380553E68C0A044B42 /* GlobalRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08385E0E43AC769050DEAD7F /* GlobalRouting.swift */; };
 		CC20C36A4D2DBBA51289E962 /* iPadWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C7C0A704A460F5127BEA1 /* iPadWorkspace.swift */; };
+		CD1BFB872F641705E9261E7F /* byway-es.json in Resources */ = {isa = PBXBuildFile; fileRef = E560504802172846BEE4C59D /* byway-es.json */; };
+		CDB84E485C656809DD077DE1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8132CC4C0D7FB1C819B8D3DB /* InfoPlist.strings */; };
+		CE1B2D083F32F70A79D373C6 /* NodeGroupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93808AC4BCE4438A8E6CEA8B /* NodeGroupViews.swift */; };
+		D244FBC4A5047013D84EBEE0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8132CC4C0D7FB1C819B8D3DB /* InfoPlist.strings */; };
+		D43EA546B68CB5C9DB01DCC9 /* VPNController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F174F83DEECA990C7BBD6C9A /* VPNController.swift */; };
+		D55D24048DFBBE827D415A66 /* ShadowrocketConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB74B1544810262A50616D9 /* ShadowrocketConfiguration.swift */; };
+		D685280933388A15DA868C6D /* ManagementPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324D908C39622C19B7CF21AC /* ManagementPage.swift */; };
+		D85EDB7067322C51DDF463BE /* byway-es.json in Resources */ = {isa = PBXBuildFile; fileRef = E560504802172846BEE4C59D /* byway-es.json */; };
+		DB0C188ED860189AC4C3DEA6 /* BywayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E99F15E484192F4B3317590 /* BywayApp.swift */; };
+		DBA1D5DDA2C897E082154A99 /* SnapshotHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5354B4CE25FA5FD15FB6DFEE /* SnapshotHook.swift */; };
+		DC003726F6F7D2907D3CC337 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE40CD904EACAA3C7485F5F /* HomeView.swift */; };
+		DC5CBBC3DDD846CDB81BA856 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ACFB40EDC3874C6EED0D13 /* DesignSystem.swift */; };
 		DD3A3E3266E0ED9918EC4FC4 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE40CD904EACAA3C7485F5F /* HomeView.swift */; };
+		DDAB97892CA3FF4C338FFDD1 /* management.html in Resources */ = {isa = PBXBuildFile; fileRef = 20985DFF20380592C276BE22 /* management.html */; };
+		DF99D83A6ADCC2D064158963 /* iPadWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8C7C0A704A460F5127BEA1 /* iPadWorkspace.swift */; };
 		DFB2BF3030BF6EA61B11B673 /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = 61CF91D1D6A7807D8B5C486D /* Yams */; };
+		E125F5DBC7A5DC5D657A05A0 /* geoip-cn.srs in Resources */ = {isa = PBXBuildFile; fileRef = 0763ECA1B3BC08E255C4AAF2 /* geoip-cn.srs */; };
+		E1EE6EC8460A857831803F33 /* GlobalRoutingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E726B66FEFA7E25761959A /* GlobalRoutingView.swift */; };
 		E29BB98BE7001C8AB208479D /* BywayTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 21E58EB81BD0E26817F53B79 /* BywayTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E2D17478230F199402C6300B /* NodeManagementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518097F5EFDEB7AECC9D8B00 /* NodeManagementViews.swift */; };
+		E56B80A213D39293E275C51C /* Editors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4D4980C814DC1F92827E37 /* Editors.swift */; };
+		E834F07755AC73077F5009CA /* MacWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C551AD7B6FB2D8F4AAAE73B /* MacWorkspace.swift */; };
+		E8BC3D2F837E42D6CEA348D3 /* SystemDNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428B7F930246767C64D2B59C /* SystemDNS.swift */; };
+		EBF5D38E646CACC1F06FEFD8 /* TunHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82725CEA261FB1869B73422 /* TunHelper.swift */; };
 		ECC84179D70B902336EBAC7A /* NodeSubscriptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2F2C9EF6B8B033251EAF77 /* NodeSubscriptions.swift */; };
+		EE8D4ADEA75E5463E0C83C0A /* NodeListSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A2AA8E85364E9CA9BF523 /* NodeListSections.swift */; };
+		F03561EFE26BB8BDA2BFBBAD /* LANDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DB32B985C0403A6785B34A /* LANDiscovery.swift */; };
 		F04242F92B216B821A52BB39 /* geoip-cn.srs in Resources */ = {isa = PBXBuildFile; fileRef = 0763ECA1B3BC08E255C4AAF2 /* geoip-cn.srs */; };
 		F1B9C9C55B91DEC07D5CB3B6 /* MobileDiagnosticsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B61973ADC1647D8CEB89C03 /* MobileDiagnosticsViews.swift */; };
 		F1D2886237200EE2571A59B6 /* Measurements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28FC21D77015C29B2E2E70C /* Measurements.swift */; };
 		F1EB4EF43AE07AFB05C98C54 /* Libbox.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4D3D0A09453E18652127FAF /* Libbox.xcframework */; };
 		F58F03BEFA16044D040F9273 /* DNSSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4AD6937EABAD0B64FC674 /* DNSSettingsView.swift */; };
 		F7AE7F40457E34FD2DEB9BDF /* PrivateNetworkPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350B15C066E4528E98432777 /* PrivateNetworkPage.swift */; };
+		F7B82A19333A03A97CF335F8 /* TunnelDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2342411E588E4BE01C5E2648 /* TunnelDiagnostics.swift */; };
+		F87768B94795A0D8D90F3B2F /* byway-en.json in Resources */ = {isa = PBXBuildFile; fileRef = DC36348B8C58911000B1F46A /* byway-en.json */; };
+		F8910E158884A80F0EE916FD /* MobileAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03B0ECC8C81FB7216BEE8F57 /* MobileAPI.swift */; };
+		FCCE81106678F7BEC9E749E9 /* DNSSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4AD6937EABAD0B64FC674 /* DNSSettingsView.swift */; };
 		FE498A663919E800E561EB87 /* RoutingImportDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA994505091C74377511104 /* RoutingImportDocument.swift */; };
+		FF7B46D942A081AB11D698FE /* LANDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52DB32B985C0403A6785B34A /* LANDiscovery.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,58 +188,78 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6510311BCCCDB19B997C03A6 /* LANDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LANDiscovery.swift"; sourceTree = "<group>"; };
-		CD55AF7A7FEAE78200F05267 /* ManagementPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ManagementPage.swift"; sourceTree = "<group>"; };
-		E6D5147CC96B7D0CD601137A /* management.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "Web/management.html"; sourceTree = "<group>"; };
-		F8F2A337E6C5106B21DD85F6 /* management.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "Web/management.css"; sourceTree = "<group>"; };
-		8DA4082C74B66DC59A8BE9E3 /* management.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "Web/management.js"; sourceTree = "<group>"; };
 		03B0ECC8C81FB7216BEE8F57 /* MobileAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileAPI.swift; sourceTree = "<group>"; };
 		0763ECA1B3BC08E255C4AAF2 /* geoip-cn.srs */ = {isa = PBXFileReference; path = "geoip-cn.srs"; sourceTree = "<group>"; };
 		08385E0E43AC769050DEAD7F /* GlobalRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalRouting.swift; sourceTree = "<group>"; };
+		0BC6D3E8EC04CB88B8EA721C /* TunnelRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelRuntime.swift; sourceTree = "<group>"; };
 		0F9D29979FD740FCF81A5B68 /* GeoIP-NOTICE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "GeoIP-NOTICE.txt"; sourceTree = "<group>"; };
 		14AE83D01C41D8DE1697D67D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1500BF2F622041D42CDE0CE4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		20985DFF20380592C276BE22 /* management.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = management.html; sourceTree = "<group>"; };
 		21E58EB81BD0E26817F53B79 /* BywayTunnel.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BywayTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2342411E588E4BE01C5E2648 /* TunnelDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelDiagnostics.swift; sourceTree = "<group>"; };
+		324D908C39622C19B7CF21AC /* ManagementPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagementPage.swift; sourceTree = "<group>"; };
+		32547A40402CF0FE123D17C0 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		3353D303CCA047E035F51F19 /* mobile-ai.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "mobile-ai.md"; sourceTree = "<group>"; };
+		33AB5F065037E39879937097 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		3447F33080EE89B5CB358CB9 /* NodeSharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSharing.swift; sourceTree = "<group>"; };
 		350B15C066E4528E98432777 /* PrivateNetworkPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNetworkPage.swift; sourceTree = "<group>"; };
 		3A4244ED0CA88DC60A633126 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		3B8312F245DB83F23E25E3B9 /* TunEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunEngine.swift; sourceTree = "<group>"; };
+		428B7F930246767C64D2B59C /* SystemDNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemDNS.swift; sourceTree = "<group>"; };
+		4D623B3326112BE922FF5B16 /* PlatformCompat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformCompat.swift; sourceTree = "<group>"; };
 		4E99F15E484192F4B3317590 /* BywayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BywayApp.swift; sourceTree = "<group>"; };
 		518097F5EFDEB7AECC9D8B00 /* NodeManagementViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeManagementViews.swift; sourceTree = "<group>"; };
+		52DB32B985C0403A6785B34A /* LANDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANDiscovery.swift; sourceTree = "<group>"; };
 		52F1B229EDDBAF7BAF1964E5 /* RoutingRuleTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingRuleTest.swift; sourceTree = "<group>"; };
+		5354B4CE25FA5FD15FB6DFEE /* SnapshotHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHook.swift; sourceTree = "<group>"; };
 		5537EB5949D7D544DD47BAE6 /* Tunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tunnel.entitlements; sourceTree = "<group>"; };
 		55CAFB00858638764FA6FDF0 /* LANServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANServer.swift; sourceTree = "<group>"; };
 		585A54AD6FEBF33A646ABD49 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		58ACFB40EDC3874C6EED0D13 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		5A8C7C0A704A460F5127BEA1 /* iPadWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPadWorkspace.swift; sourceTree = "<group>"; };
+		5AEDE5AA93A1EDE03C1D3DDA /* management.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = management.js; sourceTree = "<group>"; };
 		5E4200D831B316E16551400B /* TunnelPlatform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelPlatform.swift; sourceTree = "<group>"; };
 		5EF882FFF4A20344723E3B8E /* LANAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANAPI.swift; sourceTree = "<group>"; };
 		727A08CB361B529E36C680C6 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		736B6E723B70308848CBAF54 /* BywayMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BywayMac.entitlements; sourceTree = "<group>"; };
 		799D2425D4AAA65751045783 /* RoutingNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingNetworkMonitor.swift; sourceTree = "<group>"; };
 		7AA4AD6937EABAD0B64FC674 /* DNSSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSSettingsView.swift; sourceTree = "<group>"; };
 		7C4D4980C814DC1F92827E37 /* Editors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editors.swift; sourceTree = "<group>"; };
 		7DE40CD904EACAA3C7485F5F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		7FEC4FD1E5F6228A0C59688E /* MacTun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacTun.swift; sourceTree = "<group>"; };
 		8AB74B1544810262A50616D9 /* ShadowrocketConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShadowrocketConfiguration.swift; sourceTree = "<group>"; };
 		8B61973ADC1647D8CEB89C03 /* MobileDiagnosticsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDiagnosticsViews.swift; sourceTree = "<group>"; };
 		8BB75212979652C0397B62E1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8D4EB2F5828A8D6FEB046873 /* ConfigurationEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationEditor.swift; sourceTree = "<group>"; };
 		9150432C6D3452A6877D838C /* LANModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANModels.swift; sourceTree = "<group>"; };
 		93808AC4BCE4438A8E6CEA8B /* NodeGroupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeGroupViews.swift; sourceTree = "<group>"; };
+		978BE88D33D98DFE5CE1D1CD /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		994DC642175D75C4A1E62CDA /* DeviceIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentity.swift; sourceTree = "<group>"; };
 		9A33F0A1AE25FD96B6E18F22 /* DNSSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSSettings.swift; sourceTree = "<group>"; };
+		9C551AD7B6FB2D8F4AAAE73B /* MacWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWorkspace.swift; sourceTree = "<group>"; };
 		A0A93033CAD0DE9BE87E1A90 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
 		A4D3D0A09453E18652127FAF /* Libbox.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Libbox.xcframework; path = Vendor/Libbox.xcframework; sourceTree = "<group>"; };
 		B02477781BC429FE83420043 /* LANControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANControl.swift; sourceTree = "<group>"; };
 		B253FE3E7D3E3494FCBF64D6 /* Byway.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Byway.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B99A3C92B501A49BFCF96A79 /* TunControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunControl.swift; sourceTree = "<group>"; };
 		B9E726B66FEFA7E25761959A /* GlobalRoutingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalRoutingView.swift; sourceTree = "<group>"; };
 		BD2F2C9EF6B8B033251EAF77 /* NodeSubscriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSubscriptions.swift; sourceTree = "<group>"; };
+		C44BC62D12E622A8CBFD5CE4 /* BywayMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BywayMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C663419E9ADBBA98BBDEAC88 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		C7F71E10F0474B8673E0D5F7 /* SystemProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemProxy.swift; sourceTree = "<group>"; };
+		C82725CEA261FB1869B73422 /* TunHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunHelper.swift; sourceTree = "<group>"; };
 		CCF846A34952FE6BF0B21110 /* MeasurementsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurementsViews.swift; sourceTree = "<group>"; };
+		DA0BD10D10AADCA5ADAB376F /* MacEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacEngine.swift; sourceTree = "<group>"; };
 		DBD3CB48B79CE278B5E13CB9 /* NodeQRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeQRScanner.swift; sourceTree = "<group>"; };
+		DC36348B8C58911000B1F46A /* byway-en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "byway-en.json"; sourceTree = "<group>"; };
 		E28FC21D77015C29B2E2E70C /* Measurements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measurements.swift; sourceTree = "<group>"; };
+		E31CAD36D466839DA6730C6D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		E560504802172846BEE4C59D /* byway-es.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "byway-es.json"; sourceTree = "<group>"; };
 		E78ECE47A12C97C40D987814 /* PrivateNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateNetwork.swift; sourceTree = "<group>"; };
 		EDA994505091C74377511104 /* RoutingImportDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingImportDocument.swift; sourceTree = "<group>"; };
 		F174F83DEECA990C7BBD6C9A /* VPNController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNController.swift; sourceTree = "<group>"; };
+		F7F5806F40C2725FC0A34D82 /* management.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = management.css; sourceTree = "<group>"; };
 		F86A52B5B885CE213A683188 /* MobileDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDiagnostics.swift; sourceTree = "<group>"; };
 		FB5A2AA8E85364E9CA9BF523 /* NodeListSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeListSections.swift; sourceTree = "<group>"; };
 		FB82240DA4829BC2FDFF991A /* RoutingLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingLibrary.swift; sourceTree = "<group>"; };
@@ -189,6 +285,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7AAAA04E8CE9DA50DE5F4ED2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A56A52ABCFBC95B900EC72A /* Yams in Frameworks */,
+				66A8C1EF0F8F1CC0BE96653F /* Libbox.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -196,6 +301,7 @@
 			isa = PBXGroup;
 			children = (
 				B253FE3E7D3E3494FCBF64D6 /* Byway.app */,
+				C44BC62D12E622A8CBFD5CE4 /* BywayMac.app */,
 				21E58EB81BD0E26817F53B79 /* BywayTunnel.appex */,
 			);
 			name = Products;
@@ -210,6 +316,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		18D944D78EE63DA66139F9B9 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				DC36348B8C58911000B1F46A /* byway-en.json */,
+				E560504802172846BEE4C59D /* byway-es.json */,
+				8132CC4C0D7FB1C819B8D3DB /* InfoPlist.strings */,
+			);
+			path = Localization;
+			sourceTree = "<group>";
+		};
 		713AF5D2E874173A2B1B0C6D /* Tunnel */ = {
 			isa = PBXGroup;
 			children = (
@@ -219,6 +335,7 @@
 				5537EB5949D7D544DD47BAE6 /* Tunnel.entitlements */,
 				2342411E588E4BE01C5E2648 /* TunnelDiagnostics.swift */,
 				5E4200D831B316E16551400B /* TunnelPlatform.swift */,
+				0BC6D3E8EC04CB88B8EA721C /* TunnelRuntime.swift */,
 			);
 			path = Tunnel;
 			sourceTree = "<group>";
@@ -229,15 +346,13 @@
 				994DC642175D75C4A1E62CDA /* DeviceIdentity.swift */,
 				9A33F0A1AE25FD96B6E18F22 /* DNSSettings.swift */,
 				08385E0E43AC769050DEAD7F /* GlobalRouting.swift */,
+				32547A40402CF0FE123D17C0 /* L10n.swift */,
 				5EF882FFF4A20344723E3B8E /* LANAPI.swift */,
+				52DB32B985C0403A6785B34A /* LANDiscovery.swift */,
 				9150432C6D3452A6877D838C /* LANModels.swift */,
 				55CAFB00858638764FA6FDF0 /* LANServer.swift */,
+				324D908C39622C19B7CF21AC /* ManagementPage.swift */,
 				E28FC21D77015C29B2E2E70C /* Measurements.swift */,
-				6510311BCCCDB19B997C03A6 /* LANDiscovery.swift */,
-				CD55AF7A7FEAE78200F05267 /* ManagementPage.swift */,
-				E6D5147CC96B7D0CD601137A /* management.html */,
-				F8F2A337E6C5106B21DD85F6 /* management.css */,
-				8DA4082C74B66DC59A8BE9E3 /* management.js */,
 				03B0ECC8C81FB7216BEE8F57 /* MobileAPI.swift */,
 				F86A52B5B885CE213A683188 /* MobileDiagnostics.swift */,
 				727A08CB361B529E36C680C6 /* Models.swift */,
@@ -260,6 +375,7 @@
 				8BB75212979652C0397B62E1 /* Assets.xcassets */,
 				4E99F15E484192F4B3317590 /* BywayApp.swift */,
 				8D4EB2F5828A8D6FEB046873 /* ConfigurationEditor.swift */,
+				58ACFB40EDC3874C6EED0D13 /* DesignSystem.swift */,
 				7AA4AD6937EABAD0B64FC674 /* DNSSettingsView.swift */,
 				7C4D4980C814DC1F92827E37 /* Editors.swift */,
 				B9E726B66FEFA7E25761959A /* GlobalRoutingView.swift */,
@@ -267,16 +383,45 @@
 				1500BF2F622041D42CDE0CE4 /* Info.plist */,
 				5A8C7C0A704A460F5127BEA1 /* iPadWorkspace.swift */,
 				B02477781BC429FE83420043 /* LANControl.swift */,
+				9C551AD7B6FB2D8F4AAAE73B /* MacWorkspace.swift */,
 				CCF846A34952FE6BF0B21110 /* MeasurementsViews.swift */,
 				8B61973ADC1647D8CEB89C03 /* MobileDiagnosticsViews.swift */,
 				93808AC4BCE4438A8E6CEA8B /* NodeGroupViews.swift */,
 				FB5A2AA8E85364E9CA9BF523 /* NodeListSections.swift */,
 				518097F5EFDEB7AECC9D8B00 /* NodeManagementViews.swift */,
 				DBD3CB48B79CE278B5E13CB9 /* NodeQRScanner.swift */,
+				4D623B3326112BE922FF5B16 /* PlatformCompat.swift */,
 				350B15C066E4528E98432777 /* PrivateNetworkPage.swift */,
+				5354B4CE25FA5FD15FB6DFEE /* SnapshotHook.swift */,
 				F174F83DEECA990C7BBD6C9A /* VPNController.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		A12B5E84B1B13492EFF42277 /* Mac */ = {
+			isa = PBXGroup;
+			children = (
+				736B6E723B70308848CBAF54 /* BywayMac.entitlements */,
+				DA0BD10D10AADCA5ADAB376F /* MacEngine.swift */,
+				7FEC4FD1E5F6228A0C59688E /* MacTun.swift */,
+				428B7F930246767C64D2B59C /* SystemDNS.swift */,
+				C7F71E10F0474B8673E0D5F7 /* SystemProxy.swift */,
+				B99A3C92B501A49BFCF96A79 /* TunControl.swift */,
+				3B8312F245DB83F23E25E3B9 /* TunEngine.swift */,
+				C82725CEA261FB1869B73422 /* TunHelper.swift */,
+			);
+			path = Mac;
+			sourceTree = "<group>";
+		};
+		C67CFFFBA380C0CBC8C57163 /* Web */ = {
+			isa = PBXGroup;
+			children = (
+				F7F5806F40C2725FC0A34D82 /* management.css */,
+				20985DFF20380592C276BE22 /* management.html */,
+				5AEDE5AA93A1EDE03C1D3DDA /* management.js */,
+			);
+			name = Web;
+			path = Shared/Web;
 			sourceTree = "<group>";
 		};
 		D6A099D9F7DB933428E0B374 = {
@@ -284,9 +429,12 @@
 			children = (
 				796D34237DFBC0AF36326786 /* App */,
 				DABB94E61092435A7779711F /* docs */,
+				18D944D78EE63DA66139F9B9 /* Localization */,
+				A12B5E84B1B13492EFF42277 /* Mac */,
 				F6B060A8F1365803C7BAE07A /* Resources */,
 				750177406D6274945E1F1C44 /* Shared */,
 				713AF5D2E874173A2B1B0C6D /* Tunnel */,
+				C67CFFFBA380C0CBC8C57163 /* Web */,
 				174FB7523343FBA59749FAB8 /* Frameworks */,
 				16FBF7BA82AD22055928DE6B /* Products */,
 			);
@@ -355,6 +503,26 @@
 			productReference = 21E58EB81BD0E26817F53B79 /* BywayTunnel.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		C4127E10FB1A91CBBD5BF810 /* BywayMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 94ADD30BC4187103E09AC2DE /* Build configuration list for PBXNativeTarget "BywayMac" */;
+			buildPhases = (
+				BD77C5ADD7BCA390681A88D4 /* Sources */,
+				C36F201B230898A67E5285BF /* Resources */,
+				7AAAA04E8CE9DA50DE5F4ED2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BywayMac;
+			packageProductDependencies = (
+				6FA8C62B7409C883E6668774 /* Yams */,
+			);
+			productName = BywayMac;
+			productReference = C44BC62D12E622A8CBFD5CE4 /* BywayMac.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -386,6 +554,9 @@
 							};
 						};
 					};
+					C4127E10FB1A91CBBD5BF810 = {
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = FE39D2B00DED37B54D0D6FBC /* Build configuration list for PBXProject "Byway" */;
@@ -395,6 +566,8 @@
 			knownRegions = (
 				Base,
 				en,
+				es,
+				"zh-Hans",
 			);
 			mainGroup = D6A099D9F7DB933428E0B374;
 			minimizedProjectReferenceProxies = 1;
@@ -406,6 +579,7 @@
 			projectRoot = "";
 			targets = (
 				4637DF91E5DDB062B140D417 /* Byway */,
+				C4127E10FB1A91CBBD5BF810 /* BywayMac */,
 				95C1AD0F6711F1031FAC2C54 /* BywayTunnel */,
 			);
 		};
@@ -417,10 +591,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				8431AF84187A0B2770B8D8B2 /* Assets.xcassets in Resources */,
+				D244FBC4A5047013D84EBEE0 /* InfoPlist.strings in Resources */,
+				08DC165E112B09B166FFFB05 /* byway-en.json in Resources */,
+				03A8F5E12CBAF684FCBB6C6A /* byway-es.json in Resources */,
 				534AD13BAE198EAAB59BD0FC /* geoip-cn.srs in Resources */,
-				60F03AF418557FBD47EE23F1 /* management.html in Resources */,
-				08AF5D3EB16828CA86A266BD /* management.css in Resources */,
-				E56D030E71238D11E364ADCD /* management.js in Resources */,
+				0C3BF7458D354642B9BE2CED /* management.css in Resources */,
+				DDAB97892CA3FF4C338FFDD1 /* management.html in Resources */,
+				410178F673994BD61894FA16 /* management.js in Resources */,
 				8D99B0F3E64F46DE09531408 /* mobile-ai.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -430,11 +607,30 @@
 			buildActionMask = 2147483647;
 			files = (
 				89FDDFA8D355AD007EA9406C /* GeoIP-NOTICE.txt in Resources */,
+				CDB84E485C656809DD077DE1 /* InfoPlist.strings in Resources */,
+				F87768B94795A0D8D90F3B2F /* byway-en.json in Resources */,
+				CD1BFB872F641705E9261E7F /* byway-es.json in Resources */,
 				F04242F92B216B821A52BB39 /* geoip-cn.srs in Resources */,
-				8BFDB3AAE41501D8D9BF1623 /* management.html in Resources */,
-				9F8A592F3FDBA9A3A288D67A /* management.css in Resources */,
-				71503D052CCBB712B9E528E5 /* management.js in Resources */,
+				869CA6B7050FF599BE9A5342 /* management.css in Resources */,
+				0E021EE7DCFFEC64584E01AC /* management.html in Resources */,
+				113C8D287F6484C63FC871F4 /* management.js in Resources */,
 				9790D0F0E09DC9E7D13F4F11 /* mobile-ai.md in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C36F201B230898A67E5285BF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6951FF9E54B0310178843AD1 /* Assets.xcassets in Resources */,
+				A68FB799F0E86B28B437E2F2 /* InfoPlist.strings in Resources */,
+				72B92DF6B3ABA8D95878BEB2 /* byway-en.json in Resources */,
+				D85EDB7067322C51DDF463BE /* byway-es.json in Resources */,
+				E125F5DBC7A5DC5D657A05A0 /* geoip-cn.srs in Resources */,
+				2A4430A6B984C35E950ED6A2 /* management.css in Resources */,
+				53BEB83C19DEC41F77D4BE40 /* management.html in Resources */,
+				1A2D9DAAF8EB8B23F1230F4F /* management.js in Resources */,
+				33E2CF491213AD65073F1F0F /* mobile-ai.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -448,12 +644,13 @@
 				BBEB365591BB0316852F817B /* DNSSettings.swift in Sources */,
 				B0310284C0F40CB9BF8B6571 /* DeviceIdentity.swift in Sources */,
 				44F924677002E8037CAAA9AA /* GlobalRouting.swift in Sources */,
+				625238CA424D91160854706E /* L10n.swift in Sources */,
 				ADE281C48F5D7225CA528874 /* LANAPI.swift in Sources */,
+				FF7B46D942A081AB11D698FE /* LANDiscovery.swift in Sources */,
 				26F1D37C9DEF2CCF8635DEB6 /* LANModels.swift in Sources */,
 				17D45EBC8534A56E383A4DAD /* LANServer.swift in Sources */,
+				9A5F8211072C3FFC2483DF17 /* ManagementPage.swift in Sources */,
 				F1D2886237200EE2571A59B6 /* Measurements.swift in Sources */,
-				A7D02B3D5E5C8A4201248CB9 /* LANDiscovery.swift in Sources */,
-				636045F987BC4C1D721D6BFB /* ManagementPage.swift in Sources */,
 				510A9BEACBD89A21EDEB1B02 /* MobileAPI.swift in Sources */,
 				6E9F75B3BC32014CEE80FA50 /* MobileDiagnostics.swift in Sources */,
 				7C7481436A794F2D03D9318C /* Models.swift in Sources */,
@@ -469,6 +666,7 @@
 				07C72CFFFDBE8A2727A34FED /* ShadowrocketConfiguration.swift in Sources */,
 				3EC90885B8E94B0E945ADEF6 /* TunnelDiagnostics.swift in Sources */,
 				B1C69F939C2AD33E8BC3C240 /* TunnelPlatform.swift in Sources */,
+				5863BE84A102170CBE4AFD31 /* TunnelRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,19 +678,22 @@
 				8FABDFF12E1685E0709B0B56 /* ConfigurationEditor.swift in Sources */,
 				38A1E4C698B7CBC44CD41DBF /* DNSSettings.swift in Sources */,
 				F58F03BEFA16044D040F9273 /* DNSSettingsView.swift in Sources */,
+				DC5CBBC3DDD846CDB81BA856 /* DesignSystem.swift in Sources */,
 				38EDC84D7B5B14BF550D8B79 /* DeviceIdentity.swift in Sources */,
 				81BD43E4A58366FEA8B58234 /* Editors.swift in Sources */,
 				1959EA330742547F20CD926E /* GlobalRouting.swift in Sources */,
 				01A04AFCE04542FBDF75F779 /* GlobalRoutingView.swift in Sources */,
 				DD3A3E3266E0ED9918EC4FC4 /* HomeView.swift in Sources */,
+				0B92815362981739CF714C91 /* L10n.swift in Sources */,
 				AEE12C14007988B1CC9ABBBA /* LANAPI.swift in Sources */,
 				729008FD328021C7CA0BB321 /* LANControl.swift in Sources */,
+				63DEAC908CBB449BB83E0840 /* LANDiscovery.swift in Sources */,
 				467953F596CC8E864052C1BA /* LANModels.swift in Sources */,
 				31B83346A62A362897C2E473 /* LANServer.swift in Sources */,
+				580CB6B420097C6FE9745B86 /* MacWorkspace.swift in Sources */,
+				D685280933388A15DA868C6D /* ManagementPage.swift in Sources */,
 				C064157E40CBBFFA05737744 /* Measurements.swift in Sources */,
 				6A56D9505A08477CD2D334D4 /* MeasurementsViews.swift in Sources */,
-				0691F73A71FA8261634F8492 /* LANDiscovery.swift in Sources */,
-				8FC0392E5D45BC4001530C23 /* ManagementPage.swift in Sources */,
 				0DA25CB5BBAA028B75CD966F /* MobileAPI.swift in Sources */,
 				5666E9D4A01E832E70F2F35F /* MobileDiagnostics.swift in Sources */,
 				F1B9C9C55B91DEC07D5CB3B6 /* MobileDiagnosticsViews.swift in Sources */,
@@ -503,6 +704,7 @@
 				BA1F2213F83B4702268E0A6E /* NodeQRScanner.swift in Sources */,
 				9D9E1AE8AB4F751A46A44CA6 /* NodeSharing.swift in Sources */,
 				ECC84179D70B902336EBAC7A /* NodeSubscriptions.swift in Sources */,
+				067C8EE55030CBBAD64E7CA0 /* PlatformCompat.swift in Sources */,
 				1C016234FDF703C6BC84998F /* PrivateNetwork.swift in Sources */,
 				F7AE7F40457E34FD2DEB9BDF /* PrivateNetworkPage.swift in Sources */,
 				79ECAF26B306DFA13A2D6855 /* ProfileStore.swift in Sources */,
@@ -510,8 +712,68 @@
 				05CCACA33CFDEFBD4C0ECBF6 /* RoutingLibrary.swift in Sources */,
 				A4DF395B5A48CDB83D02169D /* RoutingRuleTest.swift in Sources */,
 				C6E43E500C2F9B85C2D316FB /* ShadowrocketConfiguration.swift in Sources */,
+				0CD5E44C33550EFEB5D4BD08 /* SnapshotHook.swift in Sources */,
 				7A4A902D1DD3B8F7EC58FBD4 /* VPNController.swift in Sources */,
 				CC20C36A4D2DBBA51289E962 /* iPadWorkspace.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD77C5ADD7BCA390681A88D4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB0C188ED860189AC4C3DEA6 /* BywayApp.swift in Sources */,
+				A20D6639A032615BD061D856 /* ConfigurationEditor.swift in Sources */,
+				2ED1AC2A43650174B7E6E4CF /* DNSSettings.swift in Sources */,
+				FCCE81106678F7BEC9E749E9 /* DNSSettingsView.swift in Sources */,
+				8905DEC1E969C67C8F78A14C /* DesignSystem.swift in Sources */,
+				84514AEEA14B101D832D71F0 /* DeviceIdentity.swift in Sources */,
+				E56B80A213D39293E275C51C /* Editors.swift in Sources */,
+				C95F55380553E68C0A044B42 /* GlobalRouting.swift in Sources */,
+				E1EE6EC8460A857831803F33 /* GlobalRoutingView.swift in Sources */,
+				DC003726F6F7D2907D3CC337 /* HomeView.swift in Sources */,
+				BA251F2E9596F3CF042CBFDF /* L10n.swift in Sources */,
+				4927691C91912A568C73A03E /* LANAPI.swift in Sources */,
+				59733DCA623D0EEF53453BC0 /* LANControl.swift in Sources */,
+				F03561EFE26BB8BDA2BFBBAD /* LANDiscovery.swift in Sources */,
+				13E353901AB637317B5031D6 /* LANModels.swift in Sources */,
+				7B727A503EF565E559861A0D /* LANServer.swift in Sources */,
+				44CAC8A033E02FD4EFAAC6BC /* MacEngine.swift in Sources */,
+				965695818E513394FF741DBF /* MacTun.swift in Sources */,
+				E834F07755AC73077F5009CA /* MacWorkspace.swift in Sources */,
+				25ACA8F06014902432C5CE2E /* ManagementPage.swift in Sources */,
+				A7C9EBCF162E3D7185A0185A /* Measurements.swift in Sources */,
+				8CC1D8FF8225C778FD3789CA /* MeasurementsViews.swift in Sources */,
+				F8910E158884A80F0EE916FD /* MobileAPI.swift in Sources */,
+				B6F0326CBCB8F9C8D7C8710F /* MobileDiagnostics.swift in Sources */,
+				041E041F3908063DB17DCC92 /* MobileDiagnosticsViews.swift in Sources */,
+				53C3F573BC2662E8BC034D74 /* Models.swift in Sources */,
+				CE1B2D083F32F70A79D373C6 /* NodeGroupViews.swift in Sources */,
+				EE8D4ADEA75E5463E0C83C0A /* NodeListSections.swift in Sources */,
+				BCEAD40072565F7E06786849 /* NodeManagementViews.swift in Sources */,
+				B8F4E056444203FB79E006FD /* NodeQRScanner.swift in Sources */,
+				31F90EE03FF555384A80E3EC /* NodeSharing.swift in Sources */,
+				B1B3E749E086DA1C68A577ED /* NodeSubscriptions.swift in Sources */,
+				35370A6319B29B02C1934DFF /* PlatformCompat.swift in Sources */,
+				857285CEBDE59A048478CF7D /* PrivateNetwork.swift in Sources */,
+				8353D6BC5404DFD80E6B7CBE /* PrivateNetworkPage.swift in Sources */,
+				843C8B022E8FBCFA7B9F58A5 /* ProfileStore.swift in Sources */,
+				36B19A5663412D53F27CC5FE /* RoutingImportDocument.swift in Sources */,
+				B8497AE75BAFCB8CC7A4A03D /* RoutingLibrary.swift in Sources */,
+				324F7982C765FD4F20E6E29E /* RoutingNetworkMonitor.swift in Sources */,
+				3B2C4577D2356F0F73664BF6 /* RoutingRuleTest.swift in Sources */,
+				D55D24048DFBBE827D415A66 /* ShadowrocketConfiguration.swift in Sources */,
+				DBA1D5DDA2C897E082154A99 /* SnapshotHook.swift in Sources */,
+				E8BC3D2F837E42D6CEA348D3 /* SystemDNS.swift in Sources */,
+				9D8C6A7596FE0D8AD76A142C /* SystemProxy.swift in Sources */,
+				8ADE5611357F1E25059729FF /* TunControl.swift in Sources */,
+				6853E61902D88E6A3FBA82B1 /* TunEngine.swift in Sources */,
+				EBF5D38E646CACC1F06FEFD8 /* TunHelper.swift in Sources */,
+				F7B82A19333A03A97CF335F8 /* TunnelDiagnostics.swift in Sources */,
+				4AFB8DD5140EB54910976087 /* TunnelPlatform.swift in Sources */,
+				212F5961399C29DCD5FA1B55 /* TunnelRuntime.swift in Sources */,
+				D43EA546B68CB5C9DB01DCC9 /* VPNController.swift in Sources */,
+				DF99D83A6ADCC2D064158963 /* iPadWorkspace.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -525,7 +787,48 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		8132CC4C0D7FB1C819B8D3DB /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				33AB5F065037E39879937097 /* en */,
+				978BE88D33D98DFE5CE1D1CD /* es */,
+				E31CAD36D466839DA6730C6D /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
+		2BE775EB2E01D65EE690F904 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Mac/BywayMac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lresolv",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BYWAY_BUNDLE_ID).mac";
+				PRODUCT_NAME = Byway;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
 		7F607F5083FDA7637681D2C4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -551,6 +854,34 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		8EF686C89EE91650673948A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Mac/BywayMac.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lresolv",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BYWAY_BUNDLE_ID).mac";
+				PRODUCT_NAME = Byway;
+				SDKROOT = macosx;
+			};
+			name = Release;
 		};
 		9BE3444CB9301556F53CC0EC /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -612,7 +943,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -751,7 +1081,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -767,6 +1096,15 @@
 			buildConfigurations = (
 				7F607F5083FDA7637681D2C4 /* Debug */,
 				E404E28D8D8382C73F4DC920 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		94ADD30BC4187103E09AC2DE /* Build configuration list for PBXNativeTarget "BywayMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2BE775EB2E01D65EE690F904 /* Debug */,
+				8EF686C89EE91650673948A9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -809,6 +1147,11 @@
 			productName = Yams;
 		};
 		626F3DACFB99025991E7B5CA /* Yams */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3AA74188800F3065DE34A23C /* XCRemoteSwiftPackageReference "Yams" */;
+			productName = Yams;
+		};
+		6FA8C62B7409C883E6668774 /* Yams */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3AA74188800F3065DE34A23C /* XCRemoteSwiftPackageReference "Yams" */;
 			productName = Yams;

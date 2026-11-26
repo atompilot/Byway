@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../Localization/byway-*.json" LogicalName="Byway.Localization.%(Filename)%(Extension)" />
+    <Compile Include="../Windows/L10n.cs" Link="L10n.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <EmbeddedResource Include="../Shared/Web/management.html" LogicalName="Byway.Web.management.html" />
     <EmbeddedResource Include="../Shared/Web/management.css" LogicalName="Byway.Web.management.css" />

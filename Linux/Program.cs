@@ -19,7 +19,7 @@ if (args is ["open-device-web"])
 
 if (args.Length != 2)
 {
-    Console.Error.WriteLine("Usage: Byway.Gateway <Shadowrocket node export.json> <default node name>");
+    Console.Error.WriteLine(L10n.Text("Usage: Byway.Gateway <Shadowrocket node export.json> <default node name>"));
     return 2;
 }
 
@@ -27,15 +27,15 @@ try
 {
     string? token = Environment.GetEnvironmentVariable("BYWAY_API_TOKEN");
     if (token is null || token.Length < 32 || token.Any(char.IsWhiteSpace))
-        throw new InvalidDataException("Set BYWAY_API_TOKEN to a private token of at least 32 characters.");
+        throw new InvalidDataException(L10n.Text("Set BYWAY_API_TOKEN to a private token of at least 32 characters."));
 
     List<Node> nodes = NodeImport.Read(args[0]).Entries
         .Select(entry => entry.Node).OfType<Node>().ToList();
     if (nodes.Count == 0 || !nodes.Any(node => node.Name == args[1]))
-        throw new InvalidDataException("The requested node was not found among the supported VLESS entries.");
+        throw new InvalidDataException(L10n.Text("The requested node was not found among the supported VLESS entries."));
     string[] tags = nodes.Select(node => $"node:{node.Name}").ToArray();
     if (tags.Distinct(StringComparer.Ordinal).Count() != tags.Length)
-        throw new InvalidDataException("Give each exported node a unique name before importing.");
+        throw new InvalidDataException(L10n.Text("Give each exported node a unique name before importing."));
 
     List<object> outbounds =
     [
@@ -95,6 +95,6 @@ try
 }
 catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException or JsonException)
 {
-    Console.Error.WriteLine(error is InvalidDataException ? error.Message : "The node export could not be read.");
+    Console.Error.WriteLine(error is InvalidDataException ? error.Message : L10n.Text("The node export could not be read."));
     return 1;
 }

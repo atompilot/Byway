@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PadWorkspace: View {
-    private static let brandIcon = UIImage(named: "AppIcon60x60")
+    private static let brandIcon = BywayImage(named: "AppIcon60x60")
     @ObservedObject var controller: VPNController
     @ObservedObject var localControl: LANControl
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -20,11 +20,11 @@ struct PadWorkspace: View {
 
         var title: String {
             switch self {
-            case .nodes: "节点"
-            case .routing: "分流"
-            case .privateNetwork: "私网"
-            case .traffic: "流量"
-            case .ai: "AI 控制"
+            case .nodes: L10n.text("节点")
+            case .routing: L10n.text("分流")
+            case .privateNetwork: L10n.text("私网")
+            case .traffic: L10n.text("流量")
+            case .ai: L10n.text("AI 控制")
             }
         }
 
@@ -78,7 +78,7 @@ struct PadWorkspace: View {
                         Color.black.opacity(0.26).ignoresSafeArea().contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("关闭侧栏")
+                    .accessibilityLabel(L10n.text("关闭侧栏"))
 
                     sidebar(showClose: true)
                         .frame(width: min(270, geometry.size.width * 0.78))
@@ -100,11 +100,11 @@ struct PadWorkspace: View {
         return NavigationStack(path: path) {
             nodeList
                 .toolbar {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
+                    ToolbarItemGroup(placement: .primaryAction) {
                         if !controller.profile.nodes.isEmpty {
                             NodeBatchTestButton(controller: controller, compact: true).labelStyle(.titleOnly)
                         }
-                        Button("添加节点", systemImage: "plus") { nodeActions.sheet = .add }
+                        Button(L10n.text("添加节点"), systemImage: "plus") { nodeActions.sheet = .add }
                             .accessibilityIdentifier("ipad-add-node")
                             .disabled(!controller.canManage)
                     }
@@ -128,8 +128,8 @@ struct PadWorkspace: View {
             Group {
                 if let base { destination(base).id(base) }
                 else {
-                    ContentUnavailableView("选择节点或组", systemImage: "square.stack",
-                                           description: Text("从列表打开节点或节点组。"))
+                    ContentUnavailableView(L10n.text("选择节点或组"), systemImage: "square.stack",
+                                           description: Text(L10n.text("从列表打开节点或节点组。")))
                 }
             }
             .navigationDestination(for: NodeListTarget.self) { destination($0) }
@@ -140,7 +140,7 @@ struct PadWorkspace: View {
     private var nodeList: some View {
         List {
             if controller.profile.nodes.isEmpty && controller.profile.nodeSubscriptions.isEmpty {
-                ContentUnavailableView("暂无节点", systemImage: "server.rack")
+                ContentUnavailableView(L10n.text("暂无节点"), systemImage: "server.rack")
             } else {
                 NodeListSections(controller: controller, nodeActions: $nodeActions, groupActions: $groupActions,
                                  search: search, selection: nodeSelection,
@@ -150,30 +150,45 @@ struct PadWorkspace: View {
         .listStyle(.plain)
         .safeAreaInset(edge: .top, spacing: 0) { searchBar }
         .navigationTitle(Page.nodes.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .bywayInlineTitle()
         .refreshable { await controller.load() }
     }
 
     private var searchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
-            TextField("搜索节点或组", text: $search)
-                .textInputAutocapitalization(.never)
+            TextField(L10n.text("搜索节点或组"), text: $search)
+                #if os(macOS)
+                .textFieldStyle(.plain)
+                #endif
+                .bywayNoAutocapitalization()
                 .autocorrectionDisabled()
                 .submitLabel(.search)
                 .focused($searchFocused)
                 .onSubmit { searchFocused = false }
                 .accessibilityIdentifier("ipad-node-search")
             if !search.isEmpty {
-                Button("清除搜索", systemImage: "xmark.circle.fill") { search = "" }
+                Button(L10n.text("清除搜索"), systemImage: "xmark.circle.fill") { search = "" }
                     .labelStyle(.iconOnly)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
             }
         }
+        #if os(macOS)
+        .font(.system(size: 13))
+        .padding(.horizontal, 10)
+        .frame(minHeight: 32)
+        .background(Color.bywayFill, in: RoundedRectangle(cornerRadius: 7))
+        .overlay {
+            RoundedRectangle(cornerRadius: 7)
+                .strokeBorder(Color.bywayAccent.opacity(searchFocused ? 0.45 : 0))
+                .allowsHitTesting(false)
+        }
+        #else
         .padding(.horizontal, 11)
         .frame(minHeight: 40)
-        .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
+        .background(Color.bywayFill, in: RoundedRectangle(cornerRadius: 10))
+        #endif
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(.background)
@@ -185,7 +200,7 @@ struct PadWorkspace: View {
             HStack(spacing: 9) {
                 Group {
                     if let icon = Self.brandIcon {
-                        Image(uiImage: icon).resizable().scaledToFit()
+                        Image(bywayImage: icon).resizable().scaledToFit()
                     } else {
                         Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                             .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
@@ -198,7 +213,7 @@ struct PadWorkspace: View {
                 Text("Byway").font(.title3.weight(.semibold))
                 Spacer(minLength: 0)
                 if showClose {
-                    Button("收起侧栏", systemImage: "sidebar.leading") { presentSidebar(false) }
+                    Button(L10n.text("收起侧栏"), systemImage: "sidebar.leading") { presentSidebar(false) }
                         .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
                         .keyboardShortcut(.escape, modifiers: [])
@@ -238,7 +253,7 @@ struct PadWorkspace: View {
         .padding(.bottom, 12)
         .frame(maxHeight: .infinity, alignment: .topLeading)
         .background {
-            Color(uiColor: .secondarySystemGroupedBackground)
+            Color.bywaySidebarBackground
                 .overlay(Color.bywayAccent.opacity(0.045))
                 .ignoresSafeArea()
         }
@@ -253,9 +268,9 @@ struct PadWorkspace: View {
                 Text("VPN \(controller.statusLabel)").font(.footnote.weight(.semibold))
             }
             if controller.routesDirectly {
-                Text("直连模式").font(.caption).foregroundStyle(.secondary)
+                Text(L10n.text("直连模式")).font(.caption).foregroundStyle(.secondary)
             } else if let node = controller.activeNode {
-                Text("\(controller.connected ? "出口" : "已选") \(node.name)")
+                Text("\(controller.connected ? L10n.text("出口") : L10n.text("已选")) \(node.name)")
                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
             Button {
@@ -272,16 +287,75 @@ struct PadWorkspace: View {
             .buttonStyle(.bordered)
             .accessibilityIdentifier("ipad-connection-control")
             .disabled(controller.busy || controller.status == .disconnecting)
+            #if os(macOS)
+            Divider().padding(.vertical, 3)
+            macTakeoverControls
+            #endif
         }
         .padding(.horizontal, 8)
     }
 
-    private var connectionAction: String {
-        if !controller.hasConnectionProfile { return "添加节点" }
-        if controller.connected || controller.status == .connecting {
-            return controller.profile.privateNetwork?.enabled == true ? "停用 VPN" : "断开"
+    #if os(macOS)
+    /// Mac 版可选择系统代理、全流量或仅监听，三种方式共用同一份节点与分流配置。
+    private var macTakeoverControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(L10n.text("接管方式"), selection: Binding(
+                get: { controller.takeover },
+                set: { value in Task { await controller.setTakeover(value) } }
+            )) {
+                ForEach(MacTakeover.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .disabled(controller.busy)
+            .accessibilityIdentifier("mac-takeover-picker")
+
+            Text(controller.localProxyAddress)
+                .font(.caption2).foregroundStyle(.secondary)
+                .textSelection(.enabled)
+
+            switch controller.takeover {
+            case .systemProxy:
+                Text(systemProxyLabel)
+                    .font(.caption2)
+                    .foregroundStyle(controller.systemProxy == .off ? .secondary : Color.bywayAccent)
+                HStack(spacing: 6) {
+                    Button(L10n.text("设为系统代理")) { Task { await controller.applySystemProxy() } }
+                        .buttonStyle(.bordered).controlSize(.small)
+                        .accessibilityIdentifier("mac-apply-system-proxy")
+                    if controller.systemProxy != .off {
+                        Button(L10n.text("关闭")) { Task { await controller.clearSystemProxy() } }
+                            .buttonStyle(.bordered).controlSize(.small)
+                    }
+                }
+                .disabled(controller.busy)
+            case .tun:
+                Text(controller.connected ? L10n.text("已接管全部流量") : L10n.text("连接时请求一次管理员授权"))
+                    .font(.caption2).foregroundStyle(.secondary)
+            case .listenOnly:
+                Text(L10n.text("在应用或终端里把代理设为 127.0.0.1:{0}。", MacSettings.mixedPort))
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
         }
-        return "连接"
+    }
+
+    private var systemProxyLabel: String {
+        switch controller.systemProxy {
+        case .off: L10n.text("未接管系统代理")
+        case .byway(let port): L10n.text("已指向 Byway（{0}）", port)
+        case .other: L10n.text("系统代理由其他应用接管")
+        }
+    }
+    #endif
+
+    private var connectionAction: String {
+        if !controller.hasConnectionProfile { return L10n.text("添加节点") }
+        if controller.connected || controller.status == .connecting {
+            return controller.profile.privateNetwork?.enabled == true ? L10n.text("停用 VPN") : L10n.text("断开")
+        }
+        return L10n.text("连接")
     }
 
     @ViewBuilder private func pageContents(_ layout: Layout) -> some View {
@@ -300,7 +374,7 @@ struct PadWorkspace: View {
                 LANControlEditor(control: localControl, vpn: controller)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .bywayInlineTitle()
         .modifier(PadSidebarButton(isVisible: layout == .compact, open: { presentSidebar(true) }))
     }
 
@@ -344,8 +418,8 @@ private struct PadSidebarButton: ViewModifier {
     func body(content: Content) -> some View {
         content.toolbar {
             if isVisible {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("打开侧栏", systemImage: "sidebar.leading", action: open)
+                ToolbarItem(placement: .navigation) {
+                    Button(L10n.text("打开侧栏"), systemImage: "sidebar.leading", action: open)
                         .accessibilityIdentifier("ipad-open-sidebar")
                 }
             }

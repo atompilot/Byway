@@ -23,14 +23,14 @@ public partial class MainWindow
         if (request.Method == "POST" && path == "/v1/qr/decode")
         {
             if (!hasBody)
-                throw new ApiError(400, "请上传二维码图片。");
+                throw new ApiError(400, L10n.Text("请上传二维码图片。"));
             using var stream = new MemoryStream();
             await request.Body.CopyToAsync(stream, context.RequestAborted);
             stream.Position = 0;
             try { scanned = QrImage.Read(stream); }
             catch (Exception error) when (error is NotSupportedException or FormatException or ArgumentException)
             {
-                throw new ApiError(422, "无法读取这张二维码图片。");
+                throw new ApiError(422, L10n.Text("无法读取这张二维码图片。"));
             }
         }
         else if (hasBody)
@@ -40,7 +40,7 @@ public partial class MainWindow
                 limit.MaxRequestBodySize = path.StartsWith("/v1/config/routing", StringComparison.Ordinal)
                     ? 16 * 1024 * 1024 : 4 * 1024 * 1024;
             if (!request.HasJsonContentType())
-                throw new ApiError(415, "请求正文需要 application/json。");
+                throw new ApiError(415, L10n.Text("请求正文需要 application/json。"));
             using var parsed = await JsonDocument.ParseAsync(request.Body, new JsonDocumentOptions { MaxDepth = 32 }, context.RequestAborted);
             body = parsed.RootElement.Clone();
         }
@@ -50,14 +50,14 @@ public partial class MainWindow
         {
             context.RequestAborted.ThrowIfCancellationRequested();
             if (exiting || aiServer is null || fromLan && profile.Ai?.LanEnabled != true)
-                throw new ApiError(503, "Byway API 已暂停。");
+                throw new ApiError(503, L10n.Text("Byway API 已暂停。"));
             if (!aiServer.MatchesToken(request))
-                throw new ApiError(401, "访问令牌已失效。");
+                throw new ApiError(401, L10n.Text("访问令牌已失效。"));
             if (request.Method == "GET" || scanned is not null)
                 return ReadApiAsync(path, segments, request, scanned);
 
             if (busy || startingAi || ComponentDispatcher.IsThreadModal)
-                throw new ApiError(409, "Byway 正在处理操作，请稍后重试。");
+                throw new ApiError(409, L10n.Text("Byway 正在处理操作，请稍后重试。"));
             return RunExclusiveAsync(() => ChangeApiAsync(path, segments, request.Method, body, fromLan));
         }).Task.Unwrap();
     }
@@ -70,10 +70,10 @@ public partial class MainWindow
         switch (path)
         {
             case "/v1/guide":
-                return Results.Text($"设备 {TryReadDevice()?.DisplayName ?? "Windows"}\nAPI 地址 {request.Scheme}://{request.Host}\n\n{AiGuide.Value}",
+                return Results.Text(L10n.Format($"设备 {TryReadDevice()?.DisplayName ?? "Windows"}\nAPI 地址 {request.Scheme}://{request.Host}\n\n{AiGuide.Value}"),
                     "text/plain; charset=utf-8");
             case "/v1/skill": return Results.Text(AiSkill.Value, "text/markdown; charset=utf-8");
-            case "/v1/device": return Results.Json(TryReadDevice() ?? throw new ApiError(503, "无法读取设备身份。"));
+            case "/v1/device": return Results.Json(TryReadDevice() ?? throw new ApiError(503, L10n.Text("无法读取设备身份。")));
             case "/v1/status": return Results.Json(ApiStatus());
             case "/v1/private-network":
             case "/v1/private-network/config":
@@ -96,13 +96,13 @@ public partial class MainWindow
                     "last7days" => TrafficPeriod.Last7Days,
                     "last30days" => TrafficPeriod.Last30Days,
                     "all" => TrafficPeriod.All,
-                    _ => throw new ApiError(422, "range 须为 today、yesterday、last7days、last30days 或 all。")
+                    _ => throw new ApiError(422, L10n.Text("range 须为 today、yesterday、last7days、last30days 或 all。"))
                 };
                 return Results.Json(trafficHistory.Read(period, DateTimeOffset.UtcNow, TimeZoneInfo.Local));
             }
             case "/v1/connections":
                 return await ReadActiveConnectionsAsync() is { } rows ? Results.Json(rows) :
-                    throw new ApiError(503, "暂时无法读取连接。");
+                    throw new ApiError(503, L10n.Text("暂时无法读取连接。"));
             case "/v1/diagnostics/engine": return Results.Json(engineLog.Snapshot());
             case "/v1/ai": return Results.Json(ApiConnection());
             case "/v1/discovery": return Results.Json(DiscoveryState());
@@ -121,7 +121,7 @@ public partial class MainWindow
         if (segments is ["v1", "groups", var sharedGroup, "share"])
             return await ApiShareAsync(GroupShareCode(FindGroup(sharedGroup)), request.Query["qr"]);
 
-        throw new ApiError(404, "API 路径不存在。");
+        throw new ApiError(404, L10n.Text("API 路径不存在。"));
     }
 
     private async Task<IResult> ChangeApiAsync(string path, string[] segments, string method, JsonElement body, bool fromLan)
@@ -133,16 +133,16 @@ public partial class MainWindow
                 return Results.Json(await ReadPrivateNetworkAsync());
             case ("POST", "/v1/private-network/join"):
                 if (body.ValueKind != JsonValueKind.Undefined)
-                    throw new ApiError(400, "入网密钥只能在本机提交。");
+                    throw new ApiError(400, L10n.Text("入网密钥只能在本机提交。"));
                 await SetPrivateNetworkAsync(true);
                 return Results.Json(await ReadPrivateNetworkAsync(), statusCode: 202);
             case ("POST", "/v1/private-network/key"):
                 if (fromLan)
-                    throw new ApiError(403, "入网密钥只能在本机提交。");
+                    throw new ApiError(403, L10n.Text("入网密钥只能在本机提交。"));
                 await ApplyPrivateKeyAsync(Input<PrivateKeyInput>(body).Key);
                 return Results.Json(await ReadPrivateNetworkAsync(), statusCode: 202);
             case ("PUT", "/v1/private-network/state"):
-                await SetPrivateNetworkAsync(Input<ProxyInput>(body).Enabled ?? throw new ApiError(400, "请提供 enabled。"));
+                await SetPrivateNetworkAsync(Input<ProxyInput>(body).Enabled ?? throw new ApiError(400, L10n.Text("请提供 enabled。")));
                 return Results.Json(await ReadPrivateNetworkAsync());
             case ("DELETE", "/v1/private-network/membership"):
                 await SavePrivateNetworkAsync(null);
@@ -151,12 +151,12 @@ public partial class MainWindow
                 return Results.Json(await ProbePrivateNetworkAsync(Input<PrivateProbeInput>(body).Address));
             case ("PATCH", "/v1/device"):
             {
-                string name = Input<DeviceNameInput>(body).DisplayName ?? throw new ApiError(400, "请提供 displayName。");
+                string name = Input<DeviceNameInput>(body).DisplayName ?? throw new ApiError(400, L10n.Text("请提供 displayName。"));
                 return Results.Json(RenameDevice(name));
             }
             case ("PUT", "/v1/proxy"):
             {
-                bool enable = Input<ProxyInput>(body).Enabled ?? throw new ApiError(400, "请提供 enabled。");
+                bool enable = Input<ProxyInput>(body).Enabled ?? throw new ApiError(400, L10n.Text("请提供 enabled。"));
                 await SetProxyEnabledAsync(enable);
                 return Results.Json(ApiStatus());
             }
@@ -165,7 +165,7 @@ public partial class MainWindow
                 var input = Input<NodeInput>(body);
                 var group = input.GroupId is Guid id ? FindGroup(id.ToString()) : null;
                 if (group?.IsSubscription == true)
-                    throw new ApiError(409, "订阅节点通过订阅刷新加入。请指定手动组。");
+                    throw new ApiError(409, L10n.Text("订阅节点通过订阅刷新加入。请指定手动组。"));
                 var node = ParseNode(input.Link);
                 node = node with { Name = Subscription.SafeName(input.Name ?? "", node.Name) };
                 var saved = await AddNodeAsync(node, group);
@@ -179,17 +179,17 @@ public partial class MainWindow
             {
                 var input = Input<ConfigInput>(body);
                 if (input.GlobalTarget is not null)
-                    throw new ApiError(422, "全局模式使用当前节点，请调用 /v1/nodes/{id}/select。");
+                    throw new ApiError(422, L10n.Text("全局模式使用当前节点，请调用 /v1/nodes/{id}/select。"));
                 if (input is { Bypass: null, MixedPort: null, Mode: null, CaptureMode: null })
-                    throw new ApiError(400, "请提供需要修改的代理配置。");
+                    throw new ApiError(400, L10n.Text("请提供需要修改的代理配置。"));
                 var capture = input.CaptureMode?.ToLowerInvariant() switch
                 {
                     null => Options.Capture,
                     "system" => CaptureMode.SystemProxy,
                     "manual" => CaptureMode.Manual,
                     "tun" when Program.IsElevated => CaptureMode.Tun,
-                    "tun" => throw new ApiError(403, "请先以管理员身份重启这台 PC 上的 Byway，再切换到全流量模式。"),
-                    _ => throw new ApiError(422, "接管方式须为 system、tun 或 manual。")
+                    "tun" => throw new ApiError(403, L10n.Text("请先以管理员身份重启这台 PC 上的 Byway，再切换到全流量模式。")),
+                    _ => throw new ApiError(422, L10n.Text("接管方式须为 system、tun 或 manual。"))
                 };
                 string previousBypass = Options.Bypass;
                 await ApplyProxyOptionsAsync(Options with { Bypass = input.Bypass ?? previousBypass,
@@ -202,7 +202,7 @@ public partial class MainWindow
             }
             case ("POST", "/v1/config/shadowrocket/preview"):
             {
-                string text = Input<RoutingPreviewInput>(body).Text ?? throw new ApiError(400, "请提供 text。");
+                string text = Input<RoutingPreviewInput>(body).Text ?? throw new ApiError(400, L10n.Text("请提供 text。"));
                 return Results.Json(ShadowrocketConfiguration.Parse(text).Report());
             }
             case ("POST", "/v1/config/routing/test-rule"):
@@ -213,8 +213,8 @@ public partial class MainWindow
             case ("POST", "/v1/config/shadowrocket"):
             {
                 var input = Input<RoutingCreateInput>(body);
-                string text = input.Text ?? throw new ApiError(400, "请提供 text。");
-                string name = input.Name ?? throw new ApiError(400, "请提供 name。");
+                string text = input.Text ?? throw new ApiError(400, L10n.Text("请提供 text。"));
+                string name = input.Name ?? throw new ApiError(400, L10n.Text("请提供 name。"));
                 if (CheckRoutingWarnings(ShadowrocketConfiguration.Parse(text), input.AcceptWarnings) is { } warning)
                     return warning;
                 var entry = new ImportedRouting(Guid.NewGuid(), name, text);
@@ -247,7 +247,7 @@ public partial class MainWindow
                 var input = Input<ClashMigrationInput>(body);
                 var draft = await PreviewClashMigrationAsync();
                 if (input.Revision != draft.Revision)
-                    throw new ApiError(409, "Clash 配置已变化，请重新预览后再迁移。");
+                    throw new ApiError(409, L10n.Text("Clash 配置已变化，请重新预览后再迁移。"));
                 if (CheckRoutingWarnings(draft.Configuration, input.AcceptWarnings) is { } warning)
                     return warning;
                 await SaveClashMigrationAsync(draft);
@@ -256,7 +256,7 @@ public partial class MainWindow
             case ("POST", "/v1/config/routing"):
             {
                 var input = Input<RoutingCreateInput>(body);
-                string name = input.Name ?? throw new ApiError(400, "请提供 name。");
+                string name = input.Name ?? throw new ApiError(400, L10n.Text("请提供 name。"));
                 var entry = (await PrepareRoutingAsync(input.Text, input.Subscription)) with
                 {
                     Name = name, RefreshHours = input.RefreshHours ?? 24, Selections = input.Selections
@@ -264,7 +264,7 @@ public partial class MainWindow
                 var parsed = entry.Parse();
                 if (input.Selections is { } choices && (parsed is not ClashConfiguration clash ||
                     choices.Any(choice => !clash.Groups.Any(group => group.Name == choice.Key && group.Selected == choice.Value))))
-                    throw new InvalidDataException("策略组或其成员不存在。");
+                    throw new InvalidDataException(L10n.Text("策略组或其成员不存在。"));
                 if (CheckRoutingWarnings(parsed, input.AcceptWarnings) is { } warning)
                     return warning;
                 await SaveRoutingEntryAsync(entry, input.Activate == true);
@@ -275,7 +275,7 @@ public partial class MainWindow
             {
                 var input = Input<RoutingSelectionInput>(body);
                 if (!body.EnumerateObject().Any(item => item.NameEquals("id")))
-                    throw new ApiError(400, "请明确提供 id。使用 null 切回默认配置。");
+                    throw new ApiError(400, L10n.Text("请明确提供 id。使用 null 切回默认配置。"));
                 bool shadowrocketOnly = path == "/v1/config/shadowrocket/active";
                 if (shadowrocketOnly && input.Id is Guid id)
                     FindRouting(id, shadowrocketOnly: true);
@@ -287,9 +287,9 @@ public partial class MainWindow
                 var input = Input<SettingsInput>(body);
                 bool windowWidthOnly = input is { CloseToTray: null, StartAtLogin: null, ResumeProxy: null };
                 if (windowWidthOnly && input.SidebarWidth is null)
-                    throw new ApiError(400, "请提供需要修改的设置。");
+                    throw new ApiError(400, L10n.Text("请提供需要修改的设置。"));
                 if (input.SidebarWidth is double width && (!double.IsFinite(width) || width != ClampSidebarWidth(width)))
-                    throw new ApiError(422, $"侧栏宽度须在 {SidebarColumn.MinWidth} 到 {SidebarColumn.MaxWidth} 之间。");
+                    throw new ApiError(422, L10n.Format($"侧栏宽度须在 {SidebarColumn.MinWidth} 到 {SidebarColumn.MaxWidth} 之间。"));
                 bool start = input.StartAtLogin ?? Options.StartAtLogin;
                 var options = Options with
                 {
@@ -314,13 +314,13 @@ public partial class MainWindow
                 return Results.Json(new { closed = "all" });
             case ("PATCH", "/v1/discovery"):
             {
-                bool enabled = Input<DiscoveryInput>(body).Enabled ?? throw new ApiError(400, "请提供 enabled。");
+                bool enabled = Input<DiscoveryInput>(body).Enabled ?? throw new ApiError(400, L10n.Text("请提供 enabled。"));
                 return Results.Json(SetDiscoveryEnabled(enabled));
             }
             case ("PUT", "/v1/ai"):
             {
                 RequireLocal(fromLan);
-                bool enabled = Input<LanInput>(body).LanEnabled ?? throw new ApiError(400, "请提供 lanEnabled。");
+                bool enabled = Input<LanInput>(body).LanEnabled ?? throw new ApiError(400, L10n.Text("请提供 lanEnabled。"));
                 await ChangeLanAsync(enabled);
                 return Results.Json(ApiConnection());
             }
@@ -332,7 +332,7 @@ public partial class MainWindow
             case ("POST", "/v1/import/shadowrocket"):
             {
                 if (body.ValueKind != JsonValueKind.Array)
-                    throw new ApiError(400, "请上传 Shadowrocket 节点 JSON 数组。");
+                    throw new ApiError(400, L10n.Text("请上传 Shadowrocket 节点 JSON 数组。"));
                 using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(body.GetRawText()));
                 return Results.Json(await ImportAsync(NodeImport.Read(stream)));
             }
@@ -341,7 +341,7 @@ public partial class MainWindow
                 ShowWindow();
                 var dialog = new ScanDialog(this);
                 if (dialog.ShowDialog() != true || dialog.Result is not { } scanned)
-                    throw new ApiError(409, "扫码已取消。");
+                    throw new ApiError(409, L10n.Text("扫码已取消。"));
                 return await ImportApiCodeAsync(scanned);
             }
         }
@@ -362,16 +362,16 @@ public partial class MainWindow
             ["v1", "config", "routing", var id, "rules"] when method == "POST" =>
                 await AddRoutingRuleApiAsync(FindRouting(RoutingId(id)), Input<RoutingRuleInput>(body)),
             ["v1", "config", "routing", _, "groups"] when method == "PUT" =>
-                throw new ApiError(410, "所有代理规则使用当前节点，请调用 /v1/nodes/{id}/select。"),
+                throw new ApiError(410, L10n.Text("所有代理规则使用当前节点，请调用 /v1/nodes/{id}/select。")),
             ["v1", "connections", var id] when method == "DELETE" => await CloseConnectionApiAsync(id),
-            _ => throw new ApiError(404, "API 路径不存在。")
+            _ => throw new ApiError(404, L10n.Text("API 路径不存在。"))
         };
     }
 
     private static async Task<ImportedRouting> PrepareRoutingAsync(string? text, string? subscription)
     {
         if ((text is null) == (subscription is null))
-            throw new ApiError(400, "请提供 text 或 subscription 中的一项。");
+            throw new ApiError(400, L10n.Text("请提供 text 或 subscription 中的一项。"));
         if (subscription is null)
             return new(Guid.NewGuid(), "", text!);
         var link = SubscriptionLink.Parse(subscription);
@@ -399,12 +399,12 @@ public partial class MainWindow
             return Results.Json(new { deleted = entry.Id, activeId = profile.SelectedRouting });
         }
         if (method != "PATCH")
-            throw new ApiError(405, "支持 PATCH 或 DELETE。");
+            throw new ApiError(405, L10n.Text("支持 PATCH 或 DELETE。"));
         var input = Input<RoutingPatchInput>(body);
         if (input.Name is null && input.Text is null && input.Subscription is null && input.RefreshHours is null)
-            throw new ApiError(400, "请提供要修改的配置字段。");
+            throw new ApiError(400, L10n.Text("请提供要修改的配置字段。"));
         if (shadowrocketOnly && (input.Subscription is not null || input.RefreshHours is not null))
-            throw new ApiError(400, "Clash 订阅使用 /v1/config/routing。");
+            throw new ApiError(400, L10n.Text("Clash 订阅使用 /v1/config/routing。"));
         var next = entry with { Name = input.Name ?? entry.Name, RefreshHours = input.RefreshHours ?? entry.RefreshHours };
         if (!string.IsNullOrEmpty(input.Subscription))
         {
@@ -431,11 +431,11 @@ public partial class MainWindow
     {
         var report = configuration.Report();
         return report.Warnings.Length > 0 && accepted != true
-            ? Results.Json(new { error = "请先查看并确认兼容提示。", report }, statusCode: 422) : null;
+            ? Results.Json(new { error = L10n.Text("请先查看并确认兼容提示。"), report }, statusCode: 422) : null;
     }
 
     private static Guid RoutingId(string input) => Guid.TryParse(input, out var id) ? id
-        : throw new ApiError(404, "分流配置不存在。");
+        : throw new ApiError(404, L10n.Text("分流配置不存在。"));
 
     private async Task<IResult> ChangeNodeApiAsync(NodeRow row, string method, JsonElement body)
     {
@@ -445,11 +445,11 @@ public partial class MainWindow
             return Results.Json(new { deleted = row.Node.Id });
         }
         if (method != "PATCH")
-            throw new ApiError(405, "支持 PATCH 或 DELETE。");
+            throw new ApiError(405, L10n.Text("支持 PATCH 或 DELETE。"));
 
         var input = Input<NodePatch>(body);
         if (input.Name is null && input.Link is null)
-            throw new ApiError(400, "请提供 name 或 link。");
+            throw new ApiError(400, L10n.Text("请提供 name 或 link。"));
         Node original = row.Node;
         Node edited = input.Link is null ? original : ParseNode(input.Link).WithId(original.Id);
         await EditNodeAsync(original, edited with { Name = Subscription.SafeName(input.Name ?? original.Name, original.Name) });
@@ -461,7 +461,7 @@ public partial class MainWindow
         if (input.Subscription is not null)
         {
             if (input.Members is not null)
-                throw new ApiError(400, "订阅组的成员由订阅提供。");
+                throw new ApiError(400, L10n.Text("订阅组的成员由订阅提供。"));
             var link = SubscriptionLink.Parse(input.Subscription);
             link = link with { Name = Subscription.SafeName(input.Name ?? "", link.Name) };
             Guid id = await AddSubscriptionAsync(link);
@@ -470,7 +470,7 @@ public partial class MainWindow
 
         string name = Subscription.SafeName(input.Name ?? "", "");
         if (name.Length == 0)
-            throw new ApiError(400, "请提供手动组的名称。");
+            throw new ApiError(400, L10n.Text("请提供手动组的名称。"));
         var group = new NodeGroup(Guid.NewGuid(), name, null, ValidateMembers(input.Members ?? []));
         await SaveGroupAsync(null, group);
         return Results.Json(ApiGroup(group), statusCode: 201);
@@ -484,13 +484,13 @@ public partial class MainWindow
             return Results.Json(new { deleted = group.Id });
         }
         if (method != "PATCH")
-            throw new ApiError(405, "支持 PATCH 或 DELETE。");
+            throw new ApiError(405, L10n.Text("支持 PATCH 或 DELETE。"));
 
         var input = Input<GroupInput>(body);
         if (input.Name is null && input.Members is null && input.Subscription is null)
-            throw new ApiError(400, "请提供 name、members 或 subscription。");
+            throw new ApiError(400, L10n.Text("请提供 name、members 或 subscription。"));
         if (group.IsSubscription ? input.Members is not null : input.Subscription is not null)
-            throw new ApiError(409, "手动组编辑成员，订阅组编辑订阅地址。");
+            throw new ApiError(409, L10n.Text("手动组编辑成员，订阅组编辑订阅地址。"));
 
         var updated = group with
         {
@@ -505,7 +505,7 @@ public partial class MainWindow
     private async Task<IResult> RefreshGroupApiAsync(NodeGroup group)
     {
         if (!group.IsSubscription)
-            throw new ApiError(409, "只有订阅组支持刷新。");
+            throw new ApiError(409, L10n.Text("只有订阅组支持刷新。"));
         await LoadSubscriptionAsync(group, isNew: false);
         return Results.Json(ApiGroup(FindGroup(group.Id.ToString())));
     }
@@ -535,17 +535,17 @@ public partial class MainWindow
         if (input.Link is not null && input.Parts is null)
             return ImportCode.Parse(input.Link);
         if (input.Link is not null || input.Parts is not { Length: > 0 })
-            throw new ApiError(400, "请提供 link 或 parts。");
+            throw new ApiError(400, L10n.Text("请提供 link 或 parts。"));
         var collector = new QrParts();
         foreach (string part in input.Parts)
         {
             if (string.IsNullOrWhiteSpace(part))
-                throw new ApiError(400, "二维码内容不能为空。");
+                throw new ApiError(400, L10n.Text("二维码内容不能为空。"));
             string? code = collector.Accept(part.Trim(), out _);
             if (code is not null)
                 return ImportCode.Parse(code);
         }
-        throw new ApiError(422, "请提供同组的全部二维码内容。");
+        throw new ApiError(422, L10n.Text("请提供同组的全部二维码内容。"));
     }
 
     private static async Task<IResult> ApiShareAsync(string value, string? qr)
@@ -554,7 +554,7 @@ public partial class MainWindow
         if (qr is null)
             return Results.Json(new { link = value, qrCount = parts.Length });
         if (!int.TryParse(qr, out int page) || page < 1 || page > parts.Length)
-            throw new ApiError(404, "二维码页码不存在。");
+            throw new ApiError(404, L10n.Text("二维码页码不存在。"));
         return Results.Bytes(await Task.Run(() => QrImage.Png(parts[page - 1])), "image/png");
     }
 
@@ -601,13 +601,13 @@ public partial class MainWindow
         "rule" => RoutingMode.Rule,
         "global" => RoutingMode.Global,
         "direct" => RoutingMode.Direct,
-        _ => throw new ApiError(422, "路由模式须为 rule、global 或 direct。")
+        _ => throw new ApiError(422, L10n.Text("路由模式须为 rule、global 或 direct。"))
     };
 
     private async Task<IResult> CloseConnectionApiAsync(string id)
     {
         if (!Guid.TryParse(id, out var connection))
-            throw new ApiError(404, "连接不存在。");
+            throw new ApiError(404, L10n.Text("连接不存在。"));
         await DisconnectAsync(connection);
         return Results.Json(new { closed = connection });
     }
@@ -641,31 +641,31 @@ public partial class MainWindow
     }
 
     private NodeRow FindNode(string id) => Guid.TryParse(id, out Guid parsed) &&
-        nodes.Find(row => row.Node.Id == parsed) is { } node ? node : throw new ApiError(404, "节点不存在。");
+        nodes.Find(row => row.Node.Id == parsed) is { } node ? node : throw new ApiError(404, L10n.Text("节点不存在。"));
 
     private NodeGroup FindGroup(string id) => Guid.TryParse(id, out Guid parsed) &&
-        Groups.Find(group => group.Id == parsed) is { } item ? item : throw new ApiError(404, "节点组不存在。");
+        Groups.Find(group => group.Id == parsed) is { } item ? item : throw new ApiError(404, L10n.Text("节点组不存在。"));
 
     private List<Guid> ValidateMembers(IEnumerable<Guid> members)
     {
         var unique = members.Distinct().ToList();
         if (unique.Any(id => !profile.Nodes.Exists(node => node.Id == id)))
-            throw new ApiError(422, "组成员中包含不存在的节点。");
+            throw new ApiError(422, L10n.Text("组成员中包含不存在的节点。"));
         return unique;
     }
 
     private static Node ParseNode(string? link) =>
         !string.IsNullOrWhiteSpace(link) && ImportCode.Parse(link) is ImportCode.NodeCode code ? code.Node :
-            throw new ApiError(400, "请提供单个节点链接。");
+            throw new ApiError(400, L10n.Text("请提供单个节点链接。"));
 
     private static T Input<T>(JsonElement body) where T : class => body.ValueKind == JsonValueKind.Object
-        ? body.Deserialize<T>(ApiJson) ?? throw new ApiError(400, "请提供 JSON 正文。")
-        : throw new ApiError(400, "请提供 JSON 对象。");
+        ? body.Deserialize<T>(ApiJson) ?? throw new ApiError(400, L10n.Text("请提供 JSON 正文。"))
+        : throw new ApiError(400, L10n.Text("请提供 JSON 对象。"));
 
     private static void RequireLocal(bool fromLan)
     {
         if (fromLan)
-            throw new ApiError(403, "请在 Byway 所在电脑上更改授权。");
+            throw new ApiError(403, L10n.Text("请在 Byway 所在电脑上更改授权。"));
     }
 
     private sealed record NodeInput(string? Link, string? Name, Guid? GroupId);

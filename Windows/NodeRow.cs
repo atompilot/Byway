@@ -6,10 +6,12 @@ namespace Byway;
 internal sealed class NodeRow(Node node) : INotifyPropertyChanged
 {
     public Node Node { get; } = node;
-    public string GroupNames => Groups.Count == 0 ? "未分组" : string.Join("、", Groups.Select(group => group.Name));
+    public string GroupNames => Groups.Count == 0
+        ? L10n.Text("未分组")
+        : string.Join(L10n.Language == "zh-Hans" ? "、" : ", ", Groups.Select(group => group.Name));
     public string Protocol => Node.ProtocolLabel;
     public string UseStatus { get; private set; } = "";
-    public string Test { get; private set; } = "未测试";
+    public string Test { get; private set; } = L10n.Text("未测试");
     public string ExitDisplay { get; private set; } = "—";
     public string TestAge { get; private set; } = "—";
     public string? TestLocalTime => LastTestedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
@@ -26,7 +28,7 @@ internal sealed class NodeRow(Node node) : INotifyPropertyChanged
 
     internal void UpdateUseStatus(bool active, bool selected)
     {
-        string status = active ? "使用中" : selected ? "已选为出口" : "";
+        string status = active ? L10n.Text("使用中") : selected ? L10n.Text("已选为出口") : "";
         if (UseStatus == status)
             return;
         UseStatus = status;
@@ -34,7 +36,7 @@ internal sealed class NodeRow(Node node) : INotifyPropertyChanged
     }
 
     internal void Update(ProbeResult result) =>
-        Update(result.Succeeded ? $"可用 · {result.Milliseconds} ms" : result.Error!, result.CompletedAtUtc, result);
+        Update(result.Succeeded ? L10n.Format($"可用 · {result.Milliseconds} ms") : result.Error!, result.CompletedAtUtc, result);
 
     internal void Update(string test, DateTimeOffset? testedAtUtc = null) => Update(test, testedAtUtc, null);
 
@@ -61,9 +63,9 @@ internal sealed class NodeRow(Node node) : INotifyPropertyChanged
 
     private static string RelativeTime(TimeSpan age) => age.TotalMinutes switch
     {
-        < 1 => "刚刚",
-        < 60 => $"{(int)age.TotalMinutes} 分钟前",
-        < 1440 => $"{(int)age.TotalHours} 小时前",
-        _ => $"{(int)age.TotalDays} 天前"
+        < 1 => L10n.Text("刚刚"),
+        < 60 => L10n.Format($"{(int)age.TotalMinutes} 分钟前"),
+        < 1440 => L10n.Format($"{(int)age.TotalHours} 小时前"),
+        _ => L10n.Format($"{(int)age.TotalDays} 天前")
     };
 }

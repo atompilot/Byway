@@ -16,9 +16,9 @@ struct LANEndpoint: Codable, Equatable, Sendable {
     var state: String
     var discovery: LANDiscovery?
 
-    static let off = LANEndpoint(state: "已关闭")
-    static let paused = LANEndpoint(state: "已暂停")
-    static let handoff = LANEndpoint(state: "正在连接局域网接口")
+    static let off = LANEndpoint(state: L10n.text("已关闭"))
+    static let paused = LANEndpoint(state: L10n.text("已暂停"))
+    static let handoff = LANEndpoint(state: L10n.text("正在连接局域网接口"))
 }
 
 struct LANPublishedEndpoint: Codable, Sendable {
@@ -55,18 +55,18 @@ extension LANBackend {
     func lanTrafficHistory() async throws -> TrafficHistory { TrafficHistory() }
     func lanDiagnostics() async throws -> MobileGatewayDiagnostics { MobileGatewayDiagnostics() }
     func lanCalls() async throws -> [LANCall] { [] }
-    func lanCloseConnections(_ id: String?) async throws { throw LANFailure(409, "VPN 未连接") }
+    func lanCloseConnections(_ id: String?) async throws { throw LANFailure(409, L10n.text("VPN 未连接")) }
     func lanVPNAction(enabled: Bool) async throws -> (@Sendable () -> Void)? {
-        throw LANFailure(409, "当前设备无法切换 VPN 状态")
+        throw LANFailure(409, L10n.text("当前设备无法切换 VPN 状态"))
     }
     func lanPrivateStatus() async throws -> PrivateNetworkSettingsView {
         PrivateNetworkSettingsView(try await lanSnapshot().profile.privateNetwork)
     }
     func lanPrivateChange(_ change: PrivateNetworkChange) async throws -> PrivateNetworkReceipt {
-        throw LANFailure(409, "当前无法修改私网设置")
+        throw LANFailure(409, L10n.text("当前无法修改私网设置"))
     }
     func lanPrivateProbe(address: String) async throws -> PrivateNetworkProbe {
-        throw LANFailure(409, "私网未连接")
+        throw LANFailure(409, L10n.text("私网未连接"))
     }
 }
 
@@ -103,7 +103,7 @@ enum LANEdit: Sendable {
         var nodeImport: NodeImportReport?
         switch self {
         case let .create(link, name):
-            guard current.nodes.count < NodeSubscription.maxNodes else { throw BywayError.message("节点数已达上限") }
+            guard current.nodes.count < NodeSubscription.maxNodes else { throw BywayError.message(L10n.text("节点数已达上限")) }
             let node = try ProxyNode(link: link, name: name)
             try Self.checkDuplicate(node, in: current)
             updated.nodes.append(node)
@@ -120,7 +120,7 @@ enum LANEdit: Sendable {
             if activeID == id || updated.selectedID == id { updated.selectedID = updated.nodes.first?.id }
         case .changeRouting(let patch):
             guard current.importedConfiguration?.enabled != true else {
-                throw LANFailure(409, "分流配置正在生效，请修改或停用导入的配置")
+                throw LANFailure(409, L10n.text("分流配置正在生效，请修改或停用导入的配置"))
             }
             updated.routing = try patch.applying(to: current.routingSettings).validated()
             if patch.dnsServer != nil { updated.dns?.mode = .configuration }
@@ -128,7 +128,7 @@ enum LANEdit: Sendable {
             let imported = ImportedConfiguration(text: text, enabled: true)
             let report = try imported.report()
             guard acceptWarnings || report.warnings.isEmpty else {
-                throw LANFailure(422, "配置含有兼容提示，请先预览并确认")
+                throw LANFailure(422, L10n.text("配置含有兼容提示，请先预览并确认"))
             }
             let library = current.savedRouting
             try updated.editRoutingLibrary(.save(id: library.activeID ?? library.configurations.first?.id,
@@ -137,7 +137,7 @@ enum LANEdit: Sendable {
         case .useImportedConfiguration(let enabled):
             guard let imported = current.importedConfiguration,
                   let id = current.savedRouting.activeID ?? current.savedRouting.configurations.first?.id else {
-                throw LANFailure(404, "还没有导入分流配置")
+                throw LANFailure(404, L10n.text("还没有导入分流配置"))
             }
             try updated.editRoutingLibrary(.activate(enabled ? id : nil))
             configurationReport = try ImportedConfiguration(text: imported.text, enabled: enabled).report()
@@ -168,7 +168,7 @@ enum LANEdit: Sendable {
 
     private static func checkDuplicate(_ node: ProxyNode, in profile: BywayProfile) throws {
         if profile.nodes.contains(where: { $0.id != node.id && $0.hasSameEndpoint(as: node) }) {
-            throw BywayError.message("已添加相同的节点")
+            throw BywayError.message(L10n.text("已添加相同的节点"))
         }
     }
 }

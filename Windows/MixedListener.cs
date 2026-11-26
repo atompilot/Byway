@@ -28,7 +28,7 @@ internal sealed class MixedListener : IDisposable
             listener.Stop();
             stop.Dispose();
             if (error.SocketErrorCode is SocketError.AddressAlreadyInUse or SocketError.AccessDenied)
-                throw new InvalidOperationException($"无法使用端口 {port}。请退出占用该端口的代理，或在「配置」中更换端口。", error);
+                throw new InvalidOperationException(L10n.Format($"无法使用端口 {port}。请退出占用该端口的代理，或在「配置」中更换端口。"), error);
             throw;
         }
         Port = ((IPEndPoint)listener.LocalEndpoint).Port;

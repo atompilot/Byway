@@ -32,7 +32,7 @@ struct NodeListGroup: Identifiable {
         let groups = manual + subscriptions
         let grouped = Set(groups.flatMap { $0.nodes.map(\.id) })
         let ungrouped = profile.nodes.filter { !grouped.contains($0.id) }
-        return ungrouped.isEmpty ? groups : [Self(id: .ungrouped, name: "未分组", nodes: ungrouped)] + groups
+        return ungrouped.isEmpty ? groups : [Self(id: .ungrouped, name: L10n.text("未分组"), nodes: ungrouped)] + groups
     }
 }
 
@@ -53,9 +53,9 @@ struct NodeGroupDetail: View {
                 if let subscription = group.subscription {
                     subscriptionInfo(subscription)
                 }
-                Section("节点（\(group.nodes.count)）") {
+                Section(L10n.text("节点（{0}）", group.nodes.count)) {
                     if let progress = controller.batchProgress {
-                        Button("停止测试 · \(progress.completed)/\(progress.total)", systemImage: "stop.circle") {
+                        Button(L10n.text("停止测试 · {0}/{1}", progress.completed, progress.total), systemImage: "stop.circle") {
                             controller.toggleBatchTest()
                         }
                         .disabled(controller.stoppingBatch)
@@ -67,21 +67,21 @@ struct NodeGroupDetail: View {
                             NodeMenuItems(controller: controller, node: node, actions: $nodeActions)
                         }
                     }
-                    if group.nodes.isEmpty { Text("此组暂无节点").foregroundStyle(.secondary) }
+                    if group.nodes.isEmpty { Text(L10n.text("此组暂无节点")).foregroundStyle(.secondary) }
                 }
             } else {
-                ContentUnavailableView("暂无节点", systemImage: "square.stack")
+                ContentUnavailableView(L10n.text("暂无节点"), systemImage: "square.stack")
             }
         }
-        .navigationTitle(group?.name ?? "节点组")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(group?.name ?? L10n.text("节点组"))
+        .bywayInlineTitle()
         .toolbar {
             if let group {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         NodeGroupMenuItems(controller: controller, group: group, actions: $groupActions)
                     } label: {
-                        Label("更多", systemImage: "ellipsis.circle").labelStyle(.iconOnly)
+                        Label(L10n.text("更多"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)
                     }
                     .accessibilityIdentifier("node-group-more")
                 }
@@ -112,22 +112,22 @@ struct NodeGroupDetail: View {
     private func status(of node: ProxyNode) -> String {
         switch controller.probes[node.id] {
         case .succeeded(let probe): "\(probe.latencyMS) ms"
-        case .failed: "测试失败"
-        case nil: node.id == controller.activeNode?.id ? "当前" : node.host
+        case .failed: L10n.text("测试失败")
+        case nil: node.id == controller.activeNode?.id ? L10n.text("当前") : node.host
         }
     }
 
     private func subscriptionInfo(_ item: NodeSubscription) -> some View {
-        Section("订阅信息") {
-            if let host = item.address.host { LabeledContent("订阅服务器", value: host) }
-            LabeledContent("最近刷新", value: item.refreshedAt.formatted(date: .abbreviated, time: .shortened))
+        Section(L10n.text("订阅信息")) {
+            if let host = item.address.host { LabeledContent(L10n.text("订阅服务器"), value: host) }
+            LabeledContent(L10n.text("最近刷新"), value: item.refreshedAt.formatted(date: .abbreviated, time: .shortened))
             if let usage = item.usage {
-                usageRow("剩余流量", usage.remaining)
-                usageRow("总额度", usage.total)
-                usageRow("上传", usage.upload)
-                usageRow("下载", usage.download)
+                usageRow(L10n.text("剩余流量"), usage.remaining)
+                usageRow(L10n.text("总额度"), usage.total)
+                usageRow(L10n.text("上传"), usage.upload)
+                usageRow(L10n.text("下载"), usage.download)
                 if let expires = usage.expires, expires > 0 {
-                    LabeledContent("到期时间", value: Date(timeIntervalSince1970: Double(expires)).formatted())
+                    LabeledContent(L10n.text("到期时间"), value: Date(timeIntervalSince1970: Double(expires)).formatted())
                 }
             }
         }
@@ -166,25 +166,25 @@ struct NodeGroupMenuItems: View {
 
     var body: some View {
         if let subscription = group.subscription {
-            Button("编辑订阅", systemImage: "pencil") { actions.sheet = .editSubscription(subscription) }.disabled(!canManage)
-            Button("刷新订阅", systemImage: "arrow.clockwise") { refresh(subscription.id) }.disabled(!canManage)
+            Button(L10n.text("编辑订阅"), systemImage: "pencil") { actions.sheet = .editSubscription(subscription) }.disabled(!canManage)
+            Button(L10n.text("刷新订阅"), systemImage: "arrow.clockwise") { refresh(subscription.id) }.disabled(!canManage)
         } else if let manual = group.manualGroup {
-            Button("编辑节点组", systemImage: "pencil") { actions.sheet = .editGroup(manual) }.disabled(!canManage)
+            Button(L10n.text("编辑节点组"), systemImage: "pencil") { actions.sheet = .editGroup(manual) }.disabled(!canManage)
         } else {
-            Button("添加节点", systemImage: "plus") { actions.sheet = .add }.disabled(!canManage)
+            Button(L10n.text("添加节点"), systemImage: "plus") { actions.sheet = .add }.disabled(!canManage)
         }
 
-        Button("测试本组节点", systemImage: "waveform.path") {
+        Button(L10n.text("测试本组节点"), systemImage: "waveform.path") {
             controller.toggleBatchTest(only: Set(group.nodes.map(\.id)))
         }
         .disabled(!controller.canTest || actions.progress != nil || group.nodes.isEmpty)
 
-        Button(group.subscription == nil ? "分享节点组" : "分享订阅", systemImage: "qrcode", action: share)
+        Button(group.subscription == nil ? L10n.text("分享节点组") : L10n.text("分享订阅"), systemImage: "qrcode", action: share)
             .disabled(group.subscription == nil && group.nodes.isEmpty)
 
         if group.id != .ungrouped {
             Divider()
-            Button(group.subscription == nil ? "删除节点组" : "删除订阅", systemImage: "trash", role: .destructive) {
+            Button(group.subscription == nil ? L10n.text("删除节点组") : L10n.text("删除订阅"), systemImage: "trash", role: .destructive) {
                 actions.deletion = group
             }
             .disabled(!canManage)
@@ -199,7 +199,7 @@ struct NodeGroupMenuItems: View {
     }
 
     private func refresh(_ id: UUID) {
-        actions.progress = "正在刷新订阅"
+        actions.progress = L10n.text("正在刷新订阅")
         Task {
             defer { actions.progress = nil }
             do { try await controller.manage("POST", "/v1/subscriptions/\(id.uuidString)/refresh") }
@@ -227,14 +227,14 @@ struct NodeGroupActionPresenter: ViewModifier {
                     NodeShareSheet(item: item)
                 }
             }
-            .alert("删除「\(actions.deletion?.name ?? "")」？", isPresented: Binding(
+            .alert(L10n.text("删除「{0}」？", actions.deletion?.name ?? ""), isPresented: Binding(
                 get: { actions.deletion != nil },
                 set: { if !$0 { actions.deletion = nil } }
             ), presenting: actions.deletion) { group in
-                Button("删除", role: .destructive) { delete(group) }
-                Button("取消", role: .cancel) {}
+                Button(L10n.text("删除"), role: .destructive) { delete(group) }
+                Button(L10n.text("取消"), role: .cancel) {}
             } message: { group in
-                Text(group.subscription == nil ? "组内节点会保留。" : "将同时移除订阅中的节点。")
+                Text(group.subscription == nil ? L10n.text("组内节点会保留。") : L10n.text("将同时移除订阅中的节点。"))
             }
             .overlay(alignment: .bottom) {
                 if let progress = actions.progress {
@@ -247,7 +247,7 @@ struct NodeGroupActionPresenter: ViewModifier {
     }
 
     private func delete(_ group: NodeListGroup) {
-        actions.progress = "正在删除"
+        actions.progress = L10n.text("正在删除")
         Task {
             defer { actions.progress = nil }
             do {
@@ -280,21 +280,21 @@ private struct SubscriptionEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("名称", text: Binding(get: { name ?? subscription.name }, set: { name = $0 }))
+                    TextField(L10n.text("名称"), text: Binding(get: { name ?? subscription.name }, set: { name = $0 }))
                         .accessibilityIdentifier("edit-subscription-name")
-                    SecureField("替换订阅地址", text: $link).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    if let host = subscription.address.host { LabeledContent("订阅服务器", value: host) }
+                    SecureField(L10n.text("替换订阅地址"), text: $link).bywayNoAutocapitalization().autocorrectionDisabled()
+                    if let host = subscription.address.host { LabeledContent(L10n.text("订阅服务器"), value: host) }
                 }
                 .disabled(saving)
-                if saving { ProgressView("正在保存订阅") }
+                if saving { ProgressView(L10n.text("正在保存订阅")) }
                 if let error { Text(error).foregroundStyle(.red) }
             }
-            .navigationTitle("编辑订阅")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(L10n.text("编辑订阅"))
+            .bywayInlineTitle()
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(saving) }
+                ToolbarItem(placement: .cancellationAction) { Button(L10n.text("取消")) { dismiss() }.disabled(saving) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存", action: save)
+                    Button(L10n.text("保存"), action: save)
                         .disabled(saving || !controller.canManage ||
                                   (name == nil && link.isEmpty) || name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true)
                 }

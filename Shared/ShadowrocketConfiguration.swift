@@ -88,7 +88,9 @@ struct ShadowrocketConfiguration: Sendable {
     private(set) var finalLine: Int?
     private(set) var dnsServer: String?
     private(set) var preferIP: String?
-    private(set) var ipv6 = true
+    /// 默认关闭：全流量 TUN 下劫持 IPv6 却没有可用出口，IPv6 会成为黑洞，
+    /// 导致浏览器优先 IPv6 时整站打不开。配置里显式写 `ipv6 = true` 才会启用。
+    private(set) var ipv6 = false
     private(set) var warnings: [String] = []
 
     var usesGeoIP: Bool { rules.contains { $0.kind == .geoIP } }
@@ -96,7 +98,7 @@ struct ShadowrocketConfiguration: Sendable {
     init(_ text: String) throws {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               text.utf8.count <= Self.maxBytes else {
-            throw BywayError.message("配置需要为 UTF-8 文本，大小不能超过 1 MB")
+            throw BywayError.message(L10n.text("配置需要为 UTF-8 文本，大小不能超过 1 MB"))
         }
         var section = ""
         var hasRuleSection = false
@@ -110,7 +112,7 @@ struct ShadowrocketConfiguration: Sendable {
                 section = line.dropFirst().dropLast().lowercased()
                 if section == "rule" { hasRuleSection = true }
                 if !["general", "rule", "host", "url rewrite"].contains(section) {
-                    warn("配置段 [\(section)] 已保留，当前版本不执行")
+                    warn(L10n.text("配置段 [{0}] 已保留，当前版本不执行", section))
                 }
                 continue
             }
@@ -134,22 +136,22 @@ struct ShadowrocketConfiguration: Sendable {
                     // Byway's DNS uses real IP responses for every domain.
                     break
                 case "private-ip-answer":
-                    if try !Self.flag(value, at: lineNumber) { warn("Byway 保留 DNS 返回的私有 IP 地址") }
+                    if try !Self.flag(value, at: lineNumber) { warn(L10n.text("Byway 保留 DNS 返回的私有 IP 地址")) }
                 case "udp-policy-not-supported-behaviour":
-                    if value.uppercased() != "REJECT" { warn("不支持 UDP 的节点保持拒绝处理") }
+                    if value.uppercased() != "REJECT" { warn(L10n.text("不支持 UDP 的节点保持拒绝处理")) }
                 case "dns-direct-system":
-                    if try Self.flag(value, at: lineNumber) { warn("直连域名沿用导入后的统一 DNS 设置") }
+                    if try Self.flag(value, at: lineNumber) { warn(L10n.text("直连域名沿用导入后的统一 DNS 设置")) }
                 default:
-                    warn("设置 \(key) 已保留，当前版本不执行")
+                    warn(L10n.text("设置 {0} 已保留，当前版本不执行", key))
                 }
             case "rule":
                 let fields = Self.values(line)
                 let kind = fields[0].uppercased()
                 if hasFinal {
-                    throw Self.invalid(lineNumber, "FINAL 后还有分流规则")
+                    throw Self.invalid(lineNumber, L10n.text("FINAL 后还有分流规则"))
                 } else if kind == "FINAL" {
                     guard fields.count == 2, let policy = Policy(rawValue: fields[1].uppercased()) else {
-                        throw Self.invalid(lineNumber, "FINAL 需要指定 DIRECT、PROXY 或 REJECT")
+                        throw Self.invalid(lineNumber, L10n.text("FINAL 需要指定 DIRECT、PROXY 或 REJECT"))
                     }
                     final = policy
                     finalLine = lineNumber
@@ -157,15 +159,15 @@ struct ShadowrocketConfiguration: Sendable {
                 } else if let kind = Rule.Kind(rawValue: kind) {
                     if let rule = try parseRule(fields, kind: kind, at: lineNumber) { rules.append(rule) }
                 } else {
-                    warn("第 \(lineNumber) 行 \(kind) 已保留，当前版本不执行")
+                    warn(L10n.text("第 {0} 行 {1} 已保留，当前版本不执行", lineNumber, kind))
                 }
             case "host":
                 let (host, value) = try Self.assignment(line, at: lineNumber)
                 let addresses = Self.values(value)
                 guard Self.isHostname(host), addresses.allSatisfy({ IPv4Address($0) != nil || IPv6Address($0) != nil }) else {
-                    throw Self.invalid(lineNumber, "Host 需要有效的主机名和 IP 地址")
+                    throw Self.invalid(lineNumber, L10n.text("Host 需要有效的主机名和 IP 地址"))
                 }
-                guard hosts[host] == nil else { throw Self.invalid(lineNumber, "Host 重复定义") }
+                guard hosts[host] == nil else { throw Self.invalid(lineNumber, L10n.text("Host 重复定义")) }
                 hosts[host] = addresses
             case "url rewrite":
                 hasRewrite = true
@@ -173,11 +175,11 @@ struct ShadowrocketConfiguration: Sendable {
                 break
             }
         }
-        guard hasRuleSection, hasFinal || !rules.isEmpty else { throw BywayError.message("请提供带有 [Rule] 的分流配置") }
+        guard hasRuleSection, hasFinal || !rules.isEmpty else { throw BywayError.message(L10n.text("请提供带有 [Rule] 的分流配置")) }
         if let fallbackDNS, fallbackDNS.lowercased() != dnsServer?.lowercased() {
-            warn("备用 DNS 已保留，当前版本只使用主 DNS")
+            warn(L10n.text("备用 DNS 已保留，当前版本只使用主 DNS"))
         }
-        if hasRewrite { warn("[URL Rewrite] 已保留，当前版本不执行网址跳转") }
+        if hasRewrite { warn(L10n.text("[URL Rewrite] 已保留，当前版本不执行网址跳转")) }
     }
 
     func engineRules() -> [[String: Any]] {
@@ -196,26 +198,26 @@ struct ShadowrocketConfiguration: Sendable {
     private mutating func parseRule(_ fields: [String], kind: Rule.Kind, at line: Int) throws -> Rule? {
         let isIP = kind == .ipv4 || kind == .ipv6
         guard fields.count == 3 || (isIP && fields.count == 4 && fields[3].lowercased() == "no-resolve"),
-              !fields[1].isEmpty else { throw Self.invalid(line, "分流规则格式无效") }
+              !fields[1].isEmpty else { throw Self.invalid(line, L10n.text("分流规则格式无效")) }
         guard let policy = Policy(rawValue: fields[2].uppercased()) else {
-            warn("第 \(line) 行的分流策略已保留，当前版本不执行")
+            warn(L10n.text("第 {0} 行的分流策略已保留，当前版本不执行", line))
             return nil
         }
         let value = fields[1].lowercased()
         switch kind {
         case .domain, .suffix:
-            guard Self.isHostname(value, allowEdgeHyphens: true) else { throw Self.invalid(line, "域名格式无效") }
+            guard Self.isHostname(value, allowEdgeHyphens: true) else { throw Self.invalid(line, L10n.text("域名格式无效")) }
         case .keyword:
             break
         case .ipv4, .ipv6:
             _ = try Self.cidr(value, at: line)
         case .geoIP:
             guard value == "cn" else {
-                warn("第 \(line) 行只支持 GEOIP,CN")
+                warn(L10n.text("第 {0} 行只支持 GEOIP,CN", line))
                 return nil
             }
         case .port:
-            guard Rule.ports(value) != nil else { throw Self.invalid(line, "目标端口或范围无效") }
+            guard Rule.ports(value) != nil else { throw Self.invalid(line, L10n.text("目标端口或范围无效")) }
         }
         return Rule(kind: kind, value: value, policy: policy, noResolve: fields.count == 4, lineNumber: line)
     }
@@ -231,7 +233,7 @@ struct ShadowrocketConfiguration: Sendable {
     private static func assignment(_ line: String, at number: Int) throws -> (String, String) {
         let parts = line.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
         guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else {
-            throw invalid(number, "设置需要键和值")
+            throw invalid(number, L10n.text("设置需要键和值"))
         }
         return (parts[0].lowercased(), parts[1])
     }
@@ -240,7 +242,7 @@ struct ShadowrocketConfiguration: Sendable {
         switch value.lowercased() {
         case "true": true
         case "false": false
-        default: throw invalid(line, "设置需要 true 或 false")
+        default: throw invalid(line, L10n.text("设置需要 true 或 false"))
         }
     }
 
@@ -250,7 +252,7 @@ struct ShadowrocketConfiguration: Sendable {
         guard let url = URLComponents(string: value), url.scheme == "https",
               let host = url.host, !host.isEmpty, url.user == nil, url.password == nil,
               url.query == nil, url.fragment == nil, (url.port ?? 443) > 0, (url.port ?? 443) <= 65535 else {
-            throw invalid(line, "主 DNS 需要是 system、IP 地址或 HTTPS DNS 地址")
+            throw invalid(line, L10n.text("主 DNS 需要是 system、IP 地址或 HTTPS DNS 地址"))
         }
         return value
     }
@@ -260,7 +262,7 @@ struct ShadowrocketConfiguration: Sendable {
         guard parts.count == 2, let prefix = Int(parts[1]), prefix >= 0,
               (IPv4Address(String(parts[0])) != nil && prefix <= 32 ||
                IPv6Address(String(parts[0])) != nil && prefix <= 128) else {
-            throw invalid(line, "CIDR 地址格式无效")
+            throw invalid(line, L10n.text("CIDR 地址格式无效"))
         }
         return value
     }
@@ -273,6 +275,6 @@ struct ShadowrocketConfiguration: Sendable {
     }
 
     private static func invalid(_ line: Int, _ message: String) -> BywayError {
-        .message("第 \(line) 行：\(message)")
+        .message(L10n.text("第 {0} 行：{1}", line, message))
     }
 }

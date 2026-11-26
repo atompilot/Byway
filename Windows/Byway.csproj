@@ -13,6 +13,7 @@
     <Version>0.16.3</Version>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../Localization/byway-*.json" LogicalName="Byway.Localization.%(Filename)%(Extension)" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <EmbeddedResource Include="../Shared/Web/management.html" LogicalName="Byway.Web.management.html" />
     <EmbeddedResource Include="../Shared/Web/management.css" LogicalName="Byway.Web.management.css" />

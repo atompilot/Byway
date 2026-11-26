@@ -40,7 +40,7 @@ final class LANServer {
         #if targetEnvironment(simulator) || BYWAY_LOCAL_TEST
         setNetwork(LANSubnet(address: IPv4Address.loopback, mask: IPv4Address("255.255.255.255")!))
         #else
-        publish(LANEndpoint(state: "等待 Wi‑Fi"))
+        publish(LANEndpoint(state: L10n.text("等待 Wi‑Fi")))
         let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
         self.monitor = monitor
         monitor.pathUpdateHandler = { [weak self, weak monitor] path in
@@ -75,7 +75,7 @@ final class LANServer {
         if let next, next == network, listener != nil { return }
         closeListener()
         guard let next else {
-            publish(LANEndpoint(state: "请连接有 IPv4 地址的 Wi‑Fi"))
+            publish(LANEndpoint(state: L10n.text("请连接有 IPv4 地址的 Wi‑Fi")))
             return
         }
         do {
@@ -85,7 +85,7 @@ final class LANServer {
                 return
             }
             self.lease = lease
-            publish(LANEndpoint(state: "正在启动"))
+            publish(LANEndpoint(state: L10n.text("正在启动")))
             let parameters = NWParameters.tcp
             parameters.allowLocalEndpointReuse = true
             parameters.requiredLocalEndpoint = .hostPort(host: .ipv4(next.address), port: port)
@@ -100,7 +100,7 @@ final class LANServer {
                     guard let self, let listener, self.listener === listener else { return }
                     switch event {
                     case .ready:
-                        self.publish(LANEndpoint(address: "http://\(next.address):\(self.port.rawValue)", state: "已开启"))
+                        self.publish(LANEndpoint(address: "http://\(next.address):\(self.port.rawValue)", state: L10n.text("已开启")))
                         self.refreshDiscovery()
                     case .failed(let error):
                         self.listenerFailed(error, on: next)
@@ -109,7 +109,7 @@ final class LANServer {
                             self.listenerFailed(error, on: next)
                         } else {
                             self.stopDiscovery()
-                            self.publish(LANEndpoint(state: "等待 Wi‑Fi"))
+                            self.publish(LANEndpoint(state: L10n.text("等待 Wi‑Fi")))
                         }
                     default: break
                     }
@@ -137,7 +137,7 @@ final class LANServer {
             publish(.handoff)
             retryListener(on: network)
         } else {
-            publish(LANEndpoint(state: "监听失败，请重试"))
+            publish(LANEndpoint(state: L10n.text("监听失败，请重试")))
         }
     }
 
@@ -189,14 +189,14 @@ final class LANServer {
                 let input = try request.decode(DiscoveryInput.self, keys: ["enabled"])
                 try store.saveDiscoveryEnabled(input.enabled)
                 refreshDiscovery()
-            default: throw LANFailure(404, "API 路径不存在")
+            default: throw LANFailure(404, L10n.text("API 路径不存在"))
             }
             let enabled = try store.readDiscoveryEnabled()
             return LANResponse(200, endpoint.discovery ?? LANDiscovery(enabled: enabled, status: enabled ? "waiting" : "off"))
         } catch let failure as LANFailure {
             return LANResponse(failure)
         } catch {
-            return LANResponse(LANFailure(503, "无法访问局域网发现设置"))
+            return LANResponse(LANFailure(503, L10n.text("无法访问局域网发现设置")))
         }
     }
 
@@ -211,10 +211,10 @@ final class LANServer {
         let hosts = [address] + (hostname.map { ["\($0):\(port.rawValue)"] } ?? [])
         let stream = LANConnection(connection, authorizedToken: settings.token, hosts: hosts) { [weak self] request in
             guard let self, let store = self.store, let handle = self.handle, self.settings == settings else {
-                return LANResponse(LANFailure(503, "局域网控制已暂停"))
+                return LANResponse(LANFailure(503, L10n.text("局域网控制已暂停")))
             }
             guard (try? store.readLANSettings()) == settings else {
-                return LANResponse(LANFailure(401, "控制令牌已失效"))
+                return LANResponse(LANFailure(401, L10n.text("控制令牌已失效")))
             }
             if ManagementPage.isAsset(method: request.method, path: request.target) {
                 return ManagementPage.response(for: request.target)
@@ -387,40 +387,40 @@ private final class LANConnection {
 
     private func parse() throws -> LANRequest? {
         guard let boundary = received.range(of: Self.separator) else {
-            if received.count > Self.headerLimit { throw LANFailure(431, "请求头过大") }
+            if received.count > Self.headerLimit { throw LANFailure(431, L10n.text("请求头过大")) }
             return nil
         }
-        guard boundary.lowerBound <= Self.headerLimit else { throw LANFailure(431, "请求头过大") }
+        guard boundary.lowerBound <= Self.headerLimit else { throw LANFailure(431, L10n.text("请求头过大")) }
         guard let head = String(data: received[..<boundary.lowerBound], encoding: .utf8) else {
-            throw LANFailure(400, "请求头无效")
+            throw LANFailure(400, L10n.text("请求头无效"))
         }
         let lines = head.components(separatedBy: "\r\n")
         let line = lines[0].split(separator: " ")
         guard line.count == 3, line[2] == "HTTP/1.1", line[1].hasPrefix("/") else {
-            throw LANFailure(400, "需要 HTTP/1.1 请求")
+            throw LANFailure(400, L10n.text("需要 HTTP/1.1 请求"))
         }
         var headers: [String: String] = [:]
         for line in lines.dropFirst() {
-            guard let colon = line.firstIndex(of: ":") else { throw LANFailure(400, "请求头无效") }
+            guard let colon = line.firstIndex(of: ":") else { throw LANFailure(400, L10n.text("请求头无效")) }
             let name = line[..<colon].lowercased()
-            guard headers[name] == nil else { throw LANFailure(400, "请求头重复") }
+            guard headers[name] == nil else { throw LANFailure(400, L10n.text("请求头重复")) }
             headers[name] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
         }
         let method = String(line[0]), path = String(line[1])
         let asset = ManagementPage.isAsset(method: method, path: path)
         guard ManagementPage.allowsRequest(method: method, path: path, headers: headers, hosts: hosts, asset: asset) else {
-            throw LANFailure(403, "此地址或来源无法访问 Byway API")
+            throw LANFailure(403, L10n.text("此地址或来源无法访问 Byway API"))
         }
         if !asset {
             let actual = Array((headers["authorization"] ?? "").utf8)
             guard actual.count == expectedAuthorization.count,
                   zip(actual, expectedAuthorization).reduce(UInt8(0), { $0 | ($1.0 ^ $1.1) }) == 0 else {
-                throw LANFailure(401, "控制令牌无效")
+                throw LANFailure(401, L10n.text("控制令牌无效"))
             }
         }
         guard headers["transfer-encoding"] == nil, headers["expect"] == nil,
               let length = Int(headers["content-length"] ?? "0"), length >= 0, !asset || length == 0 else {
-            throw LANFailure(400, "请求长度无效")
+            throw LANFailure(400, L10n.text("请求长度无效"))
         }
         let configurationUpload = (line[0] == "PUT" && line[1] == "/v1/config/shadowrocket") ||
             (line[0] == "POST" && line[1] == "/v1/config/shadowrocket/preview") ||
@@ -435,10 +435,10 @@ private final class LANConnection {
         } else {
             maxBody = Self.bodyLimit
         }
-        guard length <= maxBody else { throw LANFailure(413, "请求正文过大") }
+        guard length <= maxBody else { throw LANFailure(413, L10n.text("请求正文过大")) }
         let end = boundary.upperBound + length
         guard received.count >= end else { return nil }
-        guard received.count == end else { throw LANFailure(400, "连接只接受一个请求") }
+        guard received.count == end else { throw LANFailure(400, L10n.text("连接只接受一个请求")) }
         return LANRequest(method: String(line[0]), target: String(line[1]), headers: headers,
                           body: received[boundary.upperBound..<end])
     }

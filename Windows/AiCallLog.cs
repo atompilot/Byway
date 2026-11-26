@@ -15,7 +15,7 @@ internal sealed class AiCallLog
 
     internal void Record(DateTimeOffset time, string source, string method, string? path, int status, long milliseconds)
     {
-        string displayMethod = method is "GET" or "POST" or "PUT" or "PATCH" or "DELETE" ? method : "其他";
+        string displayMethod = method is "GET" or "POST" or "PUT" or "PATCH" or "DELETE" ? method : L10n.Text("其他");
         string displayPath = DisplayPath(path);
         lock (recent)
         {
@@ -37,7 +37,7 @@ internal sealed class AiCallLog
             return "—";
         string[] segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length is < 2 or > 4 || segments[0] != "v1")
-            return "未知路径";
+            return L10n.Text("未知路径");
         for (int i = 1; i < segments.Length; i++)
         {
             if (RouteWords.Contains(segments[i]))
@@ -45,7 +45,7 @@ internal sealed class AiCallLog
             bool isResource = i == 2 && segments[1] is "nodes" or "groups" ||
                 i == 3 && segments[1] == "config" && segments[2] == "shadowrocket";
             if (!isResource || !Guid.TryParse(segments[i], out Guid id))
-                return "未知路径";
+                return L10n.Text("未知路径");
             segments[i] = id.ToString();
         }
         return "/" + string.Join('/', segments);

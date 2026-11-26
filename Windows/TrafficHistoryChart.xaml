@@ -1,6 +1,7 @@
 <UserControl x:Class="Byway.TrafficHistoryChart"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Byway">
     <UserControl.Resources>
         <DrawingBrush x:Key="MissingTraffic" Viewport="0,0,5,5" ViewportUnits="Absolute"
                       Viewbox="0,0,5,5" ViewboxUnits="Absolute" TileMode="Tile" Opacity="0.45">
@@ -57,7 +58,7 @@
                      ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      ItemContainerStyle="{StaticResource TrafficSlot}" SelectionChanged="BarSelectionChanged"
                      PreviewKeyDown="OnBarKeyDown" AutomationProperties.AutomationId="TrafficHistoryBars"
-                     AutomationProperties.Name="分时用量">
+                     AutomationProperties.Name="{local:Loc '分时用量'}">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
                 </ListBox.ItemsPanel>

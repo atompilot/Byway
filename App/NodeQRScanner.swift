@@ -1,4 +1,10 @@
+import SwiftUI
+#if os(iOS)
 import AVFoundation
+import VisionKit
+#endif
+
+#if os(iOS)
 import SwiftUI
 import VisionKit
 
@@ -21,42 +27,42 @@ struct NodeQRScanner: View {
             case .checking:
                 ProgressView()
             case .importing:
-                ProgressView("正在导入")
+                ProgressView(L10n.text("正在导入"))
             case .partial(let progress):
                 ContentUnavailableView {
                     Label(progress, systemImage: "qrcode")
                 } actions: {
-                    Button("继续扫描") { state = .ready }
+                    Button(L10n.text("继续扫描")) { state = .ready }
                 }
             case .ready:
                 QRCodeCamera(didRead: importCode) { state = .unavailable }
             case .denied:
                 ContentUnavailableView {
-                    Label("需要相机权限", systemImage: "camera")
+                    Label(L10n.text("需要相机权限"), systemImage: "camera")
                 } description: {
-                    Text("你可以在设置中允许 Byway 使用相机，或返回粘贴节点链接。")
+                    Text(L10n.text("你可以在设置中允许 Byway 使用相机，或返回粘贴节点链接。"))
                 } actions: {
-                    Button("打开设置") {
+                    Button(L10n.text("打开设置")) {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             openURL(url)
                         }
                     }
                 }
             case .unavailable:
-                ContentUnavailableView("相机暂不可用", systemImage: "camera",
-                                       description: Text("你可以返回粘贴节点链接。"))
+                ContentUnavailableView(L10n.text("相机暂不可用"), systemImage: "camera",
+                                       description: Text(L10n.text("你可以返回粘贴节点链接。")))
             case .invalidCode(let message):
                 ContentUnavailableView {
-                    Label("无法导入节点", systemImage: "qrcode")
+                    Label(L10n.text("无法导入节点"), systemImage: "qrcode")
                 } description: {
                     Text(message)
                 } actions: {
-                    Button("重新扫码") { state = .ready }
+                    Button(L10n.text("重新扫码")) { state = .ready }
                 }
             }
         }
-        .navigationTitle("扫码添加")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("扫码添加"))
+        .bywayInlineTitle()
         .task { await authorizeCamera() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active, case .denied = state,
@@ -180,3 +186,53 @@ private struct QRCodeCamera: UIViewControllerRepresentable {
         }
     }
 }
+
+#else
+struct NodeQRScanner: View {
+    let save: (String) async throws -> String?
+
+    @State private var text = ""
+    @State private var error: String?
+    @State private var busy = false
+    @State private var partial: String?
+
+    var body: some View {
+        Form {
+            Section {
+                TextField(L10n.text("粘贴节点、订阅链接或分享码"), text: $text, axis: .vertical)
+                    .lineLimit(3...6)
+                    .bywayNoAutocapitalization()
+                    .autocorrectionDisabled()
+                    .bywayKeyboardType(.url)
+            } footer: {
+                Text(L10n.text("Mac 版暂不调用相机。可粘贴链接，或用「读取二维码图片」从图片导入。"))
+            }
+            if let partial {
+                Section(L10n.text("导入进度")) { Text(partial) }
+            }
+            if let error {
+                Section { Text(error).foregroundStyle(.red) }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle(L10n.text("添加节点"))
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(L10n.text("导入")) { submit() }
+                    .disabled(busy || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+    }
+
+    private func submit() {
+        busy = true
+        error = nil
+        partial = nil
+        Task {
+            do { partial = try await save(text) }
+            catch { self.error = error.localizedDescription }
+            busy = false
+        }
+    }
+}
+#endif

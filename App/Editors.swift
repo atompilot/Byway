@@ -21,33 +21,33 @@ struct RelayEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("HTTPS 地址", text: $address)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
+                    TextField(L10n.text("HTTPS 地址"), text: $address)
+                        .bywayKeyboardType(.url)
+                        .bywayNoAutocapitalization()
                         .autocorrectionDisabled()
                         .accessibilityIdentifier("relay-address")
-                    SecureField("设备密钥", text: $key)
-                        .textInputAutocapitalization(.never)
+                    SecureField(L10n.text("设备密钥"), text: $key)
+                        .bywayNoAutocapitalization()
                         .autocorrectionDisabled()
                         .accessibilityIdentifier("relay-key")
                 } footer: {
-                    Text(editable ? "隧道连接后，Byway 会连接到你的控制服务。" : "断开隧道后可修改控制服务。")
+                    Text(editable ? L10n.text("隧道连接后，Byway 会连接到你的控制服务。") : L10n.text("断开隧道后可修改控制服务。"))
                 }
                 .disabled(!editable)
                 if configuration != nil && editable {
-                    Button("移除控制服务", role: .destructive) { persist(nil) }
+                    Button(L10n.text("移除控制服务"), role: .destructive) { persist(nil) }
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }
-            .navigationTitle("AI 控制")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(L10n.text("AI 控制"))
+            .bywayInlineTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(editable ? "取消" : "完成") { dismiss() }
+                    Button(editable ? L10n.text("取消") : L10n.text("完成")) { dismiss() }
                 }
                 if editable {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("保存") {
+                        Button(L10n.text("保存")) {
                             do {
                                 let configuration = try RelayConfiguration(address: address, deviceKey: key)
                                 persist(configuration)
@@ -85,88 +85,89 @@ struct LANControlEditor: View {
         Form {
             LocalDeviceSection()
             Section {
-                Toggle("允许局域网控制", isOn: Binding(
+                Toggle(L10n.text("允许局域网控制"), isOn: Binding(
                     get: { control.enabled },
                     set: { control.setEnabled($0, vpn: vpn) }
                 ))
                 .accessibilityIdentifier("lan-control-toggle")
                 .disabled(!vpn.ready)
                 if control.enabled {
-                    LabeledContent("状态", value: control.state)
-                    Toggle("允许局域网发现", isOn: Binding(
+                    LabeledContent(L10n.text("状态"), value: control.state)
+                    Toggle(L10n.text("允许局域网发现"), isOn: Binding(
                         get: { control.discoveryEnabled },
                         set: { control.setDiscoveryEnabled($0, vpn: vpn) }
                     ))
                     .accessibilityIdentifier("lan-discovery-toggle")
                     if let address = control.address {
                         Button {
-                            UIPasteboard.general.string = aiInstruction(address)
+                            BywayPasteboard.copy(aiInstruction(address))
                             copiedAIInstruction = true
                         } label: {
-                            Label(copiedAIInstruction ? "接入指令已复制" : "复制接入指令", systemImage: "doc.on.doc")
+                            Label(copiedAIInstruction ? L10n.text("接入指令已复制") : L10n.text("复制接入指令"), systemImage: "doc.on.doc")
                         }
                         .accessibilityIdentifier("lan-control-copy")
-                        LabeledContent("API 地址") {
+                        LabeledContent(L10n.text("API 地址")) {
                             Text(address).textSelection(.enabled)
                         }
                     }
                 }
             } header: {
-                Text("把 Byway 接入电脑上的 AI")
+                Text(L10n.text("把 Byway 接入电脑上的 AI"))
             } footer: {
                 if control.enabled {
-                    Text("复制后直接粘贴给电脑上的 AI。VPN 连接期间，锁屏也可访问；VPN 断开后，接口只在 Byway 前台开放。")
+                    Text(L10n.text("复制后直接粘贴给电脑上的 AI。VPN 连接期间，锁屏也可访问；VPN 断开后，接口只在 Byway 前台开放。"))
                 } else {
-                    Text("开启后可复制接入指令，交给同一 Wi‑Fi 上的电脑 AI 管理节点和代理设置。请只在信任的 Wi‑Fi 上使用。")
+                    Text(L10n.text("开启后可复制接入指令，交给同一 Wi‑Fi 上的电脑 AI 管理节点和代理设置。请只在信任的 Wi‑Fi 上使用。"))
                 }
             }
 
-            Section("出口与连接") {
-                LabeledContent("已选代理节点", value: vpn.activeNode?.name ?? "未选择节点")
+            Section(L10n.text("出口与连接")) {
+                LabeledContent(L10n.text("已选代理节点"), value: vpn.activeNode?.name ?? L10n.text("未选择节点"))
                     .accessibilityIdentifier("ai-selected-exit")
-                LabeledContent("VPN 状态", value: vpn.statusLabel)
+                LabeledContent(L10n.text("VPN 状态"), value: vpn.statusLabel)
                     .accessibilityIdentifier("ai-vpn-status")
             }
 
             if let address = control.address,
                let webURL = URL(string: control.discovery?.preferredUrl ?? address + "/") {
                 Section {
-                    LabeledContent("首选地址") { Text(webURL.absoluteString).textSelection(.enabled) }
+                    LabeledContent(L10n.text("首选地址")) { Text(webURL.absoluteString).textSelection(.enabled) }
                     if control.discoveryEnabled && control.discovery?.mdnsUrl == nil {
-                        Text(control.discovery?.status == "unavailable" ? "mDNS 不可用，使用 IP 地址。" : "正在发布 mDNS 地址。")
+                        Text(control.discovery?.status == "unavailable" ? L10n.text("mDNS 不可用，使用 IP 地址。") : L10n.text("正在发布 mDNS 地址。"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    Button("打开管理网页") { openURL(webURL) }
+                    Button(L10n.text("打开管理网页")) { openURL(webURL) }
                         .disabled(!vpn.connected)
                         .accessibilityIdentifier("open-management-web")
-                    Button(copiedWebLink ? "网页链接已复制" : "复制网页链接") {
-                        UIPasteboard.general.url = webURL
+                    Button(copiedWebLink ? L10n.text("网页链接已复制") : L10n.text("复制网页链接")) {
+                        BywayPasteboard.copy(url: webURL)
                         copiedWebLink = true
                     }
                     .accessibilityIdentifier("copy-management-link")
                     if control.discovery?.mdnsUrl != nil {
-                        Button(copiedIPLink ? "IP 链接已复制" : "复制 IP 链接") {
-                            UIPasteboard.general.url = URL(string: address + "/")
+                        Button(copiedIPLink ? L10n.text("IP 链接已复制") : L10n.text("复制 IP 链接")) {
+                            BywayPasteboard.copy(url: URL(string: address + "/")!)
                             copiedIPLink = true
                         }
                         .accessibilityIdentifier("copy-management-ip")
                     }
                 } header: {
-                    Text("管理网页")
+                    Text(L10n.text("管理网页"))
                 } footer: {
                     if !vpn.connected {
-                        Text("连接 VPN 后可用本机浏览器打开。Byway 保持前台时，其他设备可用链接访问。")
+                        Text(L10n.text("连接 VPN 后可用本机浏览器打开。Byway 保持前台时，其他设备可用链接访问。"))
                     }
                 }
             }
             Section {
-                NavigationLink("调用日志") { LANCallLogView(controller: vpn) }
-                Button("中继控制设置") { showRelay = true }
+                NavigationLink(L10n.text("调用日志")) { LANCallLogView(controller: vpn) }
+                Button(L10n.text("中继控制设置")) { showRelay = true }
             }
         }
-        .navigationTitle("AI 控制")
-        .navigationBarTitleDisplayMode(.inline)
+        .bywaySettingsForm()
+        .navigationTitle(L10n.text("AI 控制"))
+        .bywayInlineTitle()
         .sheet(isPresented: $showRelay) {
             RelayEditor(configuration: vpn.profile.relay, editable: vpn.canEdit, save: vpn.setRelay)
         }
@@ -188,7 +189,7 @@ struct LANControlEditor: View {
     }
 
     private func aiInstruction(_ address: String) -> String {
-        "请读取 \(address)/v1/guide 了解 Byway 的操作接口。\nAuthorization: Bearer \(control.token)"
+        L10n.text("请读取 {0}/v1/guide 了解 Byway 的操作接口。\nAuthorization: Bearer {1}", address, control.token)
     }
 }
 
@@ -199,24 +200,24 @@ private struct LocalDeviceSection: View {
     @State private var error: String?
 
     var body: some View {
-        Section("当前设备") {
+        Section(L10n.text("当前设备")) {
             if let device {
-                LabeledContent("识别码", value: device.shortCode)
+                LabeledContent(L10n.text("识别码"), value: device.shortCode)
                     .monospacedDigit()
                     .accessibilityIdentifier("device-short-code")
                 if editing {
-                    TextField("设备名称", text: $draft)
+                    TextField(L10n.text("设备名称"), text: $draft)
                         .accessibilityIdentifier("device-name-input")
                         .onSubmit(save)
-                    Button("保存", action: save)
-                    Button("取消", role: .cancel) {
+                    Button(L10n.text("保存"), action: save)
+                    Button(L10n.text("取消"), role: .cancel) {
                         editing = false
                         error = nil
                     }
                 } else {
-                    LabeledContent("设备名称", value: device.displayName)
+                    LabeledContent(L10n.text("设备名称"), value: device.displayName)
                         .accessibilityIdentifier("device-display-name")
-                    Button("修改设备名称") {
+                    Button(L10n.text("修改设备名称")) {
                         draft = device.displayName
                         error = nil
                         editing = true

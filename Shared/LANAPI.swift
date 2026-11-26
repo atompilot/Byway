@@ -10,7 +10,7 @@ struct LANFailure: LocalizedError {
         self.message = message
     }
 
-    static let nodeNotFound = Self(404, "节点不存在")
+    static let nodeNotFound = Self(404, L10n.text("节点不存在"))
 }
 
 struct LANRequest: Codable, Sendable {
@@ -22,14 +22,14 @@ struct LANRequest: Codable, Sendable {
     func decode<T: Decodable>(_ type: T.Type, keys: Set<String>) throws -> T {
         let mediaType = headers["content-type"]?.split(separator: ";").first?.trimmingCharacters(in: .whitespaces)
         guard mediaType?.lowercased() == "application/json" else {
-            throw LANFailure(415, "请求需要 application/json")
+            throw LANFailure(415, L10n.text("请求需要 application/json"))
         }
         guard let object = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any],
               !object.isEmpty, Set(object.keys).isSubset(of: keys), object.values.allSatisfy({ !($0 is NSNull) }) else {
-            throw LANFailure(400, "请求必须是 JSON 对象，且只能包含支持的字段")
+            throw LANFailure(400, L10n.text("请求必须是 JSON 对象，且只能包含支持的字段"))
         }
         do { return try JSONDecoder().decode(type, from: body) }
-        catch { throw LANFailure(400, "请求字段类型或值无效") }
+        catch { throw LANFailure(400, L10n.text("请求字段类型或值无效")) }
     }
 }
 
@@ -114,7 +114,7 @@ struct LANAPI: Sendable {
                 return LANResponse(200, try await backend.lanSnapshot().profile.nodes.map(Node.init))
             case ("POST", "/v1/nodes"):
                 let input = try request.decode(NodeInput.self, keys: ["link", "name"])
-                guard let link = input.link else { throw LANFailure(400, "请提供节点链接") }
+                guard let link = input.link else { throw LANFailure(400, L10n.text("请提供节点链接")) }
                 let receipt = try await backend.lanEdit(.create(link: link, name: input.name))
                 return LANResponse(201, receipt.node.map(Node.init))
             case ("GET", "/v1/config"):
@@ -167,9 +167,9 @@ struct LANAPI: Sendable {
         } catch let error as BywayError {
             return LANResponse(LANFailure(422, error.localizedDescription))
         } catch is CancellationError {
-            return LANResponse(LANFailure(503, "局域网控制已暂停"))
+            return LANResponse(LANFailure(503, L10n.text("局域网控制已暂停")))
         } catch {
-            return LANResponse(LANFailure(500, "操作失败，请查询设备状态"))
+            return LANResponse(LANFailure(500, L10n.text("操作失败，请查询设备状态")))
         }
     }
 
@@ -181,7 +181,7 @@ struct LANAPI: Sendable {
             return LANResponse(200, Node(node))
         case ("PATCH", nil):
             let input = try request.decode(NodeInput.self, keys: ["link", "name"])
-            guard input.link != nil || input.name != nil else { throw LANFailure(400, "请提供待修改的字段") }
+            guard input.link != nil || input.name != nil else { throw LANFailure(400, L10n.text("请提供待修改的字段")) }
             let receipt = try await backend.lanEdit(.update(id: id, link: input.link, name: input.name))
             return LANResponse(200, receipt.node.map(Node.init))
         case ("DELETE", nil):
@@ -194,7 +194,7 @@ struct LANAPI: Sendable {
         case ("GET", "share"):
             return try await MobileAPI(backend: backend).shareNode(id)
         default:
-            throw LANFailure(404, "API 路径不存在")
+            throw LANFailure(404, L10n.text("API 路径不存在"))
         }
     }
 

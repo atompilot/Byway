@@ -35,18 +35,18 @@ struct SubscriptionSource: Sendable {
             let fields = text.dropFirst(6).split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false)
             guard let payload = fields.first, let data = NodeImport.decodeBase64(String(payload)),
                   let url = String(data: data, encoding: .utf8) else {
-                throw BywayError.message("订阅链接无法解码")
+                throw BywayError.message(L10n.text("订阅链接无法解码"))
             }
             text = url
             if fields.count == 2 { name = fields[1].removingPercentEncoding }
         }
         guard text.utf8.count <= 8192, var url = URLComponents(string: text), url.scheme?.lowercased() == "https",
               let host = url.host, !host.isEmpty, url.user == nil, url.password == nil else {
-            throw BywayError.message("订阅地址需要使用 HTTPS")
+            throw BywayError.message(L10n.text("订阅地址需要使用 HTTPS"))
         }
         name = name ?? url.fragment
         url.fragment = nil
-        guard let address = url.url else { throw BywayError.message("订阅地址无效") }
+        guard let address = url.url else { throw BywayError.message(L10n.text("订阅地址无效")) }
         self.address = address
         suggestedName = String((name.map { $0.isEmpty ? host : $0 } ?? host).prefix(50))
     }
@@ -61,15 +61,15 @@ struct SubscriptionSource: Sendable {
         let (bytes, response) = try await session.bytes(for: request)
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode),
               response.expectedContentLength <= NodeImport.maxBytes else {
-            throw BywayError.message("订阅服务器响应异常或内容过大")
+            throw BywayError.message(L10n.text("订阅服务器响应异常或内容过大"))
         }
         var data = Data()
         for try await byte in bytes {
-            guard data.count < NodeImport.maxBytes else { throw BywayError.message("订阅内容超过 4 MB") }
+            guard data.count < NodeImport.maxBytes else { throw BywayError.message(L10n.text("订阅内容超过 4 MB")) }
             data.append(byte)
         }
         guard let text = String(data: data, encoding: .utf8) else {
-            throw BywayError.message("订阅内容需要使用 UTF-8 编码")
+            throw BywayError.message(L10n.text("订阅内容需要使用 UTF-8 编码"))
         }
         return try NodeImport(text, usage: SubscriptionUsage(response.value(forHTTPHeaderField: "subscription-userinfo")))
     }
@@ -105,11 +105,11 @@ struct NodeImport: Sendable {
     var usage: SubscriptionUsage?
 
     init(_ source: String, usage: SubscriptionUsage? = nil) throws {
-        guard source.utf8.count <= Self.maxBytes else { throw BywayError.message("导入内容超过 4 MB") }
+        guard source.utf8.count <= Self.maxBytes else { throw BywayError.message(L10n.text("导入内容超过 4 MB")) }
         let text = source.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: ["\u{feff}"])
         if text.hasPrefix("[") {
             let entries = try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [[String: Any]] ?? []
-            guard entries.count <= 2048 else { throw BywayError.message("导入的条目过多") }
+            guard entries.count <= 2048 else { throw BywayError.message(L10n.text("导入的条目过多")) }
             nodes = entries.compactMap { try? Self.shadowrocket($0) }
             skipped = entries.count - nodes.count
         } else {
@@ -117,7 +117,7 @@ struct NodeImport: Sendable {
                 (Self.decodeBase64(text).flatMap { String(data: $0, encoding: .utf8) } ?? text)
             let links = decoded.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
-            guard links.count <= 2048 else { throw BywayError.message("导入的条目过多") }
+            guard links.count <= 2048 else { throw BywayError.message(L10n.text("导入的条目过多")) }
             nodes = links.compactMap { try? ProxyNode(link: $0) }
             skipped = links.count - nodes.count
         }
@@ -125,7 +125,7 @@ struct NodeImport: Sendable {
             if !unique.contains(where: { $0.hasSameEndpoint(as: node) && $0.name == node.name }) { unique.append(node) }
         }
         guard !nodes.isEmpty, nodes.count <= NodeSubscription.maxNodes else {
-            throw BywayError.message("需要 1 至 512 个可用节点")
+            throw BywayError.message(L10n.text("需要 1 至 512 个可用节点"))
         }
         self.usage = usage
     }
@@ -142,7 +142,7 @@ struct NodeImport: Sendable {
               ["", "none", "tcp", "raw"].contains(text("obfs").lowercased()),
               ["", "none"].contains(text("plugin").lowercased()),
               ["", "none"].contains(text("proto").lowercased()) else {
-            throw BywayError.message("此节点导出格式不受支持")
+            throw BywayError.message(L10n.text("此节点导出格式不受支持"))
         }
         var url = URLComponents()
         url.scheme = "vless"
@@ -157,7 +157,7 @@ struct NodeImport: Sendable {
         url.queryItems = [("security", security), ("sni", text("peer")), ("pbk", key), ("sid", text("shortId")),
                           ("flow", text("flow")), ("alpn", text("alpn")), ("fp", fingerprint.hasPrefix("safari") ? "safari" : fingerprint)]
             .filter { !$0.1.isEmpty }.map { URLQueryItem(name: $0.0, value: $0.1) }
-        guard let link = url.string else { throw BywayError.message("无法读取节点") }
+        guard let link = url.string else { throw BywayError.message(L10n.text("无法读取节点")) }
         return try ProxyNode(link: link)
     }
 }
@@ -205,14 +205,14 @@ extension BywayProfile {
             return try updateSubscription(id: id, previousAddress: previousAddress, source: source, name: name, result: result)
         case let .renameSubscription(id, name):
             guard var subscription = nodeSubscriptions.first(where: { $0.id == id }) else {
-                throw LANFailure(404, "订阅不存在")
+                throw LANFailure(404, L10n.text("订阅不存在"))
             }
             subscription.name = name
             try storeSubscription(subscription)
             return id
         case let .deleteSubscription(id):
             guard let subscription = nodeSubscriptions.first(where: { $0.id == id }) else {
-                throw LANFailure(404, "订阅不存在")
+                throw LANFailure(404, L10n.text("订阅不存在"))
             }
             for node in subscription.members(in: self) { removeNodeFromCollections(node.id) }
             subscriptions?.removeAll { $0.id == id }
@@ -231,7 +231,7 @@ extension BywayProfile {
                                              name: String?, result: NodeImport) throws -> UUID {
         let existing = nodeSubscriptions.first { id == nil ? $0.address == source.address : $0.id == id }
         if id != nil, existing?.address != previousAddress || existing == nil {
-            throw LANFailure(409, "订阅已变更，请重新读取")
+            throw LANFailure(409, L10n.text("订阅已变更，请重新读取"))
         }
         if let existing, existing.address != source.address {
             for old in existing.members(in: self) { removeNodeFromCollections(old.id) }
@@ -271,11 +271,11 @@ extension BywayProfile {
         guard (1...50).contains(subscription.name.count),
               subscription.name.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }),
               !nodeSubscriptions.contains(where: { $0.id != subscription.id && $0.address == subscription.address }) else {
-            throw LANFailure(422, "订阅地址重复或名称无效")
+            throw LANFailure(422, L10n.text("订阅地址重复或名称无效"))
         }
         var subscriptions = nodeSubscriptions.filter { $0.id != subscription.id }
         subscriptions.append(subscription)
-        guard subscriptions.count <= 32 else { throw LANFailure(422, "最多可保存 32 个订阅") }
+        guard subscriptions.count <= 32 else { throw LANFailure(422, L10n.text("最多可保存 32 个订阅")) }
         var routing = globalRoutingSettings
         let members = subscription.members(in: self).map(\.id)
         if members.isEmpty {
@@ -293,6 +293,6 @@ extension BywayProfile {
     }
 
     private func checkNodeLimit() throws {
-        guard nodes.count <= NodeSubscription.maxNodes else { throw LANFailure(422, "最多可保存 512 个节点") }
+        guard nodes.count <= NodeSubscription.maxNodes else { throw LANFailure(422, L10n.text("最多可保存 512 个节点")) }
     }
 }

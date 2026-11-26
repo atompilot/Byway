@@ -25,7 +25,7 @@ public partial class MainWindow
         SyncProxyControls();
         CloseToTray.IsChecked = Options.CloseToTray;
         ReadStartupControls();
-        VersionLabel.Text = $"版本 {typeof(MainWindow).Assembly.GetName().Version!.ToString(3)}";
+        VersionLabel.Text = L10n.Format($"版本 {typeof(MainWindow).Assembly.GetName().Version!.ToString(3)}");
         ShowRoutingConfigurations();
         InitializeTrafficHistory();
         trafficTimer.Tick += async (_, _) =>
@@ -102,9 +102,9 @@ public partial class MainWindow
     private void RefreshWorkspaceControls()
     {
         ConfigProxyStatus.Text = mixed is null
-            ? $"127.0.0.1:{Options.MixedPort} · 代理已停用"
+            ? L10n.Format($"127.0.0.1:{Options.MixedPort} · 代理已停用")
             : $"{CaptureName(active?.Capture ?? Options.Capture)} · {mixed.Endpoint} · " +
-                (profile.ActiveRouting?.Name ?? "默认配置");
+                (profile.ActiveRouting?.Name ?? L10n.Text("默认配置"));
         SaveConfigButton.IsEnabled = ApplyProxyEndpoint.IsEnabled = !busy && !restorePending;
         RefreshRoutingControls();
         BypassInput.IsEnabled = MixedPortInput.IsEnabled = RoutingModeInput.IsEnabled = !busy;
@@ -122,7 +122,7 @@ public partial class MainWindow
         {
             await ApplyProxyOptionsAsync(Options with { Bypass = BypassInput.Text });
             BypassInput.Text = Options.Bypass.Replace(";", Environment.NewLine);
-            Status.Text = active?.Capture == CaptureMode.SystemProxy ? "系统代理例外已生效。" : "系统代理例外已保存。";
+            Status.Text = active?.Capture == CaptureMode.SystemProxy ? L10n.Text("系统代理例外已生效。") : L10n.Text("系统代理例外已保存。");
         });
     }
 
@@ -131,23 +131,23 @@ public partial class MainWindow
         await RunAsync(async () =>
         {
             if (!int.TryParse(MixedPortInput.Text, out int port) || RoutingModeInput.SelectedIndex < 0 || CaptureModeInput.SelectedIndex < 0)
-                throw new InvalidDataException("请输入本机混合端口并选择路由模式和接管方式。");
+                throw new InvalidDataException(L10n.Text("请输入本机混合端口并选择路由模式和接管方式。"));
             var capture = (CaptureMode)CaptureModeInput.SelectedIndex;
             if (capture == CaptureMode.Tun && !Program.IsElevated)
-                throw new InvalidDataException("请先以管理员身份重启 Byway，再应用全流量模式。");
+                throw new InvalidDataException(L10n.Text("请先以管理员身份重启 Byway，再应用全流量模式。"));
             await ApplyProxyOptionsAsync(Options with { MixedPort = port, RouteMode = (RoutingMode)RoutingModeInput.SelectedIndex, Capture = capture });
             SyncProxyControls();
-            Status.Text = active is null ? $"已保存 · {CaptureName(capture)}" : $"已应用 · {CaptureName(capture)} · {mixed!.Endpoint}";
+            Status.Text = active is null ? L10n.Format($"已保存 · {CaptureName(capture)}") : L10n.Format($"已应用 · {CaptureName(capture)} · {mixed!.Endpoint}");
         });
     }
 
     private async Task ApplyProxyOptionsAsync(DesktopOptions settings)
     {
         if (restorePending)
-            throw new InvalidOperationException("请先恢复 Windows 系统代理。");
+            throw new InvalidOperationException(L10n.Text("请先恢复 Windows 系统代理。"));
         var previous = Options;
         if (settings.MixedPort is < 1 or > 65535 or 8766 or 8767)
-            throw new InvalidDataException("混合端口须在 1 至 65535 之间，8766 和 8767 供 Byway AI 使用。");
+            throw new InvalidDataException(L10n.Text("混合端口须在 1 至 65535 之间，8766 和 8767 供 Byway AI 使用。"));
         settings = settings with { Bypass = NormalizeBypass(settings.Bypass) };
         var next = profile with { Options = settings };
         if (active is { } core && mixed is { } entry)
@@ -177,9 +177,9 @@ public partial class MainWindow
 
     private static string CaptureName(CaptureMode capture) => capture switch
     {
-        CaptureMode.Tun => "全流量（TUN）",
-        CaptureMode.Manual => "仅监听（手动代理）",
-        _ => "系统代理"
+        CaptureMode.Tun => L10n.Text("全流量（TUN）"),
+        CaptureMode.Manual => L10n.Text("仅监听（手动代理）"),
+        _ => L10n.Text("系统代理")
     };
 
     private void CaptureModeDraftChanged(object sender, SelectionChangedEventArgs e)
@@ -201,11 +201,11 @@ public partial class MainWindow
         start.ArgumentList.Add(current.Started.ToString(CultureInfo.InvariantCulture));
         try
         {
-            using var restarted = Process.Start(start) ?? throw new InvalidOperationException("无法以管理员身份启动 Byway。");
+            using var restarted = Process.Start(start) ?? throw new InvalidOperationException(L10n.Text("无法以管理员身份启动 Byway。"));
         }
         catch (System.ComponentModel.Win32Exception error) when (error.NativeErrorCode == 1223)
         {
-            Status.Text = "已取消管理员授权。";
+            Status.Text = L10n.Text("已取消管理员授权。");
             return;
         }
         await ExitAsync();
@@ -217,7 +217,7 @@ public partial class MainWindow
         {
             bool start = StartAtLoginInput.IsChecked == true;
             ApplyStartupOptions(Options with { StartAtLogin = start, ResumeProxy = start && ResumeProxyInput.IsChecked == true });
-            Status.Text = "登录启动设置已保存。";
+            Status.Text = L10n.Text("登录启动设置已保存。");
             return Task.CompletedTask;
         });
         ReadStartupControls();
@@ -226,7 +226,7 @@ public partial class MainWindow
     private void ApplyStartupOptions(DesktopOptions options)
     {
         if (!options.StartAtLogin && options.ResumeProxy)
-            throw new InvalidDataException("请先开启登录启动，再开启代理恢复。");
+            throw new InvalidDataException(L10n.Text("请先开启登录启动，再开启代理恢复。"));
         if (options.StartAtLogin != Options.StartAtLogin || options.StartAtLogin && !LoginStartup.IsRegistered)
             LoginStartup.Apply(options.StartAtLogin, () => SaveOptions(options));
         else
@@ -249,7 +249,7 @@ public partial class MainWindow
             if (!string.Equals(entry, "<local>", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(entry, "<-loopback>", StringComparison.OrdinalIgnoreCase) &&
                 Uri.CheckHostName(entry.Replace('*', 'x')) == UriHostNameType.Unknown)
-                throw new InvalidDataException($"无法识别地址「{entry}」。请填写域名、IP 或 Windows 通配符。");
+                throw new InvalidDataException(L10n.Format($"无法识别地址「{entry}」。请填写域名、IP 或 Windows 通配符。"));
         }
         return string.Join(';', entries.Distinct(StringComparer.OrdinalIgnoreCase));
     }
@@ -262,7 +262,7 @@ public partial class MainWindow
         await RunAsync(() =>
         {
             SaveOptions(Options with { CloseToTray = requested });
-            Status.Text = requested ? "关闭窗口时收起到托盘。" : "关闭窗口时退出 Byway。";
+            Status.Text = requested ? L10n.Text("关闭窗口时收起到托盘。") : L10n.Text("关闭窗口时退出 Byway。");
             return Task.CompletedTask;
         });
         CloseToTray.IsChecked = Options.CloseToTray;
@@ -290,7 +290,7 @@ public partial class MainWindow
         trafficBaseline = previousTraffic = baseline;
         hasSessionTraffic = false;
         trafficStats = new(null, null, null, null, null, "pending");
-        TrafficStatus.Text = "正在获取实时数据…";
+        TrafficStatus.Text = L10n.Text("正在获取实时数据…");
         DownloadSpeed.Text = UploadSpeed.Text = ConnectionCount.Text = "—";
         UpdateTrafficScope();
     }
@@ -312,7 +312,7 @@ public partial class MainWindow
             return;
         if (sample is null)
         {
-            TrafficStatus.Text = "暂时无法读取实时数据";
+            TrafficStatus.Text = L10n.Text("暂时无法读取实时数据");
             DownloadSpeed.Text = UploadSpeed.Text = ConnectionCount.Text = "—";
             trafficStats = trafficStats with { DownloadBytesPerSecond = null, UploadBytesPerSecond = null, ActiveConnections = null, State = "pending" };
             return;
@@ -333,7 +333,7 @@ public partial class MainWindow
         DownloadSpeed.Text = FormatBytes(downloadRate) + "/s";
         UploadSpeed.Text = FormatBytes(uploadRate) + "/s";
         ConnectionCount.Text = sample.Connections.ToString(CultureInfo.CurrentCulture);
-        TrafficStatus.Text = "代理已开启";
+        TrafficStatus.Text = L10n.Text("代理已开启");
         trafficHistory.Record(sample.CapturedAtUtc, downloaded, uploaded);
         FlushTrafficHistoryIfDue();
         previousTraffic = sample;
@@ -346,7 +346,7 @@ public partial class MainWindow
         DownloadSpeed.Text = UploadSpeed.Text = ConnectionCount.Text = "—";
         trafficStats = trafficStats with { DownloadBytesPerSecond = null, UploadBytesPerSecond = null, ActiveConnections = null,
             State = hasSessionTraffic ? "previous" : "unavailable" };
-        TrafficStatus.Text = "代理已停用";
+        TrafficStatus.Text = L10n.Text("代理已停用");
         trafficHistory.Flush();
         UpdateTrafficScope();
         if (StatsPage.IsVisible)

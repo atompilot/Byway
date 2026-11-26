@@ -30,7 +30,7 @@ enum ManagementPage {
 
     static func response(for path: String) -> LANResponse {
         guard let (name, ext, contentType) = resources[path] else {
-            return LANResponse(LANFailure(404, "页面不存在"))
+            return LANResponse(LANFailure(404, L10n.text("页面不存在")))
         }
         #if BYWAY_LOCAL_TEST
         let url: URL? = URL(fileURLWithPath: "Shared/Web", isDirectory: true).appending(path: "\(name).\(ext)")
@@ -38,7 +38,7 @@ enum ManagementPage {
         let url = Bundle.main.url(forResource: name, withExtension: ext)
         #endif
         guard let url, let body = try? Data(contentsOf: url) else {
-            return LANResponse(LANFailure(503, "无法读取管理网页"))
+            return LANResponse(LANFailure(503, L10n.text("无法读取管理网页")))
         }
         return LANResponse(webAsset: body, contentType: contentType)
     }

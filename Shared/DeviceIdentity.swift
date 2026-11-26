@@ -42,7 +42,7 @@ struct DeviceIdentityStore: Sendable {
                   default: true
                   }
               }) else {
-            throw LANFailure(422, "设备名称需要 1 至 80 个字符，且不能包含换行或控制字符")
+            throw LANFailure(422, L10n.text("设备名称需要 1 至 80 个字符，且不能包含换行或控制字符"))
         }
         let current = try read()
         if current.displayName != name {
@@ -61,7 +61,7 @@ struct DeviceIdentityStore: Sendable {
     static func local() throws -> Self {
         #if os(iOS)
         guard let group = Bundle.main.object(forInfoDictionaryKey: "BywayAppGroup") as? String else {
-            throw LANFailure(503, "无法访问设备身份")
+            throw LANFailure(503, L10n.text("无法访问设备身份"))
         }
         let model = Self.hardwareModel()
         let type = model.hasPrefix("iPad") ? "ipad" : model.hasPrefix("iPhone") ? "iphone" : "ios"
@@ -70,21 +70,39 @@ struct DeviceIdentityStore: Sendable {
         return Self(profile: try ProfileStore.open(), type: type, defaultName: name,
                     modelIdentifier: model.isEmpty ? nil : model, appVersion: version,
                     deviceID: { try keychainID(group: group) })
-        #else
-        throw LANFailure(503, "无法访问设备身份")
+        #elseif os(macOS)
+        var system = utsname()
+        let model = uname(&system) == 0
+            ? withUnsafeBytes(of: system.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+            : ""
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        return Self(profile: try ProfileStore.open(), type: "mac", defaultName: "Mac",
+                    modelIdentifier: model.isEmpty ? nil : model, appVersion: version,
+                    deviceID: {
+                        let key = "BywayDeviceID"
+                        if let saved = UserDefaults.standard.string(forKey: key),
+                           let id = UUID(uuidString: saved) { return id }
+                        let id = UUID()
+                        UserDefaults.standard.set(id.uuidString, forKey: key)
+                        return id
+                    })
+        #endif
+    }
+
+    static let nameDidChange = Notification.Name("cn.splaz.byway.device-name-changed")
+
+    static func observeNameChanges() {
+        #if os(iOS)
+        _ = observeDarwinNameChanges
         #endif
     }
 
     #if os(iOS)
-    static let nameDidChange = Notification.Name("cn.splaz.byway.device-name-changed")
-
     private static let observeDarwinNameChanges: Void = {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), nil, { _, _, _, _, _ in
             NotificationCenter.default.post(name: nameDidChange, object: nil)
         }, nameDidChange.rawValue as CFString, nil, .deliverImmediately)
     }()
-
-    static func observeNameChanges() { _ = observeDarwinNameChanges }
 
     private static func hardwareModel() -> String {
         #if targetEnvironment(simulator)
@@ -114,7 +132,7 @@ struct DeviceIdentityStore: Sendable {
             if status == errSecItemNotFound { return nil }
             guard status == errSecSuccess, let data = result as? Data,
                   let id = UUID(uuidString: String(decoding: data, as: UTF8.self)) else {
-                throw LANFailure(503, "无法读取设备身份")
+                throw LANFailure(503, L10n.text("无法读取设备身份"))
             }
             return id
         }
@@ -128,7 +146,7 @@ struct DeviceIdentityStore: Sendable {
         if status == errSecSuccess { return id }
         // The App and VPN extension can both see the item as missing at first launch.
         if status == errSecDuplicateItem, let saved = try existing() { return saved }
-        throw LANFailure(503, "无法保存设备身份")
+        throw LANFailure(503, L10n.text("无法保存设备身份"))
     }
     #endif
 }

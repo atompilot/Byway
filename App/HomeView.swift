@@ -24,10 +24,10 @@ struct HomeView: View {
                     } label: {
                         LabeledContent {
                             Text(controller.connected && controller.profile.privateNetwork?.enabled == true
-                                 ? controller.privateNetworkSummary ?? "正在连接"
+                                 ? controller.privateNetworkSummary ?? L10n.text("正在连接")
                                  : PrivateNetworkSettingsView(controller.profile.privateNetwork).state)
                         } label: {
-                            Label("私网", systemImage: "point.3.connected.trianglepath.dotted")
+                            Label(L10n.text("私网"), systemImage: "point.3.connected.trianglepath.dotted")
                         }
                     }
                     .accessibilityIdentifier("private-network")
@@ -39,7 +39,7 @@ struct HomeView: View {
                     NavigationLink {
                         SubscriptionsView(controller: controller)
                     } label: {
-                        LabeledContent("订阅", value: "\(controller.profile.nodeSubscriptions.count)")
+                        LabeledContent(L10n.text("订阅"), value: "\(controller.profile.nodeSubscriptions.count)")
                     }
                     .accessibilityIdentifier("subscriptions")
                 }
@@ -49,7 +49,7 @@ struct HomeView: View {
                         NodeBatchTestButton(controller: controller)
                     } header: {
                         HStack {
-                            Text("节点")
+                            Text(L10n.text("节点"))
                             Spacer()
                             Button {
                                 nodeActions.sheet = .add
@@ -57,7 +57,7 @@ struct HomeView: View {
                                 Image(systemName: "plus")
                                     .frame(minWidth: 44, minHeight: 44)
                             }
-                            .accessibilityLabel("添加节点")
+                            .accessibilityLabel(L10n.text("添加节点"))
                             .disabled(!controller.canManage)
                         }
                     }
@@ -70,17 +70,17 @@ struct HomeView: View {
                         LANControlEditor(control: localControl, vpn: controller)
                     } label: {
                         LabeledContent {
-                            Text(localControl.enabled ? localControl.state : "局域网")
+                            Text(localControl.enabled ? localControl.state : L10n.text("局域网"))
                         } label: {
-                            Label("AI 控制", systemImage: "slider.horizontal.3")
+                            Label(L10n.text("AI 控制"), systemImage: "slider.horizontal.3")
                         }
                     }
                     .accessibilityIdentifier("ai-control")
                 }
             }
-            .listStyle(.insetGrouped)
+            .bywayInsetGroupedList()
             .navigationTitle("Byway")
-            .navigationBarTitleDisplayMode(.inline)
+            .bywayInlineTitle()
             .navigationDestination(item: $openedGroup) { NodeGroupDetail(controller: controller, id: $0) }
             .refreshable { await controller.load() }
             .modifier(NodeActionPresenter(controller: controller, actions: $nodeActions))
@@ -144,17 +144,17 @@ struct HomeView: View {
     }
 
     private var connectionTitle: String {
-        if controller.activeNode == nil, !needsProxyNode { return "私网" }
-        guard let node = controller.activeNode else { return "暂无节点" }
-        return controller.routesDirectly ? "直连模式" : node.name
+        if controller.activeNode == nil, !needsProxyNode { return L10n.text("私网") }
+        guard let node = controller.activeNode else { return L10n.text("暂无节点") }
+        return controller.routesDirectly ? L10n.text("直连模式") : node.name
     }
 
     private var connectionActionLabel: String {
-        if needsProxyNode { return "添加节点" }
+        if needsProxyNode { return L10n.text("添加节点") }
         if controller.connected || controller.status == .connecting {
-            return controller.profile.privateNetwork?.enabled == true ? "停用 VPN" : "断开"
+            return controller.profile.privateNetwork?.enabled == true ? L10n.text("停用 VPN") : L10n.text("断开")
         }
-        return "连接"
+        return L10n.text("连接")
     }
 
     private var needsProxyNode: Bool {
@@ -174,7 +174,7 @@ struct RoutingOverviewSection: View {
                 LabeledContent {
                     Text(controller.profile.globalRoutingSettings.mode.title)
                 } label: {
-                    Label("全局路由", systemImage: "arrow.triangle.branch")
+                    Label(L10n.text("全局路由"), systemImage: "arrow.triangle.branch")
                 }
             }
             .accessibilityIdentifier("global-routing")
@@ -185,7 +185,7 @@ struct RoutingOverviewSection: View {
                 LabeledContent {
                     Text(configurationStatus)
                 } label: {
-                    Label("分流配置", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
+                    Label(L10n.text("分流配置"), systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
             }
             .accessibilityIdentifier("routing-configuration")
@@ -215,7 +215,7 @@ struct RoutingOverviewSection: View {
 
     private var configurationStatus: String {
         let library = controller.profile.savedRouting
-        return library.configurations.first { $0.id == library.activeID }?.name ?? "默认"
+        return library.configurations.first { $0.id == library.activeID }?.name ?? L10n.text("默认")
     }
 }
 

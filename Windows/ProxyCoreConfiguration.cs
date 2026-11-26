@@ -15,7 +15,7 @@ internal static class ProxyCoreConfiguration
         Dictionary<int, RoutingRuleMatch>? ruleTest = null)
     {
         if (node is null && mode != RoutingMode.Direct)
-            throw new InvalidOperationException("请先选择节点。");
+            throw new InvalidOperationException(L10n.Text("请先选择节点。"));
         if (routing is ClashConfiguration clash)
             return clash.Compile(node, port, probePort, dnsPort, lookupPort, geoIpPath, trafficAddress, trafficToken, mode, capture);
         var imported = routing as ShadowrocketConfiguration;
@@ -69,7 +69,7 @@ internal static class ProxyCoreConfiguration
                 if (imported.UsesGeoIp)
                 {
                     if (!File.Exists(geoIpPath))
-                        throw new InvalidDataException("缺少 GEOIP,CN 数据，请重新安装 Byway。");
+                        throw new InvalidDataException(L10n.Text("缺少 GEOIP,CN 数据，请重新安装 Byway。"));
                     route["rule_set"] = new[] { new { type = "local", tag = "geoip-cn", format = "binary", path = geoIpPath } };
                 }
             }

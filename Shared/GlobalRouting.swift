@@ -6,10 +6,10 @@ enum RoutingMode: String, CaseIterable, Codable, Sendable, Identifiable {
     var id: Self { self }
     var title: String {
         switch self {
-        case .rules: "按配置"
-        case .proxy: "全局代理"
-        case .direct: "全局直连"
-        case .scene: "按场景"
+        case .rules: L10n.text("按配置")
+        case .proxy: L10n.text("全局代理")
+        case .direct: L10n.text("全局直连")
+        case .scene: L10n.text("按场景")
         }
     }
 }
@@ -21,9 +21,9 @@ enum RoutingNetwork: String, CaseIterable, Codable, Sendable, Identifiable {
     var title: String {
         switch self {
         case .wifi: "Wi‑Fi"
-        case .cellular: "蜂窝网络"
-        case .wired: "有线网络"
-        case .other: "其他网络"
+        case .cellular: L10n.text("蜂窝网络")
+        case .wired: L10n.text("有线网络")
+        case .other: L10n.text("其他网络")
         }
     }
 }
@@ -75,7 +75,7 @@ struct GlobalRouting: Codable, Equatable, Sendable {
               Set(scenes.map(\.network)).count == scenes.count,
               scenes.allSatisfy({ $0.mode != .scene && ($0.groupID.map(groupIDs.contains) ?? true) }),
               groupID.map(groupIDs.contains) ?? true else {
-            throw BywayError.message("节点组或场景配置无效")
+            throw BywayError.message(L10n.text("节点组或场景配置无效"))
         }
         for index in value.groups.indices {
             value.groups[index].name = value.groups[index].name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -83,11 +83,11 @@ struct GlobalRouting: Codable, Equatable, Sendable {
             guard (1...50).contains(group.name.count),
                   !group.nodeIDs.isEmpty, Set(group.nodeIDs).count == group.nodeIDs.count,
                   group.nodeIDs.allSatisfy(known.contains) else {
-                throw BywayError.message("每个节点组需要名称和至少一个已添加的节点")
+                throw BywayError.message(L10n.text("每个节点组需要名称和至少一个已添加的节点"))
             }
         }
         guard Set(value.groups.map { $0.name.lowercased() }).count == value.groups.count else {
-            throw BywayError.message("节点组名称重复")
+            throw BywayError.message(L10n.text("节点组名称重复"))
         }
         return value
     }

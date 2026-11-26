@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "Escanea un código QR para importar el enlace del nodo a Byway.";
+"NSLocalNetworkUsageDescription" = "Permite acceder a Byway desde la misma red Wi-Fi cuando activas el control local.";

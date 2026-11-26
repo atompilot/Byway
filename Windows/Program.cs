@@ -57,7 +57,7 @@ internal static class Program
         catch (Exception error)
         {
             if (Environment.UserInteractive)
-                MessageBox.Show($"Byway 无法启动。\n{error.Message}", "Byway", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(L10n.Format($"Byway 无法启动。\n{error.Message}"), "Byway", MessageBoxButton.OK, MessageBoxImage.Error);
             return 1;
         }
     }
@@ -88,11 +88,11 @@ internal static class Program
         var info = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true };
         foreach (var argument in new[] { "--watch", owner.Pid.ToString(), owner.Started.ToString(), signal })
             info.ArgumentList.Add(argument);
-        Process guard = Process.Start(info) ?? throw new InvalidOperationException("无法启动代理恢复进程。");
+        Process guard = Process.Start(info) ?? throw new InvalidOperationException(L10n.Text("无法启动代理恢复进程。"));
         if (ready.WaitOne(TimeSpan.FromSeconds(4)) && !guard.HasExited)
             return guard;
         guard.Dispose();
-        throw new InvalidOperationException("代理恢复进程未就绪。");
+        throw new InvalidOperationException(L10n.Text("代理恢复进程未就绪。"));
     }
 
     internal static void WriteAtomic(string path, byte[] bytes)

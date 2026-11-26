@@ -16,7 +16,7 @@ internal static class QrImage
     internal static string Read(Stream stream)
     {
         if (stream.Length > 20 * 1024 * 1024)
-            throw new InvalidDataException("二维码图片不能超过 20 MB。");
+            throw new InvalidDataException(L10n.Text("二维码图片不能超过 20 MB。"));
         var frame = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None).Frames[0];
         double ratio = Math.Min(1, 2000.0 / Math.Max(frame.PixelWidth, frame.PixelHeight));
         BitmapSource source = ratio < 1 ? new TransformedBitmap(frame, new ScaleTransform(ratio, ratio)) : frame;
@@ -25,7 +25,7 @@ internal static class QrImage
         byte[] pixels = new byte[stride * bitmap.PixelHeight];
         bitmap.CopyPixels(pixels, stride, 0);
         return Decode(pixels, bitmap.PixelWidth, bitmap.PixelHeight)
-            ?? throw new InvalidDataException("图片中没有可识别的二维码。");
+            ?? throw new InvalidDataException(L10n.Text("图片中没有可识别的二维码。"));
     }
 
     internal static string? Decode(byte[] pixels, int width, int height)

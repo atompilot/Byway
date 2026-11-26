@@ -58,7 +58,7 @@ final class LANControl: ObservableObject {
                         self.refresh(vpn: vpn)
                     } catch {
                         guard self.settings == desired, desired != nil else { return }
-                        self.endpoint = LANEndpoint(state: "VPN 未应答，请检查连接状态")
+                        self.endpoint = LANEndpoint(state: L10n.text("VPN 未应答，请检查连接状态"))
                     }
                 }
             }
@@ -87,7 +87,7 @@ final class LANControl: ObservableObject {
                     self?.endpoint = update
                 } handle: { [weak self, weak vpn] request in
                     guard let self, self.foreground, let vpn, vpn.canHostLAN else {
-                        return LANResponse(LANFailure(503, "局域网控制已暂停"))
+                        return LANResponse(LANFailure(503, L10n.text("局域网控制已暂停")))
                     }
                     return await LANAPI(backend: vpn).handle(request)
                 }
@@ -101,7 +101,7 @@ final class LANControl: ObservableObject {
             }
         } catch {
             server.stop()
-            endpoint = LANEndpoint(state: "共享配置不可用")
+            endpoint = LANEndpoint(state: L10n.text("共享配置不可用"))
         }
     }
 

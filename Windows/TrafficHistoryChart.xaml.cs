@@ -73,10 +73,10 @@ public partial class TrafficHistoryChart : System.Windows.Controls.UserControl
             return $"{from}–{until}";
         }
         if (snapshot.Granularity == "month")
-            return start.ToString("yyyy 年 M 月", CultureInfo.InvariantCulture);
+            return start.ToString("Y", CultureInfo.CurrentCulture);
         if (snapshot.Granularity == "year")
-            return start.ToString("yyyy 年", CultureInfo.InvariantCulture);
-        return start.ToString("M 月 d 日", CultureInfo.InvariantCulture);
+            return start.ToString("yyyy", CultureInfo.CurrentCulture);
+        return start.ToString("M", CultureInfo.CurrentCulture);
     }
 
     private static long Volume(TrafficHistoryBin bin) => bin.TotalBytes ?? 0;
@@ -120,8 +120,8 @@ public partial class TrafficHistoryChart : System.Windows.Controls.UserControl
         string value = bin.State switch
         {
             "recorded" => MainWindow.FormatBytes(Volume(bin)),
-            "future" => "尚未到达",
-            _ => "无记录"
+            "future" => L10n.Text("尚未到达"),
+            _ => L10n.Text("无记录")
         };
         string tip = $"{label} · {value}";
         if (!Equals(bar.Item.ToolTip, tip))
@@ -156,8 +156,8 @@ public partial class TrafficHistoryChart : System.Windows.Controls.UserControl
             var local = TimeZoneInfo.ConvertTime(bins[i].StartUtc, zone);
             string label = local.ToString(snapshot.Granularity switch
             {
-                "hour" => "HH:mm", "month" => "M 月", "year" => "yyyy", _ => "M/d"
-            }, CultureInfo.InvariantCulture);
+                "hour" => "HH:mm", "month" => "MMM", "year" => "yyyy", _ => "M/d"
+            }, CultureInfo.CurrentCulture);
             AddTick(label, (i + (snapshot.Granularity == "hour" ? 0 : .5)) / bins.Length);
         }
         if (snapshot.Granularity == "hour")

@@ -32,7 +32,7 @@ internal sealed class DeviceIdentityStore(
         int length = name.EnumerateRunes().Count();
         if (length is < 1 or > 80 || name.EnumerateRunes().Any(rune =>
             Rune.GetUnicodeCategory(rune) is UnicodeCategory.Control or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator))
-            throw new ArgumentException("设备名称需要 1 至 80 个字符，且不能包含换行或控制字符。", nameof(value));
+            throw new ArgumentException(L10n.Text("设备名称需要 1 至 80 个字符，且不能包含换行或控制字符。"), nameof(value));
 
         lock (gate)
         {
@@ -66,7 +66,7 @@ internal sealed class DeviceIdentityStore(
     {
         var saved = JsonSerializer.Deserialize<Settings>(File.ReadAllBytes(path));
         return saved is not null && saved.Id != Guid.Empty ? saved :
-            throw new InvalidDataException("无法读取已保存的设备身份。");
+            throw new InvalidDataException(L10n.Text("无法读取已保存的设备身份。"));
     }
 
     private void Write(Settings saved, bool overwrite)

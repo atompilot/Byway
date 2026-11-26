@@ -1,0 +1,7 @@
+{
+  "Give each exported node a unique name before importing.": "请先为每个导出的节点设置唯一名称，再导入。",
+  "Set BYWAY_API_TOKEN to a private token of at least 32 characters.": "请将 BYWAY_API_TOKEN 设置为至少 32 个字符的私有令牌。",
+  "The node export could not be read.": "无法读取节点导出文件。",
+  "The requested node was not found among the supported VLESS entries.": "在支持的 VLESS 条目中找不到指定节点。",
+  "Usage: Byway.Gateway <Shadowrocket node export.json> <default node name>": "用法：Byway.Gateway <Shadowrocket 节点导出.json> <默认节点名称>"
+}

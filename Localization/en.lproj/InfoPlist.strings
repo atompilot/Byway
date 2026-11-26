@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "Scan a proxy node QR code to import its link into Byway.";
+"NSLocalNetworkUsageDescription" = "Let devices on the same Wi-Fi access Byway when you enable LAN control.";

@@ -6,7 +6,7 @@ namespace Byway;
 
 public partial class MainWindow
 {
-    private const string DefaultRoutingName = "默认配置";
+    private static readonly string DefaultRoutingName = L10n.Text("默认配置");
     private readonly DispatcherTimer routingTimer = new() { Interval = TimeSpan.FromMinutes(1) };
     private readonly Dictionary<Guid, DateTimeOffset> routingAttempts = [];
     private List<ImportedRouting> RoutingConfigurations => profile.RoutingConfigurations ?? [];
@@ -18,8 +18,8 @@ public partial class MainWindow
     {
         var current = profile.ActiveRouting;
         var report = current?.Parse().Report();
-        RoutingSummary.Text = current is null ? "当前使用默认配置"
-            : $"当前使用「{current.Name}」 · {report!.RuleCount} 条规则";
+        RoutingSummary.Text = current is null ? L10n.Text("当前使用默认配置")
+            : L10n.Format($"当前使用「{current.Name}」 · {report!.RuleCount} 条规则");
         List<RoutingChoice> entries = [new(null, DefaultRoutingName), ..RoutingConfigurations.Select(item => new RoutingChoice(item.Id, item.Name))];
         RoutingSelection.ItemsSource = entries;
         RoutingSelection.SelectedItem = entries.Find(item => item.Id == choice) ?? entries[0];
@@ -79,26 +79,26 @@ public partial class MainWindow
         if (ChosenRouting is not Guid id)
             return;
         var entry = FindRouting(id);
-        string details = profile.SelectedRouting == id ? "\n当前将切回默认配置。" : "";
-        if (MessageBox.Show(this, $"删除「{entry.Name}」？{details}", "删除分流配置",
+        string details = profile.SelectedRouting == id ? L10n.Text("\n当前将切回默认配置。") : "";
+        if (MessageBox.Show(this, L10n.Format($"删除「{entry.Name}」？{details}"), L10n.Text("删除分流配置"),
             MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes)
             await RunAsync(() => DeleteRoutingAsync(id));
     }
 
     private ImportedRouting FindRouting(Guid id, bool shadowrocketOnly = false) =>
         RoutingConfigurations.Find(item => item.Id == id && (!shadowrocketOnly || !item.IsClash))
-        ?? throw new ApiError(404, "分流配置不存在。");
+        ?? throw new ApiError(404, L10n.Text("分流配置不存在。"));
 
     private async Task SaveRoutingEntryAsync(ImportedRouting entry, bool activate)
     {
         var name = Subscription.SafeName(entry.Name, "");
         if (name.Length == 0 || name == DefaultRoutingName)
-            throw new InvalidDataException("请为配置填写有效名称。");
+            throw new InvalidDataException(L10n.Text("请为配置填写有效名称。"));
         if (RoutingConfigurations.Any(item => item.Id != entry.Id && item.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidDataException("已有同名分流配置。");
+            throw new InvalidDataException(L10n.Text("已有同名分流配置。"));
         entry = entry with { Name = name };
         if (entry.SubscriptionUrl is not null && entry.RefreshHours is < 0 or > 168)
-            throw new InvalidDataException("刷新间隔请填写 0 至 168 小时。0 表示仅手动刷新。");
+            throw new InvalidDataException(L10n.Text("刷新间隔请填写 0 至 168 小时。0 表示仅手动刷新。"));
 
         var configured = RoutingConfigurations.ToList();
         int index = configured.FindIndex(item => item.Id == entry.Id);
@@ -107,7 +107,7 @@ public partial class MainWindow
         {
             var parsed = entry.Parse();
             if (!await Core.CheckRoutingAsync(parsed))
-                throw new InvalidDataException("分流配置未通过内核校验，已保留原配置。");
+                throw new InvalidDataException(L10n.Text("分流配置未通过内核校验，已保留原配置。"));
         }
         if (index < 0)
             configured.Add(entry);
@@ -115,14 +115,14 @@ public partial class MainWindow
             configured[index] = entry;
         await WriteRoutingAsync(profile with { RoutingConfigurations = configured,
             SelectedRouting = activate ? entry.Id : profile.SelectedRouting }, entry.Id);
-        Status.Text = $"已保存「{entry.Name}」。";
+        Status.Text = L10n.Format($"已保存「{entry.Name}」。");
     }
 
     private async Task RefreshRoutingEntryAsync(Guid id)
     {
         var entry = FindRouting(id);
         if (entry.SubscriptionUrl is not { } url)
-            throw new InvalidDataException("这份配置没有 Clash 订阅地址。");
+            throw new InvalidDataException(L10n.Text("这份配置没有 Clash 订阅地址。"));
         routingAttempts[id] = DateTimeOffset.UtcNow;
         string text = await Subscription.FetchClashAsync(SubscriptionLink.Parse(url).Address);
         if (text == entry.Text)
@@ -135,11 +135,11 @@ public partial class MainWindow
             var selections = current.Groups.ToDictionary(group => group.Name, group => group.Selected);
             var updated = ClashConfiguration.Parse(text, selections);
             if (updated.Groups.Any(group => selections.TryGetValue(group.Name, out var previous) && previous != group.Selected))
-                throw new InvalidDataException("订阅移除了已有策略组正在使用的成员，已保留原配置。请先核对订阅中的策略组。");
+                throw new InvalidDataException(L10n.Text("订阅移除了已有策略组正在使用的成员，已保留原配置。请先核对订阅中的策略组。"));
             await SaveRoutingEntryAsync(entry with { Text = text, RefreshedAt = DateTimeOffset.UtcNow,
                 Selections = updated.Groups.ToDictionary(group => group.Name, group => group.Selected) }, activate: false);
         }
-        Status.Text = $"已刷新「{entry.Name}」。";
+        Status.Text = L10n.Format($"已刷新「{entry.Name}」。");
     }
 
     private async Task RefreshDueRoutingAsync()
@@ -153,7 +153,7 @@ public partial class MainWindow
         if (due is null)
             return;
         try { await RunExclusiveAsync(async () => { await RefreshRoutingEntryAsync(due.Id); return true; }); }
-        catch (Exception) { Status.Text = $"「{due.Name}」自动刷新失败，已保留当前配置。"; }
+        catch (Exception) { Status.Text = L10n.Format($"「{due.Name}」自动刷新失败，已保留当前配置。"); }
     }
 
     private async Task SelectRoutingAsync(Guid? id)
@@ -161,7 +161,7 @@ public partial class MainWindow
         if (id is Guid target)
             FindRouting(target);
         await WriteRoutingAsync(profile with { SelectedRouting = id }, id);
-        Status.Text = $"已切换到「{profile.ActiveRouting?.Name ?? DefaultRoutingName}」。";
+        Status.Text = L10n.Format($"已切换到「{profile.ActiveRouting?.Name ?? DefaultRoutingName}」。");
     }
 
     private async Task DeleteRoutingAsync(Guid id)
@@ -174,13 +174,13 @@ public partial class MainWindow
             SelectedRouting = selectedId
         }, selectedId);
         routingAttempts.Remove(id);
-        Status.Text = $"已删除「{entry.Name}」。";
+        Status.Text = L10n.Format($"已删除「{entry.Name}」。");
     }
 
     private async Task WriteRoutingAsync(SavedProfile next, Guid? choice)
     {
         if (restorePending)
-            throw new InvalidOperationException("请先恢复 Windows 系统代理。");
+            throw new InvalidOperationException(L10n.Text("请先恢复 Windows 系统代理。"));
 
         var before = profile.ActiveRouting;
         var after = next.ActiveRouting;

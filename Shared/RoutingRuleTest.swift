@@ -14,12 +14,12 @@ extension ShadowrocketConfiguration {
     static func inserting(_ rule: String, into text: String) throws -> String {
         guard !rule.contains(where: \.isNewline),
               try ShadowrocketConfiguration("[Rule]\n" + rule).rules.count == 1 else {
-            throw LANFailure(422, "请提供一条有效的域名或 IP 规则")
+            throw LANFailure(422, L10n.text("请提供一条有效的域名或 IP 规则"))
         }
         var lines = text.components(separatedBy: "\n")
         guard let section = lines.firstIndex(where: {
             $0.trimmingCharacters(in: .whitespacesAndNewlines.union(["\u{feff}"])).lowercased() == "[rule]"
-        }) else { throw LANFailure(422, "缺少 [Rule]") }
+        }) else { throw LANFailure(422, L10n.text("缺少 [Rule]")) }
         if section + 1 < lines.count && lines[section + 1].trimmingCharacters(in: .whitespacesAndNewlines) == rule {
             return text
         }
@@ -36,12 +36,12 @@ extension ShadowrocketConfiguration {
         let literal = Self.ip(host)
         guard literal != nil || URLComponents(string: "https://" + host)?.host == host &&
                 !host.isEmpty && host.utf8.count <= 253 else {
-            throw LANFailure(422, "请输入域名或 IP 地址")
+            throw LANFailure(422, L10n.text("请输入域名或 IP 地址"))
         }
         var resolved = literal == nil ? [] : [host]
         var didResolve = literal != nil
         if literal?.count == 16 && !ipv6 {
-            return result(.reject, rule: "IPv6 已禁用", line: nil)
+            return result(.reject, rule: L10n.text("IPv6 已禁用"), line: nil)
         }
         for rule in rules {
             let matched: Bool
@@ -62,7 +62,7 @@ extension ShadowrocketConfiguration {
                 }
                 if rule.kind == .geoIP, !resolved.isEmpty {
                     guard let database = GeoIPChina.database else {
-                        throw LANFailure(503, "当前设备缺少 GEOIP,CN 数据")
+                        throw LANFailure(503, L10n.text("当前设备缺少 GEOIP,CN 数据"))
                     }
                     matched = resolved.compactMap(Self.ip).contains { database.contains($0) }
                 } else {
@@ -85,7 +85,7 @@ extension ShadowrocketConfiguration {
     static func defaultTest(host: String, routing: ProxyRouting, node: String?) throws -> RoutingRuleMatch {
         let suffixes = routing.directDomains.map { "DOMAIN-SUFFIX,\($0),DIRECT" }
         if routing.bypassPrivateNetworks && isPrivateAddress(host) {
-            return RoutingRuleMatch(policy: "DIRECT", rule: "私有网络直连", lineNumber: nil, nodeName: nil, resolvedAddresses: [host])
+            return RoutingRuleMatch(policy: "DIRECT", rule: L10n.text("私有网络直连"), lineNumber: nil, nodeName: nil, resolvedAddresses: [host])
         }
         return try ShadowrocketConfiguration((["[Rule]"] + suffixes +
             ["FINAL,\(routing.defaultRoute == .proxy ? "PROXY" : "DIRECT")"]).joined(separator: "\n")).test(host: host, node: node)

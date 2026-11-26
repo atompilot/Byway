@@ -25,7 +25,13 @@ final class VPNController: ObservableObject, LANBackend {
     @Published private(set) var privateNetworkSummary: String?
 
     private var store: ProfileStore?
+    #if os(macOS)
+    private var engine: (any MacProxyEngine)?
+    @Published private(set) var systemProxy: SystemProxy.Mode = .off
+    @Published private(set) var takeover: MacTakeover = MacSettings.takeover
+    #else
     private var manager: NETunnelProviderManager?
+    #endif
     private var observation: (any NSObjectProtocol)?
     private var previousTraffic: (sample: TrafficSnapshot, uptime: TimeInterval)?
     private var batchTask: Task<Void, Never>?
@@ -37,7 +43,11 @@ final class VPNController: ObservableObject, LANBackend {
     }
 
     var connected: Bool { status == .connected || status == .reasserting }
+    #if os(macOS)
+    var canHostLAN: Bool { ready && !startingTunnel }
+    #else
     var canHostLAN: Bool { ready && !startingTunnel && (status == .invalid || status == .disconnected) }
+    #endif
     var canEdit: Bool { !busy && canHostLAN }
     var canManage: Bool { canEdit || (!busy && status == .connected) }
     var canTest: Bool { canManage && batchProgress == nil && !measuringBandwidth }
@@ -66,11 +76,11 @@ final class VPNController: ObservableObject, LANBackend {
 
     var statusLabel: String {
         switch status {
-        case .connecting: "正在连接"
-        case .connected: "已连接"
-        case .reasserting: "正在重连"
-        case .disconnecting: "正在断开"
-        default: "未连接"
+        case .connecting: L10n.text("正在连接")
+        case .connected: L10n.text("已连接")
+        case .reasserting: L10n.text("正在重连")
+        case .disconnecting: L10n.text("正在断开")
+        default: L10n.text("未连接")
         }
     }
 
@@ -80,7 +90,7 @@ final class VPNController: ObservableObject, LANBackend {
             let store = try ProfileStore.open()
             self.store = store
             profile = try store.read()
-            #if !targetEnvironment(simulator)
+            #if os(iOS) && !targetEnvironment(simulator)
             let identifier = try tunnelIdentifier()
             manager = try await NETunnelProviderManager.loadAllFromPreferences().first {
                 ($0.protocolConfiguration as? NETunnelProviderProtocol)?.providerBundleIdentifier == identifier
@@ -95,15 +105,34 @@ final class VPNController: ObservableObject, LANBackend {
             ready = true
             refresh()
             if !connected { readArchivedTraffic() }
+            #if os(macOS)
+            await repairStaleSystemProxy()
+            #endif
         } catch {
             message = error.localizedDescription
         }
     }
 
+    #if os(macOS)
+    /// 启动自检：清理历史版本或别的本地代理工具留下来的回环代理残留。
+    /// 没有残留时直接返回，不提示、不提权；只有确实存在脏值才弹一次管理员授权。
+    private func repairStaleSystemProxy() async {
+        guard let repaired = try? await Task.detached(operation: { try SystemProxy.repairStale() }).value,
+              repaired > 0 else { return }
+        systemProxy = SystemProxy.current
+        message = L10n.text("已清理 {0} 条失效的系统代理残留", repaired)
+    }
+    #endif
+
     func refresh() {
         let previousStatus = status
         let wasConnecting = status == .connecting || connected
+        #if os(macOS)
+        status = engine?.status ?? .invalid
+        systemProxy = SystemProxy.current
+        #else
         status = manager?.connection.status ?? .invalid
+        #endif
         if !busy, let updated = try? store?.read(), updated != profile {
             probes = probes.filter { id, _ in
                 guard let previous = profile.nodes.first(where: { $0.id == id }),
@@ -123,6 +152,7 @@ final class VPNController: ObservableObject, LANBackend {
         if previousStatus != status, status == .disconnected || status == .invalid {
             readArchivedTraffic()
         }
+        #if os(iOS)
         if wasConnecting, status == .disconnected {
             manager?.connection.fetchLastDisconnectError { [weak self] error in
                 guard let error else { return }
@@ -132,10 +162,11 @@ final class VPNController: ObservableObject, LANBackend {
                 }
             }
         }
+        #endif
     }
 
     func addNode(link: String) throws {
-        guard canEdit else { throw BywayError.message("请先断开隧道，再修改节点") }
+        guard canEdit else { throw BywayError.message(L10n.text("请先断开隧道，再修改节点")) }
         let (updated, _) = try LANEdit.create(link: link, name: nil).applying(to: profile, activeID: activeID)
         try save(updated)
     }
@@ -152,14 +183,14 @@ final class VPNController: ObservableObject, LANBackend {
     }
 
     func setRelay(_ configuration: RelayConfiguration?) throws {
-        guard canEdit else { throw BywayError.message("请先断开隧道，再更新 AI 控制") }
+        guard canEdit else { throw BywayError.message(L10n.text("请先断开隧道，再更新 AI 控制")) }
         var updated = profile
         updated.relay = configuration
         try save(updated)
     }
 
     func saveImportedConfiguration(_ edit: LANEdit) throws {
-        guard canEdit else { throw BywayError.message("请先断开 VPN，再修改分流配置") }
+        guard canEdit else { throw BywayError.message(L10n.text("请先断开 VPN，再修改分流配置")) }
         let (updated, _) = try edit.applying(to: profile, activeID: activeID)
         try save(updated)
     }
@@ -174,7 +205,7 @@ final class VPNController: ObservableObject, LANBackend {
             }
             let reply: RoutingUpdateReply = try await send(RoutingUpdate(globalRouting: settings))
             guard reply.routing != nil else {
-                throw BywayError.message(reply.error ?? "无法保存路由设置")
+                throw BywayError.message(reply.error ?? L10n.text("无法保存路由设置"))
             }
         } else {
             let (updated, _) = try LANEdit.changeGlobalRouting(settings).applying(to: profile, activeID: activeID)
@@ -192,7 +223,7 @@ final class VPNController: ObservableObject, LANBackend {
             }
             let reply: DNSUpdateReply = try await send(DNSUpdate(dnsSettings: settings))
             guard reply.settings != nil else {
-                throw BywayError.message(reply.error ?? "无法保存 DNS 设置")
+                throw BywayError.message(reply.error ?? L10n.text("无法保存 DNS 设置"))
             }
         } else {
             let (updated, _) = try LANEdit.changeDNS(settings).applying(to: profile, activeID: activeID)
@@ -202,13 +233,47 @@ final class VPNController: ObservableObject, LANBackend {
 
     func toggleConnection() async {
         guard !busy else { return }
+        #if os(macOS)
+        if engine != nil || status == .connecting {
+            await stopLocalEngine()
+            return
+        }
+        guard canEdit, activeNode != nil || profile.privateNetwork?.enabled == true else { return }
+        busy = true
+        startingTunnel = true
+        defer {
+            startingTunnel = false
+            busy = false
+        }
+        do {
+            var updated = profile
+            updated.selectedID = activeNode?.id
+            try save(updated)
+            guard let store else { throw BywayError.message(L10n.text("共享配置不可用")) }
+            if let selected = updated.selectedID { try store.saveActiveNode(selected) }
+            let engine: any MacProxyEngine
+            switch takeover {
+            case .tun:
+                guard let tun = TunEngine() else { throw BywayError.message(L10n.text("无法准备全流量内核")) }
+                engine = tun
+            case .systemProxy, .listenOnly:
+                engine = MacEngine()
+            }
+            try await engine.start(profile: updated, store: store)
+            self.engine = engine
+            status = engine.status
+        } catch {
+            message = error.localizedDescription
+        }
+        refresh()
+        #else
         if connected || status == .connecting {
             manager?.connection.stopVPNTunnel()
             return
         }
         guard canEdit, activeNode != nil || profile.privateNetwork?.enabled == true else { return }
         #if targetEnvironment(simulator)
-        message = "请在 iPhone 真机上启动代理隧道。"
+        message = L10n.text("请在 iPhone 真机上启动代理隧道。")
         #else
         busy = true
         startingTunnel = true
@@ -220,7 +285,7 @@ final class VPNController: ObservableObject, LANBackend {
             var updated = profile
             updated.selectedID = activeNode?.id
             try save(updated)
-            guard let store else { throw BywayError.message("共享配置不可用") }
+            guard let store else { throw BywayError.message(L10n.text("共享配置不可用")) }
             if let selected = updated.selectedID { try store.saveActiveNode(selected) }
             let manager = try await prepareManager()
             try manager.connection.startVPNTunnel()
@@ -230,7 +295,133 @@ final class VPNController: ObservableObject, LANBackend {
             refresh()
         }
         #endif
+        #endif
     }
+
+    #if os(macOS)
+    private func stopLocalEngine() async {
+        guard let engine else { return }
+        busy = true
+        defer { busy = false }
+        // 先归还系统代理再停内核：反过来的话，中间这段时间系统代理指着已经关掉的
+        // 混合端口，浏览器和 Electron 一类的程序会整段连不上（ERR_CONNECTION_CLOSED）。
+        await releaseSystemProxyIfOurs()
+        await engine.stop()
+        self.engine = nil
+        status = .invalid
+        refresh()
+    }
+
+    /// 系统代理若还指着本机的混合端口，先还原成接管前的样子。
+    private func releaseSystemProxyIfOurs() async {
+        guard SystemProxy.current == .byway(port: MacSettings.mixedPort) else { return }
+        do {
+            try await Task.detached { try SystemProxy.clear() }.value
+            systemProxy = SystemProxy.current
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+
+    /// 把系统代理指向本机混合端口。macOS 会为这次修改请求一次管理员授权。
+    func applySystemProxy() async {
+        let port = MacSettings.mixedPort
+        do {
+            // 授权对话框会阻塞调用线程，放到后台等待。
+            try await Task.detached { try SystemProxy.apply(port: port) }.value
+            systemProxy = SystemProxy.current
+            message = L10n.text("系统代理已指向 127.0.0.1:{0}", port)
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+
+    /// 切换接管方式。已连接时先停旧引擎、再用新方式原地重连，
+    /// 不用让用户先断开——切模式本身就是「换一种接管办法」，中间空档越短越好。
+    func setTakeover(_ value: MacTakeover) async {
+        guard !busy, takeover != value else { return }
+        let wasConnected = engine != nil || status == .connecting
+        takeover = value
+        MacSettings.takeover = value
+        guard wasConnected, let store else {
+            refresh()
+            return
+        }
+        // 两种进程内模式（系统代理 / 仅监听）共用同一个混合端口，不必重启内核。
+        let needsRestart: Bool
+        if engine is TunEngine {
+            needsRestart = value != .tun
+        } else if engine is MacEngine {
+            needsRestart = value == .tun
+        } else {
+            needsRestart = true
+        }
+        guard needsRestart else {
+            refresh()
+            return
+        }
+        busy = true
+        startingTunnel = true
+        defer {
+            startingTunnel = false
+            busy = false
+            refresh()
+        }
+        await releaseSystemProxyIfOurs()
+        await retireCurrentEngine()
+        do {
+            var updated = profile
+            updated.selectedID = activeNode?.id
+            try save(updated)
+            let next: any MacProxyEngine
+            switch value {
+            case .tun:
+                guard let tun = TunEngine() else { throw BywayError.message(L10n.text("无法准备全流量内核")) }
+                next = tun
+            case .systemProxy, .listenOnly:
+                next = MacEngine()
+            }
+            try await next.start(profile: updated, store: store)
+            engine = next
+            status = next.status
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+
+    /// 停掉当前引擎并复位状态。内核关闭（sing-box 的 `close()`）偶尔会长时间不返回，
+    /// 不设上限的话切换会永远卡在 busy，界面停在「已连接」而实际已经没有任何接管。
+    private func retireCurrentEngine() async {
+        guard let previous = engine else { return }
+        engine = nil
+        status = .invalid
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await previous.stop() }
+            group.addTask { try? await Task.sleep(for: .seconds(8)) }
+            await group.next()
+            group.cancelAll()
+        }
+    }
+
+    /// 全流量模式下显示虚拟网卡出口，其余模式显示混合端口。
+    var localProxyAddress: String {
+        switch takeover {
+        case .tun: L10n.text("全流量（虚拟网卡）")
+        case .systemProxy: "127.0.0.1:\(MacSettings.mixedPort)"
+        case .listenOnly: "127.0.0.1:\(MacSettings.mixedPort)"
+        }
+    }
+
+    func clearSystemProxy() async {
+        do {
+            try await Task.detached { try SystemProxy.clear() }.value
+            systemProxy = SystemProxy.current
+            message = L10n.text("系统代理已恢复")
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+    #endif
 
     func choose(_ node: ProxyNode) async {
         await runFromUI(.select, node: node)
@@ -291,10 +482,10 @@ final class VPNController: ObservableObject, LANBackend {
             if let result = reply.result {
                 bandwidth = (node.name, result)
             } else {
-                bandwidthError = reply.error ?? "带宽测速失败，请重试"
+                bandwidthError = reply.error ?? L10n.text("带宽测速失败，请重试")
             }
         } catch {
-            bandwidthError = connected ? "带宽测速失败，请重试" : "VPN 已断开"
+            bandwidthError = connected ? L10n.text("带宽测速失败，请重试") : L10n.text("VPN 已断开")
         }
     }
 
@@ -337,13 +528,13 @@ final class VPNController: ObservableObject, LANBackend {
 
     func lanSnapshot() async throws -> LANSnapshot {
         refresh()
-        guard canHostLAN else { throw LANFailure(409, "VPN 正在接管局域网接口") }
+        guard canHostLAN else { throw LANFailure(409, L10n.text("VPN 正在接管局域网接口")) }
         return LANSnapshot(connected: false, activeID: activeID, profile: profile)
     }
 
     func lanEdit(_ edit: LANEdit) async throws -> LANEditReceipt {
         try ensureAvailable()
-        guard canHostLAN else { throw LANFailure(409, "VPN 正在接管局域网接口") }
+        guard canHostLAN else { throw LANFailure(409, L10n.text("VPN 正在接管局域网接口")) }
         let (updated, receipt) = try edit.applying(to: profile, activeID: activeID)
         try save(updated)
         if case .update(let id, let link, _) = edit, link != nil { probes.removeValue(forKey: id) }
@@ -352,7 +543,7 @@ final class VPNController: ObservableObject, LANBackend {
     }
 
     func lanNodeCommand(_ operation: Operation, id: UUID) async throws -> CommandResult {
-        guard canHostLAN else { throw LANFailure(409, "VPN 正在接管局域网接口") }
+        guard canHostLAN else { throw LANFailure(409, L10n.text("VPN 正在接管局域网接口")) }
         return try await nodeCommand(operation, id: id)
     }
 
@@ -368,7 +559,7 @@ final class VPNController: ObservableObject, LANBackend {
 
     func lanPrivateChange(_ change: PrivateNetworkChange) async throws -> PrivateNetworkReceipt {
         try ensureAvailable()
-        guard canHostLAN else { throw LANFailure(409, "VPN 正在接管局域网接口") }
+        guard canHostLAN else { throw LANFailure(409, L10n.text("VPN 正在接管局域网接口")) }
         let previous = profile.privateNetwork
         var next = profile
         next.privateNetwork = try change.applying(to: previous)
@@ -390,14 +581,14 @@ final class VPNController: ObservableObject, LANBackend {
 
     func privateNetworkLocalStatus(key: String? = nil) async throws -> PrivateNetworkSettingsView {
         guard connected else {
-            if key != nil { throw LANFailure(409, "请先启动 VPN") }
+            if key != nil { throw LANFailure(409, L10n.text("请先启动 VPN")) }
             return PrivateNetworkSettingsView(profile.privateNetwork)
         }
         let command = PrivateNetworkLocalRequest(privateNetwork: key == nil ? .status : .key, key: key)
         let reply: MobileManagementReply = try await send(command)
         guard reply.status == 200 else {
             let error = try? JSONDecoder().decode([String: String].self, from: reply.payload)
-            throw LANFailure(reply.status, error?["error"] ?? "私网操作未完成")
+            throw LANFailure(reply.status, error?["error"] ?? L10n.text("私网操作未完成"))
         }
         return try JSONDecoder().decode(PrivateNetworkSettingsView.self, from: reply.payload)
     }
@@ -419,10 +610,10 @@ final class VPNController: ObservableObject, LANBackend {
         refresh()
         if !enabled && canHostLAN { return nil }
         guard canEdit, activeNode != nil || profile.privateNetwork?.enabled == true else {
-            throw LANFailure(409, "请在 Byway 中选择节点或启用私网")
+            throw LANFailure(409, L10n.text("请在 Byway 中选择节点或启用私网"))
         }
         #if targetEnvironment(simulator)
-        throw LANFailure(409, "请在 iPhone 或 iPad 真机启动 VPN")
+        throw LANFailure(409, L10n.text("请在 iPhone 或 iPad 真机启动 VPN"))
         #else
         return { [weak self] in
             Task { @MainActor in
@@ -449,14 +640,16 @@ final class VPNController: ObservableObject, LANBackend {
         refresh()
         guard (200..<300).contains(reply.status) else {
             let details = try? JSONDecoder().decode([String: String].self, from: reply.payload)
-            throw LANFailure(reply.status, details?["error"] ?? "操作失败")
+            throw LANFailure(reply.status, details?["error"] ?? L10n.text("操作失败"))
         }
         return reply.payload
     }
 
     func refreshTunnelLAN() async throws {
+        #if os(iOS)
         guard connected else { return }
         let _: Bool = try await send(LANSettingsCommand.refresh)
+        #endif
     }
 
     func nodeCommand(_ operation: Operation, id: UUID) async throws -> CommandResult {
@@ -473,9 +666,9 @@ final class VPNController: ObservableObject, LANBackend {
         }
         if canEdit, operation == .select {
             guard canSelectNode(node) else {
-                throw BywayError.message("该节点不在当前节点组")
+                throw BywayError.message(L10n.text("该节点不在当前节点组"))
             }
-            guard let store else { throw BywayError.message("共享配置不可用") }
+            guard let store else { throw BywayError.message(L10n.text("共享配置不可用")) }
             try store.saveActiveNode(id)
             refresh()
             return CommandResult(id: command.id,
@@ -483,11 +676,11 @@ final class VPNController: ObservableObject, LANBackend {
                                                       nodes: profile.nodes.map { NodeStatus(id: $0.id, name: $0.name) }),
                                  probe: nil, error: nil)
         }
-        guard status == .connected else { throw LANFailure(409, "请先连接 VPN") }
+        guard status == .connected else { throw LANFailure(409, L10n.text("请先连接 VPN")) }
         busy = true
         defer { busy = false; refresh() }
         let result: CommandResult = try await send(command)
-        guard result.id == command.id else { throw BywayError.message("隧道返回了未知指令") }
+        guard result.id == command.id else { throw BywayError.message(L10n.text("隧道返回了未知指令")) }
         if let message = result.error { throw BywayError.message(message) }
         if let probe = result.probe { probes[id] = .succeeded(probe) }
         return result
@@ -501,12 +694,12 @@ final class VPNController: ObservableObject, LANBackend {
         let probe = try await Task.detached {
             var error: NSError?
             guard let result = LibboxBywayProbeOutbound(configuration, &error) else {
-                throw BywayError.message("节点未通过 HTTPS 连通性测试")
+                throw BywayError.message(L10n.text("节点未通过 HTTPS 连通性测试"))
             }
             return Probe(latencyMS: Int(result.latencyMS), exitIP: result.exitIP)
         }.value
         try Task.checkCancellation()
-        guard canHostLAN else { throw LANFailure(409, "VPN 状态已改变，请重新测试") }
+        guard canHostLAN else { throw LANFailure(409, L10n.text("VPN 状态已改变，请重新测试")) }
         return probe
     }
 
@@ -519,27 +712,34 @@ final class VPNController: ObservableObject, LANBackend {
         try Task.checkCancellation()
         refresh()
         guard !busy, canEdit || status == .connected else {
-            throw LANFailure(409, "VPN 正在处理操作，请稍后重试")
+            throw LANFailure(409, L10n.text("VPN 正在处理操作，请稍后重试"))
         }
     }
 
     private func save(_ updated: BywayProfile) throws {
-        guard let store else { throw BywayError.message("共享配置不可用") }
+        guard let store else { throw BywayError.message(L10n.text("共享配置不可用")) }
         try store.save(updated)
         profile = updated
         refresh()
     }
 
     private func send<Response: Decodable>(_ request: some Encodable) async throws -> Response {
-        guard let session = manager?.connection as? NETunnelProviderSession else {
-            throw LANFailure(409, "VPN 隧道不可用")
-        }
         let data = try JSONEncoder().encode(request)
+        #if os(macOS)
+        guard let engine else { throw LANFailure(409, L10n.text("代理内核未运行")) }
+        guard let reply = await engine.handle(data) else {
+            throw BywayError.message(L10n.text("代理内核未返回结果"))
+        }
+        return try JSONDecoder().decode(Response.self, from: reply)
+        #else
+        guard let session = manager?.connection as? NETunnelProviderSession else {
+            throw LANFailure(409, L10n.text("VPN 隧道不可用"))
+        }
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Response, Error>) in
             do {
                 try session.sendProviderMessage(data) { response in
                     guard let response else {
-                        continuation.resume(throwing: BywayError.message("隧道未返回结果"))
+                        continuation.resume(throwing: BywayError.message(L10n.text("隧道未返回结果")))
                         return
                     }
                     continuation.resume(with: Result { try JSONDecoder().decode(Response.self, from: response) })
@@ -548,11 +748,13 @@ final class VPNController: ObservableObject, LANBackend {
                 continuation.resume(throwing: error)
             }
         }
+        #endif
     }
 
+    #if os(iOS)
     private func tunnelIdentifier() throws -> String {
         guard let identifier = Bundle.main.object(forInfoDictionaryKey: "BywayTunnelIdentifier") as? String else {
-            throw BywayError.message("应用缺少隧道标识")
+            throw BywayError.message(L10n.text("应用缺少隧道标识"))
         }
         return identifier
     }
@@ -572,4 +774,5 @@ final class VPNController: ObservableObject, LANBackend {
         self.manager = manager
         return manager
     }
+    #endif
 }

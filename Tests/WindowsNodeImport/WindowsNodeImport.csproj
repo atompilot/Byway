@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../../Localization/byway-*.json" LogicalName="Byway.Localization.%(Filename)%(Extension)" />
+    <Compile Include="../../Windows/L10n.cs" Link="L10n.cs" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <Compile Include="../../Windows/NodeImport.cs" Link="NodeImport.cs" />
     <Compile Include="../../Windows/NodeRow.cs" Link="NodeRow.cs" />

@@ -1,14 +1,33 @@
 import Foundation
 
+extension Data.WritingOptions {
+    /// macOS 没有文件保护等级，iPhone 上仍使用限时的数据保护。
+    static var bywayAtomicProtected: Self {
+        #if os(macOS)
+        return [.atomic]
+        #else
+        return [.atomic, .completeFileProtectionUntilFirstUserAuthentication]
+        #endif
+    }
+}
+
 struct ProfileStore: Sendable {
     let directory: URL
 
     static func open() throws -> Self {
+        #if os(macOS)
+        let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                                               appropriateFor: nil, create: true)
+        let folder = base.appending(path: "Byway", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return Self(directory: folder)
+        #else
         guard let group = Bundle.main.object(forInfoDictionaryKey: "BywayAppGroup") as? String,
               let folder = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group) else {
-            throw BywayError.message("无法访问 Byway 的共享配置，请检查签名")
+            throw BywayError.message(L10n.text("无法访问 Byway 的共享配置，请检查签名"))
         }
         return Self(directory: folder)
+        #endif
     }
 
     private var file: URL { directory.appending(path: "profile.json") }
@@ -23,7 +42,7 @@ struct ProfileStore: Sendable {
     }
 
     func save(_ profile: BywayProfile) throws {
-        try JSONEncoder().encode(profile).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try JSONEncoder().encode(profile).write(to: file, options: .bywayAtomicProtected)
     }
 
     func removePrivateIdentity(_ id: UUID) {
@@ -39,7 +58,7 @@ struct ProfileStore: Sendable {
 
     func saveActiveNode(_ id: UUID) throws {
         let url = directory.appending(path: "selected-node")
-        try Data(id.uuidString.utf8).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try Data(id.uuidString.utf8).write(to: url, options: .bywayAtomicProtected)
     }
 
     func readDeviceName() throws -> String? {
@@ -115,6 +134,6 @@ struct ProfileStore: Sendable {
 
     private func writeSharedFile(_ value: (some Encodable)?, named name: String) throws {
         try JSONEncoder().encode(value).write(to: directory.appending(path: name),
-                                              options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                                              options: .bywayAtomicProtected)
     }
 }

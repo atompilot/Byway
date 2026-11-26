@@ -28,13 +28,13 @@ public partial class MainWindow
     {
         var settings = profile.PrivateNetwork;
         if (settings is null)
-            return new(null, false, null, "未配置");
+            return new(null, false, null, L10n.Text("未配置"));
         if (!settings.Enabled)
-            return new(settings.Input, false, null, "已暂停");
+            return new(settings.Input, false, null, L10n.Text("已暂停"));
         if (ExternalTailscaleRunning())
-            return new(settings.Input, true, null, "Tailscale 客户端正在使用虚拟网卡");
+            return new(settings.Input, true, null, L10n.Text("Tailscale 客户端正在使用虚拟网卡"));
         if (active is not { Capture: CaptureMode.Tun, Running: true } core)
-            return new(settings.Input, true, null, "等待全流量（TUN）");
+            return new(settings.Input, true, null, L10n.Text("等待全流量（TUN）"));
         try
         {
             var runtime = await core.PrivateNetworkAsync<PrivateNetworkRuntime>();
@@ -42,18 +42,18 @@ public partial class MainWindow
                 runtime = runtime with { AuthURL = null };
             string state = runtime.State switch
             {
-                "NeedsLogin" => "等待登录",
-                "NeedsMachineAuth" => "等待管理员授权",
-                "RelayMismatch" => "中继清单不符，请检查协调服务",
-                "Running" when runtime.Relays?.Verified == true => "已连接",
-                "Stopped" => "已断开",
-                _ => "正在连接"
+                "NeedsLogin" => L10n.Text("等待登录"),
+                "NeedsMachineAuth" => L10n.Text("等待管理员授权"),
+                "RelayMismatch" => L10n.Text("中继清单不符，请检查协调服务"),
+                "Running" when runtime.Relays?.Verified == true => L10n.Text("已连接"),
+                "Stopped" => L10n.Text("已断开"),
+                _ => L10n.Text("正在连接")
             };
             return new(settings.Input, true, runtime, state);
         }
         catch (Exception error) when (error is InvalidOperationException or System.Net.Http.HttpRequestException or IOException)
         {
-            return new(settings.Input, true, null, "等待私网内核");
+            return new(settings.Input, true, null, L10n.Text("等待私网内核"));
         }
     }
 
@@ -115,7 +115,7 @@ public partial class MainWindow
         var current = profile.PrivateNetwork;
         if (current is not null &&
             (current.Input.Provider != input.Provider || current.Input.ControlURL != input.ControlURL))
-            throw new InvalidOperationException("请先退出当前私网，再更换协调服务器。");
+            throw new InvalidOperationException(L10n.Text("请先退出当前私网，再更换协调服务器。"));
         if (current is not null && current.Input.Provider == input.Provider && current.Input.ControlURL == input.ControlURL &&
             current.Input.DeviceName == input.DeviceName && current.Input.RelayMode == input.RelayMode &&
             current.Input.RelayHosts.SequenceEqual(input.RelayHosts) &&
@@ -127,9 +127,9 @@ public partial class MainWindow
 
     private Task SetPrivateNetworkAsync(bool enabled)
     {
-        var current = profile.PrivateNetwork ?? throw new InvalidOperationException("请先配置私网。");
+        var current = profile.PrivateNetwork ?? throw new InvalidOperationException(L10n.Text("请先配置私网。"));
         if (enabled && ExternalTailscaleRunning())
-            throw new InvalidOperationException("请先断开系统中的 Tailscale 客户端，再在 Byway 加入私网。");
+            throw new InvalidOperationException(L10n.Text("请先断开系统中的 Tailscale 客户端，再在 Byway 加入私网。"));
         if (current.Enabled == enabled && active is { Capture: CaptureMode.Tun, Running: true })
             return Task.CompletedTask;
         return SavePrivateNetworkAsync(current with { Enabled = enabled }, startIfReady: enabled);
@@ -158,7 +158,7 @@ public partial class MainWindow
             var runtime = current.Runtime;
             PrivateStatus.Text = runtime?.Network is { Length: > 0 } name ? $"{current.State} · {name}" : current.State;
             PrivateAddress.Text = runtime?.Addresses is { Length: > 0 } addresses ? string.Join("  ", addresses) : "";
-            PrivateToggle.Content = current.Configuration is null ? "加入私网" : current.Enabled ? "暂停私网" : "恢复私网";
+            PrivateToggle.Content = current.Configuration is null ? L10n.Text("加入私网") : current.Enabled ? L10n.Text("暂停私网") : L10n.Text("恢复私网");
             PrivateTun.Visibility = current.Enabled && active?.Capture != CaptureMode.Tun ? Visibility.Visible : Visibility.Collapsed;
             PrivateLeave.Visibility = current.Configuration is null ? Visibility.Collapsed : Visibility.Visible;
             privateAuthUrl = runtime?.AuthURL;
@@ -169,10 +169,10 @@ public partial class MainWindow
             if (relay is not null)
             {
                 bool mismatch = runtime?.State == "RelayMismatch";
-                string title = $"实际下发的中继（{relay.Hosts.Length} 个）";
+                string title = L10n.Format($"实际下发的中继（{relay.Hosts.Length} 个）");
                 if (mismatch)
-                    title += " · 清单不符";
-                string hosts = relay.Hosts.Length == 0 ? "无" : string.Join(", ", relay.Hosts);
+                    title += L10n.Text(" · 清单不符");
+                string hosts = relay.Hosts.Length == 0 ? L10n.Text("无") : string.Join(", ", relay.Hosts);
                 if (mismatch && (PrivateRelayAudit.Header as string != title || PrivateActualRelays.Text != hosts))
                     PrivateRelayAudit.IsExpanded = true;
                 PrivateRelayAudit.Header = title;
@@ -233,8 +233,8 @@ public partial class MainWindow
         PrivateRelayModeForm.Visibility = PrivateProvider.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
         bool strict = SelectedRelayMode == PrivateNetworkInput.Strict;
         PrivateStrictRelays.Visibility = strict ? Visibility.Visible : Visibility.Collapsed;
-        PrivateRelayHelp.Text = strict ? "填写协调服务应下发的中继域名，多个域名用逗号分隔。"
-            : "授权后使用 Tailscale 下发的中继。";
+        PrivateRelayHelp.Text = strict ? L10n.Text("填写协调服务应下发的中继域名，多个域名用逗号分隔。")
+            : L10n.Text("授权后使用 Tailscale 下发的中继。");
     }
 
     private async void PrivateToggleClick(object sender, RoutedEventArgs e) => await RunAsync(async () =>
@@ -253,7 +253,7 @@ public partial class MainWindow
     private async void PrivateSaveClick(object sender, RoutedEventArgs e) => await RunAsync(async () =>
     {
         var ports = Split(PrivateInboundPorts.Text).Select(value => int.TryParse(value, out int port)
-            ? port : throw new InvalidDataException("端口请用逗号分隔的数字。")).ToArray();
+            ? port : throw new InvalidDataException(L10n.Text("端口请用逗号分隔的数字。"))).ToArray();
         bool initial = profile.PrivateNetwork is null;
         string mode = SelectedRelayMode;
         await ConfigurePrivateNetworkAsync(new(PrivateProvider.SelectedIndex == 1 ? "tailscale" : "headscale",
@@ -270,7 +270,7 @@ public partial class MainWindow
     {
         if (!Program.IsElevated)
         {
-            if (System.Windows.MessageBox.Show(this, "以管理员身份重启 Byway 以启用全流量？", "私网",
+            if (System.Windows.MessageBox.Show(this, L10n.Text("以管理员身份重启 Byway 以启用全流量？"), L10n.Text("私网"),
                 MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
                 ElevateForTunClick(sender, e);
             return;
@@ -305,9 +305,9 @@ public partial class MainWindow
     private async Task ApplyPrivateKeyAsync(string? key)
     {
         if (string.IsNullOrEmpty(key) || key.Length > 4096)
-            throw new InvalidDataException("请填写有效的入网密钥。");
+            throw new InvalidDataException(L10n.Text("请填写有效的入网密钥。"));
         if (active is not { Capture: CaptureMode.Tun } core || profile.PrivateNetwork?.Enabled != true)
-            throw new InvalidOperationException("请先启动私网。");
+            throw new InvalidOperationException(L10n.Text("请先启动私网。"));
         _ = await core.PrivateNetworkAsync<System.Text.Json.JsonElement>("join", key);
     }
 
@@ -315,7 +315,7 @@ public partial class MainWindow
 
     private async void PrivateLeaveClick(object sender, RoutedEventArgs e)
     {
-        if (System.Windows.MessageBox.Show(this, "这台设备再次加入时需要重新授权。", "退出私网",
+        if (System.Windows.MessageBox.Show(this, L10n.Text("这台设备再次加入时需要重新授权。"), L10n.Text("退出私网"),
             MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
             await RunAsync(() => SavePrivateNetworkAsync(null));
     }
@@ -325,7 +325,7 @@ public partial class MainWindow
         if (PrivatePeerName is null)
             return;
         var peer = PrivatePeers.SelectedItem as PrivateNetworkPeer;
-        PrivatePeerName.Text = peer?.Name ?? "选择设备";
+        PrivatePeerName.Text = peer?.Name ?? L10n.Text("选择设备");
         PrivatePeerAddress.Text = peer is null ? "" : string.Join(Environment.NewLine,
             peer.Addresses.Append(peer.DnsName).Where(value => value.Length != 0));
         PrivateProbe.IsEnabled = PrivateCopy.IsEnabled = peer?.Addresses.Length > 0;
@@ -335,9 +335,9 @@ public partial class MainWindow
     private async Task<PrivateNetworkProbe> ProbePrivateNetworkAsync(string? address)
     {
         if (address is null || address.Length > 64 || !System.Net.IPAddress.TryParse(address, out _))
-            throw new InvalidDataException("请提供有效的私网地址。");
+            throw new InvalidDataException(L10n.Text("请提供有效的私网地址。"));
         if (active is not { Capture: CaptureMode.Tun } core || profile.PrivateNetwork?.Enabled != true)
-            throw new InvalidOperationException("私网未连接。");
+            throw new InvalidOperationException(L10n.Text("私网未连接。"));
         return await core.PrivateNetworkAsync<PrivateNetworkProbe>("probe", address);
     }
 
@@ -350,10 +350,10 @@ public partial class MainWindow
             var probe = await ProbePrivateNetworkAsync(peer.Addresses[0]);
             string path = probe.Path switch
             {
-                "direct" => "直连",
-                "derp" => string.IsNullOrEmpty(probe.Region) ? "中继" : $"中继 {probe.Region}",
-                "peerRelay" => "设备中继",
-                _ => "路径未知"
+                "direct" => L10n.Text("直连"),
+                "derp" => string.IsNullOrEmpty(probe.Region) ? L10n.Text("中继") : L10n.Format($"中继 {probe.Region}"),
+                "peerRelay" => L10n.Text("设备中继"),
+                _ => L10n.Text("路径未知")
             };
             lastPrivateProbeId = peer.Id;
             lastPrivateProbe = $"{path} · {probe.LatencyMs:F0} ms";

@@ -1,6 +1,7 @@
 name: Byway
 options:
   minimumXcodeGenVersion: 2.40.0
+  developmentLanguage: en
 packages:
   Yams:
     url: https://github.com/jpsim/Yams.git
@@ -29,6 +30,9 @@ targets:
       - path: Shared
         excludes: [Web]
       - path: Shared/Web
+        buildPhase: resources
+      - path: Localization
+        excludes: [byway-zh-Hans.json]
         buildPhase: resources
       - path: Tunnel/Resources/geoip-cn.srs
         buildPhase: resources
@@ -66,6 +70,9 @@ targets:
         excludes: [Web]
       - path: Shared/Web
         buildPhase: resources
+      - path: Localization
+        excludes: [byway-zh-Hans.json]
+        buildPhase: resources
       - path: docs/mobile-ai.md
         buildPhase: resources
     settings:
@@ -81,8 +88,49 @@ targets:
       - sdk: UIKit.framework
       - framework: Vendor/Libbox.xcframework
         embed: false
+  BywayMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: App
+        excludes: [Info.plist, App.entitlements]
+      - path: Shared
+        excludes: [Web]
+      - path: Shared/Web
+        buildPhase: resources
+      - path: Localization
+        excludes: [byway-zh-Hans.json]
+        buildPhase: resources
+      - path: Tunnel/TunnelRuntime.swift
+      - path: Tunnel/TunnelPlatform.swift
+      - path: Tunnel/TunnelDiagnostics.swift
+      - path: Tunnel/RoutingNetworkMonitor.swift
+      - path: Tunnel/Resources/geoip-cn.srs
+        buildPhase: resources
+      - path: docs/mobile-ai.md
+        buildPhase: resources
+      - path: Mac
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BYWAY_BUNDLE_ID).mac
+        PRODUCT_NAME: Byway
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Mac/BywayMac.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        OTHER_LDFLAGS: ["$(inherited)", "-lresolv"]
+    dependencies:
+      - package: Yams
+      - framework: Vendor/Libbox.xcframework
+        embed: false
 schemes:
   Byway:
     build:
       targets:
         Byway: all
+  BywayMac:
+    build:
+      targets:
+        BywayMac: all

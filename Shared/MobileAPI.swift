@@ -4,7 +4,7 @@ struct MobileAPI: Sendable {
     let backend: any LANBackend
 
     func handle(_ request: LANRequest) async throws -> LANResponse {
-        guard let url = URLComponents(string: request.target) else { throw LANFailure(400, "请求路径无效") }
+        guard let url = URLComponents(string: request.target) else { throw LANFailure(400, L10n.text("请求路径无效")) }
         let path = url.path
         let parts = path.split(separator: "/")
         switch (request.method, path) {
@@ -23,7 +23,7 @@ struct MobileAPI: Sendable {
             let result = try await backend.lanPrivateChange(.configure(configuration))
             return LANResponse(200, result.status)
         case ("POST", "/v1/private-network/join"):
-            guard request.body.isEmpty else { throw LANFailure(400, "请在设备上输入入网密钥，或通过浏览器授权") }
+            guard request.body.isEmpty else { throw LANFailure(400, L10n.text("请在设备上输入入网密钥，或通过浏览器授权")) }
             let result = try await backend.lanPrivateChange(.enable(true))
             return LANResponse(202, result.status, afterReply: result.afterReply)
         case ("PUT", "/v1/private-network/state"):
@@ -43,7 +43,7 @@ struct MobileAPI: Sendable {
             return LANResponse(200, ["lifetime": try await backend.lanTrafficHistory().lifetime])
         case ("GET", "/v1/statistics/history"):
             let range = url.queryItems?.first(where: { $0.name == "range" })?.value ?? "today"
-            guard let range = TrafficRange(rawValue: range) else { throw LANFailure(422, "不支持该统计范围") }
+            guard let range = TrafficRange(rawValue: range) else { throw LANFailure(422, L10n.text("不支持该统计范围")) }
             return LANResponse(200, range.report(try await backend.lanTrafficHistory()))
         case ("GET", "/v1/connections"):
             let diagnostics = try await backend.lanDiagnostics()
@@ -68,11 +68,11 @@ struct MobileAPI: Sendable {
                                                acceptWarnings: input.acceptWarnings == true, activate: input.activate == true))
         case ("PUT", "/v1/config/routing/active"):
             let input = try request.decode(ActiveRoutingInput.self, keys: ["id", "useDefault"])
-            guard (input.id != nil) != (input.useDefault == true) else { throw LANFailure(400, "请选择配置或默认分流") }
+            guard (input.id != nil) != (input.useDefault == true) else { throw LANFailure(400, L10n.text("请选择配置或默认分流")) }
             return try await editRouting(.activate(input.id))
         case ("POST", "/v1/config/routing/test-rule"):
             let input = try request.decode(RuleTestInput.self, keys: ["id", "host", "port"])
-            if let port = input.port, !(1...65535).contains(port) { throw LANFailure(422, "请输入有效的目标端口") }
+            if let port = input.port, !(1...65535).contains(port) { throw LANFailure(422, L10n.text("请输入有效的目标端口")) }
             let snapshot = try await backend.lanSnapshot()
             let node = snapshot.profile.nodes.first(where: { $0.id == snapshot.activeID })?.name
             let config = try input.id.map(snapshot.profile.savedRouting.configuration)
@@ -95,23 +95,23 @@ struct MobileAPI: Sendable {
             return LANResponse(200, profile.nodeSubscriptions.map { SubscriptionMetadata($0, in: profile) })
         case ("POST", "/v1/subscriptions"):
             let input = try request.decode(SubscriptionInput.self, keys: ["link", "name"])
-            guard let link = input.link else { throw LANFailure(400, "请提供订阅链接") }
+            guard let link = input.link else { throw LANFailure(400, L10n.text("请提供订阅链接")) }
             return try await subscribe(id: nil, previous: nil, link: link, name: input.name)
         case ("POST", "/v1/import"):
             let input = try request.decode(NodeImportInput.self, keys: ["link", "text", "parts", "name"])
             let parts = input.parts
             guard [input.text != nil, input.link != nil, parts != nil].filter({ $0 }).count == 1 else {
-                throw LANFailure(400, "提供链接、文件正文或分段码中的一项")
+                throw LANFailure(400, L10n.text("提供链接、文件正文或分段码中的一项"))
             }
             var fragments = NodeShareParts()
             let code = try parts.map { parts -> String in
-                guard !parts.isEmpty, parts.count <= 1500 else { throw LANFailure(400, "分段码数量无效") }
+                guard !parts.isEmpty, parts.count <= 1500 else { throw LANFailure(400, L10n.text("分段码数量无效")) }
                 var complete: String?
                 guard parts.allSatisfy({ $0.lowercased().hasPrefix(NodeShare.partPrefix) }) else {
-                    throw LANFailure(422, "parts 只接受分段二维码")
+                    throw LANFailure(422, L10n.text("parts 只接受分段二维码"))
                 }
                 for part in parts { complete = try fragments.accept(part) ?? complete }
-                guard let complete else { throw LANFailure(422, "请提交完整的分段二维码") }
+                guard let complete else { throw LANFailure(422, L10n.text("请提交完整的分段二维码")) }
                 return complete
             }
             return try await importNodes(input.link ?? input.text ?? code ?? "", name: input.name)
@@ -131,7 +131,7 @@ struct MobileAPI: Sendable {
                     return share(NodeShare.subscription(subscription))
                 }
                 guard let group = profile.globalRoutingSettings.groups.first(where: { $0.id == id }) else {
-                    throw LANFailure(404, "节点组不存在")
+                    throw LANFailure(404, L10n.text("节点组不存在"))
                 }
                 return try share(NodeShare.group(name: group.name, nodes: group.nodeIDs.compactMap { id in
                     profile.nodes.first { $0.id == id }
@@ -141,7 +141,7 @@ struct MobileAPI: Sendable {
                let id = UUID(uuidString: String(parts[3])) {
                 return try await routingRoute(request, id: id, action: parts.count == 5 ? String(parts[4]) : nil)
             }
-            throw LANFailure(404, "API 路径不存在")
+            throw LANFailure(404, L10n.text("API 路径不存在"))
         }
     }
 
@@ -165,19 +165,19 @@ struct MobileAPI: Sendable {
         case ("POST", "rules"):
             let input = try request.decode(RuleInput.self, keys: ["type", "value", "policy", "noResolve"])
             guard !input.type.contains(","), !input.value.contains(","), !input.policy.contains(",") else {
-                throw LANFailure(422, "分流字段无效")
+                throw LANFailure(422, L10n.text("分流字段无效"))
             }
             return try await editRouting(.insertRule(id, [input.type, input.value, input.policy].joined(separator: ",")
                                                      + (input.noResolve == true ? ",no-resolve" : "")))
         default:
-            throw LANFailure(404, "分流 API 路径不存在")
+            throw LANFailure(404, L10n.text("分流 API 路径不存在"))
         }
     }
 
     private func subscriptionRoute(_ request: LANRequest, id: UUID, action: String?) async throws -> LANResponse {
         let profile = try await backend.lanSnapshot().profile
         guard let subscription = profile.nodeSubscriptions.first(where: { $0.id == id }) else {
-            throw LANFailure(404, "订阅不存在")
+            throw LANFailure(404, L10n.text("订阅不存在"))
         }
         switch (request.method, action) {
         case ("GET", nil):
@@ -187,11 +187,11 @@ struct MobileAPI: Sendable {
             if let link = input.link {
                 return try await subscribe(id: id, previous: subscription.address, link: link, name: input.name)
             }
-            guard let name = input.name else { throw LANFailure(400, "请提供订阅名称") }
+            guard let name = input.name else { throw LANFailure(400, L10n.text("请提供订阅名称")) }
             _ = try await backend.lanEdit(.nodeCollection(.renameSubscription(id, name)))
             let updated = try await backend.lanSnapshot().profile
             guard let subscription = updated.nodeSubscriptions.first(where: { $0.id == id }) else {
-                throw LANFailure(404, "订阅不存在")
+                throw LANFailure(404, L10n.text("订阅不存在"))
             }
             return LANResponse(200, SubscriptionMetadata(subscription, in: updated))
         case ("DELETE", nil):
@@ -202,7 +202,7 @@ struct MobileAPI: Sendable {
         case ("GET", "share"):
             return share(NodeShare.subscription(subscription))
         default:
-            throw LANFailure(404, "订阅 API 路径不存在")
+            throw LANFailure(404, L10n.text("订阅 API 路径不存在"))
         }
     }
 
@@ -222,7 +222,7 @@ struct MobileAPI: Sendable {
             groupName = name
         }
         let receipt = try await backend.lanEdit(.importNodes(result, groupName: groupName))
-        guard let report = receipt.nodeImport else { throw LANFailure(409, "无法确认导入结果") }
+        guard let report = receipt.nodeImport else { throw LANFailure(409, L10n.text("无法确认导入结果")) }
         return LANResponse(201, report)
     }
 
@@ -232,12 +232,12 @@ struct MobileAPI: Sendable {
         do { result = try await source.fetch() }
         catch let error as BywayError { throw error }
         catch is CancellationError { throw CancellationError() }
-        catch { throw LANFailure(503, "订阅下载失败，现有订阅已保留") }
+        catch { throw LANFailure(503, L10n.text("订阅下载失败，现有订阅已保留")) }
         let receipt = try await backend.lanEdit(.nodeCollection(.subscription(id: id, previousAddress: previous,
                                                                               source: source, name: name, importResult: result)))
         let profile = try await backend.lanSnapshot().profile
         guard let subscription = profile.nodeSubscriptions.first(where: { $0.id == receipt.subscriptionID }) else {
-            throw LANFailure(409, "无法确认订阅已保存")
+            throw LANFailure(409, L10n.text("无法确认订阅已保存"))
         }
         return LANResponse(id == nil ? 201 : 200, SubscriptionMetadata(subscription, in: profile, skipped: result.skipped))
     }

@@ -55,8 +55,8 @@ public partial class MainWindow
 
     private void RefreshDeviceDisplay(DeviceInfo? device)
     {
-        AiDeviceName.Text = device?.DisplayName ?? "无法读取设备身份";
-        AiDeviceCode.Text = device is null ? "" : $"识别码  {device.ShortCode}";
+        AiDeviceName.Text = device?.DisplayName ?? L10n.Text("无法读取设备身份");
+        AiDeviceCode.Text = device is null ? "" : L10n.Format($"识别码  {device.ShortCode}");
         AiRenameDevice.IsEnabled = device is not null;
     }
 
@@ -79,7 +79,7 @@ public partial class MainWindow
         {
             RenameDevice(AiDeviceNameInput.Text);
             CloseDeviceNameEditor();
-            AiDeviceFeedback.Text = "设备名称已保存。";
+            AiDeviceFeedback.Text = L10n.Text("设备名称已保存。");
         }
         catch (Exception error)
         {
@@ -137,14 +137,14 @@ public partial class MainWindow
                 if (LanFirewall.IsAuthorized())
                     await aiServer.SetLanAsync(true);
                 else
-                    AiFeedback.Text = "当前版本需要 Windows 防火墙授权。打开局域网控制以继续。";
+                    AiFeedback.Text = L10n.Text("当前版本需要 Windows 防火墙授权。打开局域网控制以继续。");
             }
         }
         catch (Exception)
         {
             AiFeedback.Text = aiServer?.LocalReady == true
-                ? "局域网 API 启动失败。请检查 Windows 防火墙和端口 8767，再打开局域网控制。"
-                : "本机 API 启动失败。请检查端口 8766，再重试。";
+                ? L10n.Text("局域网 API 启动失败。请检查 Windows 防火墙和端口 8767，再打开局域网控制。")
+                : L10n.Text("本机 API 启动失败。请检查端口 8766，再重试。");
         }
         finally
         {
@@ -162,7 +162,7 @@ public partial class MainWindow
 
     private async Task ChangeLanAsync(bool enabled, bool interactive = false)
     {
-        var server = aiServer ?? throw new InvalidOperationException("API 还未启动。");
+        var server = aiServer ?? throw new InvalidOperationException(L10n.Text("API 还未启动。"));
         var settings = profile.Ai!;
         if (enabled)
         {
@@ -192,23 +192,23 @@ public partial class MainWindow
         bool lanEnabled = LanActive;
         var (hostAddress, addresses) = AiLanConnection();
         string[] displayedAddresses = hostAddress is null ? addresses : [$"mDNS   {hostAddress}", .. addresses];
-        AiLocalAddress.Text = localReady ? $"本机 API   {AiServer.LocalAddress}" : startingAi ? "正在启动本机 API…" : "本机 API 未启动";
+        AiLocalAddress.Text = localReady ? L10n.Format($"本机 API   {AiServer.LocalAddress}") : startingAi ? L10n.Text("正在启动本机 API…") : L10n.Text("本机 API 未启动");
         AiLanToggle.IsChecked = lanEnabled;
         AiLanToggle.IsEnabled = localReady && !busy && !startingAi;
-        AiLanAddress.Text = lanEnabled ? displayedAddresses.Length == 0 ? "等待局域网地址。" : string.Join(Environment.NewLine, displayedAddresses)
-            : "局域网已关闭。";
+        AiLanAddress.Text = lanEnabled ? displayedAddresses.Length == 0 ? L10n.Text("等待局域网地址。") : string.Join(Environment.NewLine, displayedAddresses)
+            : L10n.Text("局域网已关闭。");
         AiCopyConnection.IsEnabled = localReady;
         string? webAddress = ManagementAddress();
-        AiWebAddress.Text = webAddress ?? (lanEnabled ? "等待局域网 IP 地址。" : "管理网页未就绪。");
+        AiWebAddress.Text = webAddress ?? (lanEnabled ? L10n.Text("等待局域网 IP 地址。") : L10n.Text("管理网页未就绪。"));
         AiOpenWeb.IsEnabled = AiCopyWeb.IsEnabled = webAddress is not null;
         var discovery = DiscoveryState();
         AiDiscoveryToggle.IsChecked = discovery.Enabled;
         AiDiscoveryToggle.IsEnabled = lanEnabled && !busy;
         AiDiscoveryStatus.Text = !lanEnabled || !discovery.Enabled ? "" : discovery.Status switch
         {
-            "published" => "已发布 mDNS 地址。",
-            "unavailable" => "mDNS 不可用，使用 IP 地址。",
-            _ => "正在发布 mDNS 地址。"
+            "published" => L10n.Text("已发布 mDNS 地址。"),
+            "unavailable" => L10n.Text("mDNS 不可用，使用 IP 地址。"),
+            _ => L10n.Text("正在发布 mDNS 地址。")
         };
         AiCopyWebIp.Visibility = discovery.MdnsUrl is not null && discovery.IpUrl is not null
             ? Visibility.Visible : Visibility.Collapsed;
@@ -226,7 +226,7 @@ public partial class MainWindow
     private DiscoveryState SetDiscoveryEnabled(bool enabled)
     {
         if (profile.Ai is not { } settings)
-            throw new ApiError(503, "本机 API 尚未就绪。");
+            throw new ApiError(503, L10n.Text("本机 API 尚未就绪。"));
         if (settings.DiscoveryEnabled != enabled)
             SaveAiOptions(settings with { DiscoveryEnabled = enabled });
         RefreshAiPage();
@@ -247,7 +247,7 @@ public partial class MainWindow
     {
         if (ManagementAddress() is not { } address) return;
         try { Process.Start(new ProcessStartInfo(address.TrimEnd('/') + "/") { UseShellExecute = true }); }
-        catch (System.ComponentModel.Win32Exception) { AiFeedback.Text = "无法打开默认浏览器。"; }
+        catch (System.ComponentModel.Win32Exception) { AiFeedback.Text = L10n.Text("无法打开默认浏览器。"); }
     }
 
     private void CopyManagementClick(object sender, RoutedEventArgs e)
@@ -262,8 +262,8 @@ public partial class MainWindow
 
     private void CopyManagementAddress(string address)
     {
-        try { System.Windows.Clipboard.SetText(address.TrimEnd('/') + "/"); AiFeedback.Text = "网页链接已复制。"; }
-        catch (ExternalException) { AiFeedback.Text = "无法写入剪贴板，请重试。"; }
+        try { System.Windows.Clipboard.SetText(address.TrimEnd('/') + "/"); AiFeedback.Text = L10n.Text("网页链接已复制。"); }
+        catch (ExternalException) { AiFeedback.Text = L10n.Text("无法写入剪贴板，请重试。"); }
     }
 
     private (string? HostAddress, string[] Addresses) AiLanConnection()
@@ -279,9 +279,9 @@ public partial class MainWindow
             return;
         try
         {
-            AiFeedback.Text = enable ? "正在开启局域网控制…" : "正在关闭局域网控制…";
+            AiFeedback.Text = enable ? L10n.Text("正在开启局域网控制…") : L10n.Text("正在关闭局域网控制…");
             await RunExclusiveAsync(async () => { await ChangeLanAsync(enable, interactive: true); return true; });
-            AiFeedback.Text = enable ? "局域网控制已开启。" : "局域网控制已关闭。";
+            AiFeedback.Text = enable ? L10n.Text("局域网控制已开启。") : L10n.Text("局域网控制已关闭。");
         }
         catch (Exception error)
         {
@@ -304,13 +304,13 @@ public partial class MainWindow
     {
         if (profile.Ai is null || aiServer is null || busy)
             return;
-        if (MessageBox.Show(this, "更换后，已有 AI 连接需要更新令牌。", "更换访问令牌",
+        if (MessageBox.Show(this, L10n.Text("更换后，已有 AI 连接需要更新令牌。"), L10n.Text("更换访问令牌"),
             MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
             return;
         await RunAsync(() =>
         {
             ReplaceAiToken();
-            AiFeedback.Text = "访问令牌已更换。请重新复制 AI 接入指令。";
+            AiFeedback.Text = L10n.Text("访问令牌已更换。请重新复制 AI 接入指令。");
             return Task.CompletedTask;
         });
     }
@@ -321,10 +321,10 @@ public partial class MainWindow
             return;
         var (hostAddress, addresses) = AiLanConnection();
         string address = hostAddress ?? addresses.FirstOrDefault() ?? AiServer.LocalAddress;
-        string fallback = hostAddress is null ? "" : $" 若 .local 无法解析，改用 {string.Join(" 或 ", addresses)}。";
-        string text = $"连接 Byway。绕过 HTTP 代理，直接 GET {address}/v1/guide，按指南安装可复用的 skill。{fallback}\nAuthorization: Bearer {aiServer.Token}";
-        try { System.Windows.Clipboard.SetText(text); AiFeedback.Text = "已复制 AI 接入指令。"; }
-        catch (ExternalException) { AiFeedback.Text = "无法写入剪贴板，请重试。"; }
+        string fallback = hostAddress is null ? "" : L10n.Format($" 若 .local 无法解析，改用 {string.Join(L10n.Text(" 或 "), addresses)}。");
+        string text = L10n.Format($"连接 Byway。绕过 HTTP 代理，直接 GET {address}/v1/guide，按指南安装可复用的 skill。{fallback}\nAuthorization: Bearer {aiServer.Token}");
+        try { System.Windows.Clipboard.SetText(text); AiFeedback.Text = L10n.Text("已复制 AI 接入指令。"); }
+        catch (ExternalException) { AiFeedback.Text = L10n.Text("无法写入剪贴板，请重试。"); }
     }
 
     private void ShowAiLogClick(object sender, RoutedEventArgs e)

@@ -7,13 +7,24 @@ final class TunnelPlatform: NSObject, LibboxPlatformInterfaceProtocol, LibboxCom
     private weak var provider: NEPacketTunnelProvider?
     private var monitor: NWPathMonitor?
 
-    init(provider: NEPacketTunnelProvider) {
+    init(provider: NEPacketTunnelProvider?) {
         self.provider = provider
     }
 
     func openTun(_ options: LibboxTunOptionsProtocol?, ret0_: UnsafeMutablePointer<Int32>?) throws {
-        guard let options, let ret0_, let provider else {
-            throw BywayError.message("缺少隧道设置")
+        guard let options, let ret0_ else {
+            throw BywayError.message(L10n.text("缺少隧道设置"))
+        }
+        #if os(macOS)
+        // 特权内核进程没有 PacketTunnelProvider：自己开 utun 交 fd 给内核，
+        // 接口地址与默认路由由配置里的 auto_route 负责。
+        if provider == nil {
+            ret0_.pointee = try MacTun.open()
+            return
+        }
+        #endif
+        guard let provider else {
+            throw BywayError.message(L10n.text("缺少隧道设置"))
         }
         let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
         settings.mtu = NSNumber(value: options.getMTU())
@@ -86,17 +97,17 @@ final class TunnelPlatform: NSObject, LibboxPlatformInterfaceProtocol, LibboxCom
             configuration.signal()
         }
         guard configuration.wait(timeout: .now() + 20) == .success else {
-            throw BywayError.message("等待 iOS 应用隧道设置超时")
+            throw BywayError.message(L10n.text("等待 iOS 应用隧道设置超时"))
         }
         if let configurationError { throw configurationError }
 
         let fd = LibboxGetTunnelFileDescriptor()
-        guard fd >= 0 else { throw BywayError.message("无法取得 iOS 隧道接口") }
+        guard fd >= 0 else { throw BywayError.message(L10n.text("无法取得 iOS 隧道接口")) }
         ret0_.pointee = fd
     }
 
     func startDefaultInterfaceMonitor(_ listener: LibboxInterfaceUpdateListenerProtocol?) throws {
-        guard let listener else { throw BywayError.message("缺少网络监听器") }
+        guard let listener else { throw BywayError.message(L10n.text("缺少网络监听器")) }
         let monitor = NWPathMonitor()
         self.monitor = monitor
         let firstUpdate = DispatchSemaphore(value: 0)
@@ -116,7 +127,7 @@ final class TunnelPlatform: NSObject, LibboxPlatformInterfaceProtocol, LibboxCom
         if firstUpdate.wait(timeout: .now() + 5) == .timedOut {
             monitor.cancel()
             self.monitor = nil
-            throw BywayError.message("等待网络接口超时")
+            throw BywayError.message(L10n.text("等待网络接口超时"))
         }
     }
 
@@ -144,12 +155,27 @@ final class TunnelPlatform: NSObject, LibboxPlatformInterfaceProtocol, LibboxCom
     func registerMyInterface(_ name: String?) {}
     func usePlatformAutoDetectControl() -> Bool { false }
     func autoDetectControl(_ fd: Int32) throws {}
-    func underNetworkExtension() -> Bool { true }
+    func underNetworkExtension() -> Bool {
+        #if os(macOS)
+        // macOS 特权内核进程不在 Network Extension 里，内核必须自己接管路由。
+        return provider != nil
+        #else
+        return true
+        #endif
+    }
     func includeAllNetworks() -> Bool { false }
     func readWIFIState() -> LibboxWIFIState? { nil }
     func localDNSTransport() -> LibboxLocalDNSTransportProtocol? { nil }
     func clearDNSCache() {}
-    func writeDebugMessage(_ message: String?) {}
+
+    /// 内核日志出口。macOS 特权进程没有别的日志通道，直接落到标准错误，
+    /// 由 App 重定向进 tun-helper.log；否则内核启动失败时只剩一句「引擎未启动」。
+    func writeDebugMessage(_ message: String?) {
+        #if os(macOS)
+        guard provider == nil, let message, !message.isEmpty else { return }
+        FileHandle.standardError.write(Data(("sing-box: \(message)\n").utf8))
+        #endif
+    }
     func send(_ notification: LibboxNotification?) throws {}
     func cancelNotification(_ identifier: String?, typeID: Int32) throws {}
     func startNeighborMonitor(_ listener: LibboxNeighborUpdateListenerProtocol?) throws { throw unavailable }
@@ -178,7 +204,7 @@ final class TunnelPlatform: NSObject, LibboxPlatformInterfaceProtocol, LibboxCom
     func usePlatformBridge() -> Bool { false }
     func createBridge(_ options: LibboxBridgeOptions?) throws -> LibboxBridgeSessionProtocol { throw unavailable }
 
-    private var unavailable: BywayError { .message("此隧道未启用该能力") }
+    private var unavailable: BywayError { .message(L10n.text("此隧道未启用该能力")) }
 
     private func reportUnavailable(_ error: NSErrorPointer) -> String {
         error?.pointee = unavailable as NSError

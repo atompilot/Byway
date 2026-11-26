@@ -20,7 +20,7 @@ internal sealed record SavedProfile(List<Node> Nodes, Guid? Selected, List<NodeG
     internal static SavedProfile Load() => File.Exists(Path)
         ? JsonSerializer.Deserialize<SavedProfile>(
             ProtectedData.Unprotect(File.ReadAllBytes(Path), null, DataProtectionScope.CurrentUser))
-          ?? throw new InvalidDataException("无法读取已保存的节点。")
+          ?? throw new InvalidDataException(L10n.Text("无法读取已保存的节点。"))
         : new([], null);
 
     internal void Save() => Program.WriteAtomic(Path, ProtectedData.Protect(

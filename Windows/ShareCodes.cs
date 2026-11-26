@@ -25,10 +25,10 @@ internal abstract record ImportCode
             text.StartsWith("ss://", StringComparison.OrdinalIgnoreCase))
         {
             if (text.Contains('\n') || text.Contains('\r'))
-                throw new InvalidDataException("请一次导入一个节点链接或一份节点组分享码。");
+                throw new InvalidDataException(L10n.Text("请一次导入一个节点链接或一份节点组分享码。"));
             return new NodeCode(Subscription.ParseNodes(text).Nodes.Single());
         }
-        throw new InvalidDataException("请扫描 Byway 节点组、订阅或受支持的节点二维码。");
+        throw new InvalidDataException(L10n.Text("请扫描 Byway 节点组、订阅或受支持的节点二维码。"));
     }
 }
 
@@ -71,7 +71,7 @@ internal static class ShareCodes
                 net, type = "none", host, path, tls = security, sni = serverName, alpn, fp = fingerprint
             })),
             "shadowsocks" => Shadowsocks(outbound, authority) + label,
-            _ => throw new InvalidDataException("此节点格式暂无法生成分享链接。")
+            _ => throw new InvalidDataException(L10n.Text("此节点格式暂无法生成分享链接。"))
         };
     }
 
@@ -91,23 +91,23 @@ internal static class ShareCodes
     internal static string ForGroup(string name, IReadOnlyList<Node> nodes)
     {
         if (nodes.Count == 0)
-            throw new InvalidDataException("节点组为空。");
+            throw new InvalidDataException(L10n.Text("节点组为空。"));
         var json = JsonSerializer.SerializeToUtf8Bytes(new GroupPayload(name, nodes.Select(ForNode).ToArray()));
         if (json.Length > MaxGroupJson)
-            throw new InvalidDataException("该节点组的分享内容超过 4 MB。");
+            throw new InvalidDataException(L10n.Text("该节点组的分享内容超过 4 MB。"));
         using var output = new MemoryStream();
         using (var zip = new GZipStream(output, CompressionLevel.Optimal, leaveOpen: true))
             zip.Write(json);
         string value = GroupPrefix + Base64Url(output.ToArray());
         if (value.Length > MaxCodeLength)
-            throw new InvalidDataException("该节点组过大，无法生成分享二维码。");
+            throw new InvalidDataException(L10n.Text("该节点组过大，无法生成分享二维码。"));
         return value;
     }
 
     internal static ImportCode.GroupCode ReadGroup(string value)
     {
         if (value.Length > MaxCodeLength)
-            throw new InvalidDataException("分享内容过大。");
+            throw new InvalidDataException(L10n.Text("分享内容过大。"));
         try
         {
             string encoded = value[GroupPrefix.Length..].Replace('-', '+').Replace('_', '/');
@@ -119,7 +119,7 @@ internal static class ShareCodes
             while ((read = zip.Read(buffer)) != 0)
             {
                 if (json.Length + read > MaxGroupJson)
-                    throw new InvalidDataException("分享内容超过 4 MB。");
+                    throw new InvalidDataException(L10n.Text("分享内容超过 4 MB。"));
                 json.Write(buffer, 0, read);
             }
             var group = JsonSerializer.Deserialize<GroupPayload>(json.ToArray());
@@ -128,12 +128,12 @@ internal static class ShareCodes
 
             var parsed = Subscription.ParseNodes(string.Join('\n', links), links.Length);
             if (parsed.Skipped != 0)
-                throw new InvalidDataException("节点组含有无效或不支持的节点。");
-            return new(Subscription.SafeName(group.Name ?? "", "分享的节点组"), parsed.Nodes);
+                throw new InvalidDataException(L10n.Text("节点组含有无效或不支持的节点。"));
+            return new(Subscription.SafeName(group.Name ?? "", L10n.Text("分享的节点组")), parsed.Nodes);
         }
         catch (Exception error) when (error is FormatException or JsonException)
         {
-            throw new InvalidDataException("节点组分享码无法读取。");
+            throw new InvalidDataException(L10n.Text("节点组分享码无法读取。"));
         }
     }
 
@@ -180,7 +180,7 @@ internal sealed class QrParts
             !int.TryParse(fields[2], NumberStyles.None, CultureInfo.InvariantCulture, out int total) ||
             total < 2 || total > (ShareCodes.MaxCodeLength + ChunkSize - 1) / ChunkSize ||
             part < 1 || part > total || fields[3].Length is < 1 or > ChunkSize)
-            throw new InvalidDataException("这张分段二维码无法读取。");
+            throw new InvalidDataException(L10n.Text("这张分段二维码无法读取。"));
         if (checksum != fields[0] || parts.Length != total)
         {
             checksum = fields[0];
@@ -190,12 +190,12 @@ internal sealed class QrParts
         int received = parts.Count(value => value is not null);
         if (received < total)
         {
-            progress = $"已读取 {received} / {total} 张，请继续扫描同组二维码。";
+            progress = L10n.Format($"已读取 {received} / {total} 张，请继续扫描同组二维码。");
             return null;
         }
         string result = string.Concat(parts);
         if (!string.Equals(Checksum(result), checksum, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("二维码内容校验失败，请重新扫描整组。");
+            throw new InvalidDataException(L10n.Text("二维码内容校验失败，请重新扫描整组。"));
         return result;
     }
 

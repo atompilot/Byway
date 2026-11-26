@@ -80,22 +80,23 @@ var groupOne = new NodeGroup(Guid.NewGuid(), "手动组", null, [realityNode.Id,
 var groupTwo = new NodeGroup(Guid.NewGuid(), "订阅组", source, [realityNode.Id]);
 var groupIndex = NodeGroups.ByMember([groupOne, groupTwo]);
 row.UpdateGroups(groupIndex[row.Node.Id]);
-if (row.GroupNames != "手动组、订阅组" || !row.Groups.SequenceEqual([groupOne, groupTwo]))
+string memberships = L10n.Language == "zh-Hans" ? "手动组、订阅组" : "手动组, 订阅组";
+if (row.GroupNames != memberships || !row.Groups.SequenceEqual([groupOne, groupTwo]))
     throw new InvalidOperationException("The node row must show each actual membership once.");
 var renamedGroup = groupTwo with { Name = "订阅组改名" };
 row.UpdateGroups(NodeGroups.ByMember([renamedGroup])[row.Node.Id]);
 if (row.GroupNames != "订阅组改名")
     throw new InvalidOperationException("The node row must reflect member removal and group renames.");
 row.UpdateGroups(NodeGroups.ByMember([groupOne with { Members = [parsed.Nodes[0].Id] }])[row.Node.Id]);
-if (row.GroupNames != "未分组" || row.Groups.Count != 0)
+if (row.GroupNames != L10n.Text("未分组") || row.Groups.Count != 0)
     throw new InvalidOperationException("An ungrouped node must be shown separately from named memberships.");
 if (row.TestAge != "—" || row.ExitDisplay != "—" || row.LastTestedAtUtc is not null)
     throw new InvalidOperationException("An untested node must not display probe data.");
 row.UpdateUseStatus(active: false, selected: true);
-if (row.UseStatus != "已选为出口")
+if (row.UseStatus != L10n.Text("已选为出口"))
     throw new InvalidOperationException("A saved outlet needs its own state when the proxy is off.");
 row.UpdateUseStatus(active: true, selected: true);
-if (row.UseStatus != "使用中")
+if (row.UseStatus != L10n.Text("使用中"))
     throw new InvalidOperationException("The active outlet must take precedence over the saved state.");
 
 var testedAt = DateTimeOffset.UtcNow.AddMinutes(-3);
@@ -103,11 +104,12 @@ var trace = ProbeResult.FromResponse("colo=SEA\r\nip=203.0.113.20\r\nloc=JP\r\n"
 row.Update(trace);
 row.RefreshTestAge(testedAt.AddMinutes(3));
 if (trace.ExitRegionCode != "JP" || trace.ExitRegionName is not { } region ||
-    row.ExitDisplay != $"{region} · 203.0.113.20" || row.Test != "可用 · 123 ms" || row.TestAge != "3 分钟前" ||
+    row.ExitDisplay != $"{region} · 203.0.113.20" || row.Test != L10n.Format($"可用 · {123} ms") ||
+    row.TestAge != L10n.Format($"{3} 分钟前") ||
     row.LastTestedAtUtc != testedAt || row.TestLocalTime != testedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture))
     throw new InvalidOperationException("A trace must pair the observed IP with its reported geography and retain the completion time.");
 row.RefreshTestAge(testedAt.AddHours(2));
-if (row.TestAge != "2 小时前")
+if (row.TestAge != L10n.Format($"{2} 小时前"))
     throw new InvalidOperationException("The relative test time must update as the result ages.");
 
 foreach (string code in new[] { "", "XX", "ZZ", "T1", "bad" })

@@ -14,13 +14,13 @@ public partial class MainWindow : Window, IDisposable
     private SavedProfile profile;
     private List<NodeRow> nodes = [];
     private List<NodeRow> visibleNodes = [];
-    private static readonly GroupChoice AllNodes = new("全部节点", null);
-    private static readonly GroupChoice LocalNodes = new("本地节点", Guid.Empty);
+    private static readonly GroupChoice AllNodes = new(L10n.Text("全部节点"), null);
+    private static readonly GroupChoice LocalNodes = new(L10n.Text("本地节点"), Guid.Empty);
     private readonly Forms.NotifyIcon tray;
     private readonly Forms.ContextMenuStrip trayMenu = new();
     private readonly Forms.ToolStripMenuItem trayToggle = new();
-    private readonly Forms.ToolStripMenuItem trayNodes = new("切换节点");
-    private readonly Forms.ToolStripMenuItem trayExit = new("退出 Byway");
+    private readonly Forms.ToolStripMenuItem trayNodes = new(L10n.Text("切换节点"));
+    private readonly Forms.ToolStripMenuItem trayExit = new(L10n.Text("退出 Byway"));
     private readonly DispatcherTimer heartbeat;
     private Process? guard;
     private Core? active;
@@ -42,8 +42,9 @@ public partial class MainWindow : Window, IDisposable
         this.show = show;
         profile = saved;
         InitializeComponent();
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(L10n.Language);
 
-        var trayOpen = new Forms.ToolStripMenuItem("打开 Byway");
+        var trayOpen = new Forms.ToolStripMenuItem(L10n.Text("打开 Byway"));
         trayOpen.Click += (_, _) => ShowWindow();
         trayToggle.Click += async (_, _) => await RunAsync(ToggleProxyAsync);
         trayExit.Click += async (_, _) => await RunAsync(ExitAsync);
@@ -65,7 +66,7 @@ public partial class MainWindow : Window, IDisposable
         InitializeWorkspace();
         InitializeAi();
         ShowProfile(saved, null);
-        Status.Text = nodes.Count == 0 ? "添加订阅，或导入 Shadowrocket 导出的节点 JSON。" : $"{nodes.Count} 个节点已导入。";
+        Status.Text = nodes.Count == 0 ? L10n.Text("添加订阅，或导入 Shadowrocket 导出的节点 JSON。") : L10n.Format($"{nodes.Count} 个节点已导入。");
         if (atLogin)
         {
             ShowActivated = false;
@@ -86,17 +87,17 @@ public partial class MainWindow : Window, IDisposable
 
     private void Refresh()
     {
-        ProxyState.Text = restorePending ? "正在恢复系统代理" : active is null ? "代理已停用" : "代理已开启";
+        ProxyState.Text = restorePending ? L10n.Text("正在恢复系统代理") : active is null ? L10n.Text("代理已停用") : L10n.Text("代理已开启");
         string? nodeName = (active?.Source ?? selected?.Node)?.Name;
-        CurrentNode.Text = Options.RouteMode == RoutingMode.Direct ? "路由模式 · 直连" :
-            nodeName is null ? "尚未选择节点" : $"当前节点 · {nodeName}";
+        CurrentNode.Text = Options.RouteMode == RoutingMode.Direct ? L10n.Text("路由模式 · 直连") :
+            nodeName is null ? L10n.Text("尚未选择节点") : L10n.Format($"当前节点 · {nodeName}");
         Guid? activeNodeId = restorePending ? null : active?.Source?.Id;
         foreach (var row in visibleNodes)
             row.UpdateUseStatus(row.Node.Id == activeNodeId, row == selected);
-        CurrentRouting.Text = Options.RouteMode == RoutingMode.Rule ? $"分流 · {profile.ActiveRouting?.Name ?? DefaultRoutingName}" :
-            Options.RouteMode == RoutingMode.Global ? "路由模式 · 全局" : "";
+        CurrentRouting.Text = Options.RouteMode == RoutingMode.Rule ? L10n.Format($"分流 · {profile.ActiveRouting?.Name ?? DefaultRoutingName}") :
+            Options.RouteMode == RoutingMode.Global ? L10n.Text("路由模式 · 全局") : "";
         CurrentRouting.Visibility = CurrentRouting.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        string toggle = active is null && !restorePending ? "开启代理" : "停用代理";
+        string toggle = active is null && !restorePending ? L10n.Text("开启代理") : L10n.Text("停用代理");
         ToggleButton.Content = toggle;
         ToggleButton.IsEnabled = !busy && (active is not null || selected is not null ||
             Options.RouteMode == RoutingMode.Direct || restorePending);
@@ -111,7 +112,7 @@ public partial class MainWindow : Window, IDisposable
         NewGroupButton.IsEnabled = !busy;
         ProbeButton.IsEnabled = !busy && visibleNodes.Count > 0;
         SidebarSplitter.IsEnabled = !busy;
-        ProbeButton.Content = Scope.Id is null ? "测试全部" : "测试本组";
+        ProbeButton.Content = Scope.Id is null ? L10n.Text("测试全部") : L10n.Text("测试本组");
         trayToggle.Text = toggle;
         trayToggle.Enabled = ToggleButton.IsEnabled;
         trayNodes.Enabled = !busy && nodes.Count > 1;
@@ -183,23 +184,23 @@ public partial class MainWindow : Window, IDisposable
         if (info?.TotalBytes is > 0)
         {
             string total = FormatBytes(info.TotalBytes.Value, "0.##");
-            summary.Add(info.RemainingBytes is long remaining ? $"剩余 {FormatBytes(remaining, "0.##")} / {total}" : $"总流量 {total}");
+            summary.Add(info.RemainingBytes is long remaining ? L10n.Format($"剩余 {FormatBytes(remaining, "0.##")} / {total}") : L10n.Format($"总流量 {total}"));
         }
         if (info?.ExpiresAt is { } expires)
         {
-            string label = expires <= DateTimeOffset.UtcNow ? "已到期" : "到期";
+            string label = expires <= DateTimeOffset.UtcNow ? L10n.Text("已到期") : L10n.Text("到期");
             summary.Add($"{label} {expires.ToLocalTime():yyyy-MM-dd HH:mm}");
         }
         if (info?.UploadBytes is long upload)
-            usage.Add($"已上传 {FormatBytes(upload, "0.##")}");
+            usage.Add(L10n.Format($"已上传 {FormatBytes(upload, "0.##")}"));
         if (info?.DownloadBytes is long download)
-            usage.Add($"已下载 {FormatBytes(download, "0.##")}");
+            usage.Add(L10n.Format($"已下载 {FormatBytes(download, "0.##")}"));
         if (summary.Count == 0)
         {
             summary.AddRange(usage);
             usage.Clear();
         }
-        SubscriptionSummary.Text = summary.Count > 0 ? string.Join("  ·  ", summary) : "暂无订阅信息。刷新订阅后重新获取。";
+        SubscriptionSummary.Text = summary.Count > 0 ? string.Join("  ·  ", summary) : L10n.Text("暂无订阅信息。刷新订阅后重新获取。");
         SubscriptionUsage.Text = string.Join("  ·  ", usage);
         SubscriptionUsage.Visibility = usage.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -258,7 +259,7 @@ public partial class MainWindow : Window, IDisposable
         if (existing is not null)
         {
             GroupBox.SelectedItem = ((IEnumerable<GroupChoice>)GroupBox.ItemsSource).First(choice => choice.Id == existing.Id);
-            Status.Text = "该订阅已添加。可以刷新这个节点组。";
+            Status.Text = L10n.Text("该订阅已添加。可以刷新这个节点组。");
             return existing.Id;
         }
 
@@ -276,21 +277,21 @@ public partial class MainWindow : Window, IDisposable
 
     private async Task LoadSubscriptionAsync(NodeGroup group, bool isNew, bool replaceSource = false)
     {
-        Status.Text = $"正在下载「{group.Name}」…";
+        Status.Text = L10n.Format($"正在下载「{group.Name}」…");
         var download = await Subscription.FetchAsync(new Uri(group.SubscriptionAddress!));
         List<Node> checkedNodes = [];
         int skipped = download.Skipped;
         for (int index = 0; index < download.Nodes.Count; index++)
         {
             Node node = download.Nodes[index];
-            Status.Text = $"正在校验「{group.Name}」的节点 {index + 1} / {download.Nodes.Count}…";
+            Status.Text = L10n.Format($"正在校验「{group.Name}」的节点 {index + 1} / {download.Nodes.Count}…");
             if (await Core.CheckAsync(node))
                 checkedNodes.Add(node);
             else
                 skipped++;
         }
         if (checkedNodes.Count == 0)
-            throw new InvalidDataException("订阅中的节点均未通过配置校验，无法应用。");
+            throw new InvalidDataException(L10n.Text("订阅中的节点均未通过配置校验，无法应用。"));
 
         var owned = group.Members.ToHashSet();
         var existing = profile.Nodes.Where(node => owned.Contains(node.Id)).ToList();
@@ -308,9 +309,12 @@ public partial class MainWindow : Window, IDisposable
         Guid? nextSelected = selected is { } row && !removed.Contains(row.Node.Id) ? row.Node.Id
             : replacement.FirstOrDefault()?.Id ?? nextNodes.FirstOrDefault()?.Id;
         CommitProfile(profile with { Nodes = nextNodes, Selected = nextSelected, Groups = nextGroups }, group.Id);
-        Status.Text = $"已{(isNew ? "添加" : "刷新")}「{group.Name}」 · {members.Count} 个节点。" +
-            (skipped > 0 ? $" 跳过 {skipped} 个不支持或无效的节点。" : "") +
-            (willUseUpdatedConnection ? " 当前节点将在下次连接时使用新配置。" : "");
+        string update = isNew
+            ? L10n.Format($"已添加「{group.Name}」 · {members.Count} 个节点。")
+            : L10n.Format($"已刷新「{group.Name}」 · {members.Count} 个节点。");
+        Status.Text = update +
+            (skipped > 0 ? L10n.Format($" 跳过 {skipped} 个不支持或无效的节点。") : "") +
+            (willUseUpdatedConnection ? L10n.Text(" 当前节点将在下次连接时使用新配置。") : "");
     }
 
     private void NewGroupClick(object sender, RoutedEventArgs e) => EditGroup(null);
@@ -333,11 +337,11 @@ public partial class MainWindow : Window, IDisposable
     private async Task SaveGroupAsync(NodeGroup? group, NodeGroup updated)
     {
         if (GroupNameExists(updated.Name, group?.Id))
-            throw new InvalidDataException("已有同名节点组。");
+            throw new InvalidDataException(L10n.Text("已有同名节点组。"));
         if (group?.IsSubscription == true && group.SubscriptionAddress != updated.SubscriptionAddress)
         {
             if (Groups.Any(item => item.Id != group.Id && item.SubscriptionAddress == updated.SubscriptionAddress))
-                throw new InvalidDataException("此订阅地址已被另一个节点组使用。");
+                throw new InvalidDataException(L10n.Text("此订阅地址已被另一个节点组使用。"));
             await LoadSubscriptionAsync(updated, isNew: false, replaceSource: true);
             return;
         }
@@ -345,7 +349,7 @@ public partial class MainWindow : Window, IDisposable
         if (group is null)
             next.Add(updated);
         CommitProfile(profile with { Groups = next }, updated.Id);
-        Status.Text = $"已保存「{updated.Name}」。";
+        Status.Text = L10n.Format($"已保存「{updated.Name}」。");
     }
 
     private bool GroupNameExists(string name, Guid? except) =>
@@ -360,13 +364,13 @@ public partial class MainWindow : Window, IDisposable
         var nextGroups = Groups.Where(item => item.Id != group.Id).Select(item => WithoutMembers(item, removed)).ToList();
         Guid? nextSelected = selected is { } row && !removed.Contains(row.Node.Id) ? row.Node.Id : nextNodes.FirstOrDefault()?.Id;
         CommitProfile(profile with { Nodes = nextNodes, Selected = nextSelected, Groups = nextGroups }, null);
-        Status.Text = $"已删除「{group.Name}」。";
+        Status.Text = L10n.Format($"已删除「{group.Name}」。");
     }
 
     private void EnsureActiveNodeSurvives(HashSet<Guid> removed)
     {
         if (active?.Source is { } source && removed.Contains(source.Id))
-            throw new InvalidOperationException("该操作会移除当前出口。请先切换节点或停用代理。");
+            throw new InvalidOperationException(L10n.Text("该操作会移除当前出口。请先切换节点或停用代理。"));
     }
 
     private static NodeGroup WithoutMembers(NodeGroup group, HashSet<Guid> removed) =>
@@ -374,7 +378,7 @@ public partial class MainWindow : Window, IDisposable
 
     private async void ImportClick(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "导入 Shadowrocket 节点", Filter = "JSON (*.json)|*.json" };
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = L10n.Text("导入 Shadowrocket 节点"), Filter = "JSON (*.json)|*.json" };
         if (dialog.ShowDialog(this) == true)
             await RunAsync(() => ImportAsync(NodeImport.Read(dialog.FileName), showDetails: true));
     }
@@ -389,7 +393,7 @@ public partial class MainWindow : Window, IDisposable
         for (int index = 0; index < batch.Entries.Count; index++)
         {
             ImportEntry entry = batch.Entries[index];
-            Status.Text = $"正在校验节点 {index + 1} / {batch.Entries.Count}…";
+            Status.Text = L10n.Format($"正在校验节点 {index + 1} / {batch.Entries.Count}…");
             if (entry.Node is not { } node)
                 failures.Add($"{entry.Name} · {entry.Error}");
             else if (knownLocal.Any(other => NodeImport.SameNode(other, node)) || added.Any(other => NodeImport.SameNode(other, node)))
@@ -400,19 +404,19 @@ public partial class MainWindow : Window, IDisposable
                 imported++;
             }
             else
-                failures.Add($"{entry.Name} · sing-box 未通过配置校验");
+                failures.Add(L10n.Format($"{entry.Name} · sing-box 未通过配置校验"));
         }
 
         if (imported > 0)
             CommitProfile(profile with { Nodes = profile.Nodes.Concat(added).ToList(), Selected = selected?.Node.Id ?? added[0].Id }, Guid.Empty);
-        Status.Text = $"导入 {imported} 个节点，已存在 {existing} 个，失败 {failures.Count} 个。" +
-            (batch.Subscriptions > 0 ? $" 跳过 {batch.Subscriptions} 条订阅记录。" : "");
+        Status.Text = L10n.Format($"导入 {imported} 个节点，已存在 {existing} 个，失败 {failures.Count} 个。") +
+            (batch.Subscriptions > 0 ? L10n.Format($" 跳过 {batch.Subscriptions} 条订阅记录。") : "");
         if (showDetails && failures.Count > 0)
         {
             // Keep failure details visible in a scrollable dialog without exposing connection secrets.
             var details = new Window
             {
-                Owner = this, Title = "导入详情", Width = 500, Height = 270,
+                Owner = this, Title = L10n.Text("导入详情"), Width = 500, Height = 270,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Content = new TextBox
                 {
@@ -462,25 +466,25 @@ public partial class MainWindow : Window, IDisposable
         const int maxConcurrentProbes = 8;
         using var launch = new SemaphoreSlim(1);
         foreach (var row in requested)
-            row.Update("等待测试");
-        await ProbeBatchAsync(requested, maxConcurrentProbes, "测试", CancellationToken.None);
+            row.Update(L10n.Text("等待测试"));
+        await ProbeBatchAsync(requested, maxConcurrentProbes, L10n.Text("测试"), CancellationToken.None);
 
         var retry = requested.Where(row => row.Probe is { Succeeded: false }).ToArray();
         if (requested.Count > 1 && retry.Length > 0 && requested.Any(row => row.Probe?.Succeeded == true))
         {
             using var retryBudget = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-            await ProbeBatchAsync(retry, 2, "复测", retryBudget.Token);
+            await ProbeBatchAsync(retry, 2, L10n.Text("复测"), retryBudget.Token);
         }
 
         int success = requested.Count(row => row.Probe?.Succeeded == true);
-        Status.Text = requested.Count == 1 ? $"测试完成 · {requested[0].Node.Name} · {requested[0].Test}"
-            : $"测试完成 · {success} 个可用，{requested.Count - success} 个失败。";
+        Status.Text = requested.Count == 1 ? L10n.Format($"测试完成 · {requested[0].Node.Name} · {requested[0].Test}")
+            : L10n.Format($"测试完成 · {success} 个可用，{requested.Count - success} 个失败。");
 
         async Task ProbeBatchAsync(IReadOnlyList<NodeRow> rows, int concurrency, string action, CancellationToken cancellation)
         {
             int next = 0;
             int completed = 0;
-            Status.Text = $"正在{action} · 已完成 0 / {rows.Count}";
+            Status.Text = L10n.Format($"正在{action} · 已完成 0 / {rows.Count}");
             await Task.WhenAll(Enumerable.Range(0, Math.Min(rows.Count, concurrency)).Select(_ => ProbeNextAsync()));
 
             async Task ProbeNextAsync()
@@ -489,7 +493,7 @@ public partial class MainWindow : Window, IDisposable
                 {
                     var row = rows[next++];
                     var previous = row.Probe;
-                    row.Update($"{action}中…");
+                    row.Update(L10n.Format($"{action}中…"));
                     try
                     {
                         using var candidate = await StartProbeCoreAsync(row.Node, cancellation);
@@ -501,10 +505,10 @@ public partial class MainWindow : Window, IDisposable
                         if (previous is not null)
                             row.Update(previous);
                         else
-                            row.Update(error is TimeoutException or OperationCanceledException ? "内核启动超时" : "内核启动失败",
+                            row.Update(error is TimeoutException or OperationCanceledException ? L10n.Text("内核启动超时") : L10n.Text("内核启动失败"),
                                 DateTimeOffset.UtcNow);
                     }
-                    Status.Text = $"正在{action} · 已完成 {++completed} / {rows.Count}";
+                    Status.Text = L10n.Format($"正在{action} · 已完成 {++completed} / {rows.Count}");
                 }
             }
         }
@@ -523,7 +527,7 @@ public partial class MainWindow : Window, IDisposable
         if (row == selected)
             return;
         if (restorePending)
-            throw new InvalidOperationException("请先恢复 Windows 系统代理。");
+            throw new InvalidOperationException(L10n.Text("请先恢复 Windows 系统代理。"));
         if (active is not null && Options.RouteMode != RoutingMode.Direct)
             await ActivateAsync(row, row.Node, profile with { Selected = row.Node.Id }, probeConnectivity);
         else
@@ -531,8 +535,8 @@ public partial class MainWindow : Window, IDisposable
             SaveSelection(row);
             selected = row;
             NodeList.SelectedItem = row;
-            Status.Text = Options.RouteMode == RoutingMode.Direct ? $"已选择 {row.Node.Name} · 当前为直连模式" :
-                $"已选择 {row.Node.Name}，开启代理后生效。";
+            Status.Text = Options.RouteMode == RoutingMode.Direct ? L10n.Format($"已选择 {row.Node.Name} · 当前为直连模式") :
+                L10n.Format($"已选择 {row.Node.Name}，开启代理后生效。");
         }
     }
 
@@ -547,12 +551,12 @@ public partial class MainWindow : Window, IDisposable
                 SaveOptions(Options with { ProxyWanted = false });
             await SampleTrafficAsync();
             StopProxy();
-            Status.Text = manual ? "本机代理监听已关闭。" : "已交还 Windows 系统代理。";
+            Status.Text = manual ? L10n.Text("本机代理监听已关闭。") : L10n.Text("已交还 Windows 系统代理。");
         }
         else
         {
             if (restorePending)
-                throw new InvalidOperationException("请先恢复 Windows 系统代理。");
+                throw new InvalidOperationException(L10n.Text("请先恢复 Windows 系统代理。"));
             if (active is null)
             {
                 var next = profile with { Options = Options with { ProxyWanted = true } };
@@ -580,7 +584,7 @@ public partial class MainWindow : Window, IDisposable
             try { await StartProxyAsync(previousRow, previousSource, previous, probeConnectivity); }
             catch (Exception recoveryError)
             {
-                throw new InvalidOperationException($"切换失败，未能恢复原代理。{recoveryError.Message}", switchError);
+                throw new InvalidOperationException(L10n.Format($"切换失败，未能恢复原代理。{recoveryError.Message}"), switchError);
             }
             throw;
         }
@@ -594,12 +598,12 @@ public partial class MainWindow : Window, IDisposable
         var privateNetwork = capture == CaptureMode.Tun && !ExternalTailscaleRunning() ? next.PrivateNetwork : null;
         _ = privateNetwork?.Input.Validate(settings.MixedPort);
         var mode = source is null && privateNetwork is not null ? RoutingMode.Direct : settings.RouteMode;
-        var label = mode == RoutingMode.Direct ? "直连" :
-            source?.Name ?? throw new InvalidOperationException("请先选择代理节点。");
+        var label = mode == RoutingMode.Direct ? L10n.Text("直连") :
+            source?.Name ?? throw new InvalidOperationException(L10n.Text("请先选择代理节点。"));
         var previousListener = mixed;
         var entry = previousListener?.Port == settings.MixedPort ? previousListener : new MixedListener(settings.MixedPort);
         int previousTarget = entry.TargetPort;
-        Status.Text = probeConnectivity ? $"正在验证 {label}…" : $"正在切换到 {label}…";
+        Status.Text = probeConnectivity ? L10n.Format($"正在验证 {label}…") : L10n.Format($"正在切换到 {label}…");
         Core? candidate = null;
         bool adopted = false;
         try
@@ -612,9 +616,9 @@ public partial class MainWindow : Window, IDisposable
                 if (candidate.Source is not null)
                     row?.Update(result);
                 if (!result.Succeeded)
-                    throw new InvalidOperationException($"{label} · {result.Error}，未应用新的代理配置。");
+                    throw new InvalidOperationException(L10n.Format($"{label} · {result.Error}，未应用新的代理配置。"));
                 if (capture == CaptureMode.Tun && !(await candidate.ProbeAsync(fallback: true, throughCapture: true)).Succeeded)
-                    throw new InvalidOperationException("全流量网卡已启动，但未通过系统 DNS 和 HTTPS 检查，未应用新的代理配置。");
+                    throw new InvalidOperationException(L10n.Text("全流量网卡已启动，但未通过系统 DNS 和 HTTPS 检查，未应用新的代理配置。"));
                 exitIp = result.ExitIp;
             }
 
@@ -647,8 +651,8 @@ public partial class MainWindow : Window, IDisposable
                 previousListener?.Dispose();
             NodeList.SelectedItem = row;
             Status.Text = capture != settings.Capture
-                ? "已恢复系统代理。以管理员身份重启 Byway 后可使用全流量模式。"
-                : exitIp is null ? $"已使用 {label}" : $"已使用 {label} · 出口 {exitIp}";
+                ? L10n.Text("已恢复系统代理。以管理员身份重启 Byway 后可使用全流量模式。")
+                : exitIp is null ? L10n.Format($"已使用 {label}") : L10n.Format($"已使用 {label} · 出口 {exitIp}");
         }
         finally
         {
@@ -703,14 +707,14 @@ public partial class MainWindow : Window, IDisposable
                 return;
             bool manual = active?.Capture == CaptureMode.Manual;
             StopProxy();
-            string message = manual ? "代理内核已停止，本机代理监听已关闭。" : "代理已停止，Windows 已恢复原代理或由其他应用接管。";
+            string message = manual ? L10n.Text("代理内核已停止，本机代理监听已关闭。") : L10n.Text("代理已停止，Windows 已恢复原代理或由其他应用接管。");
             engineLog.Read(message, []);
             Status.Text = message;
         }
         catch (Exception)
         {
             restorePending = true;
-            Status.Text = "无法恢复 Windows 系统代理，正在重试。";
+            Status.Text = L10n.Text("无法恢复 Windows 系统代理，正在重试。");
         }
         Refresh();
     }
@@ -728,7 +732,7 @@ public partial class MainWindow : Window, IDisposable
         if (busy)
             return;
         try { await RunExclusiveAsync(async () => { await action(); return true; }); }
-        catch (System.Text.Json.JsonException) { ShowError("无法读取 JSON。请选择 Shadowrocket 节点导出文件。"); }
+        catch (System.Text.Json.JsonException) { ShowError(L10n.Text("无法读取 JSON。请选择 Shadowrocket 节点导出文件。")); }
         catch (Exception error) { ShowError(error.Message); }
     }
 

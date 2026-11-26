@@ -87,7 +87,7 @@ internal sealed class Core : IDisposable
         }
         catch (OperationCanceledException)
         {
-            throw new InvalidOperationException("未取得规则测试结果。请检查域名的 DNS 解析后重试。");
+            throw new InvalidOperationException(L10n.Text("未取得规则测试结果。请检查域名的 DNS 解析后重试。"));
         }
     }
 
@@ -132,7 +132,7 @@ internal sealed class Core : IDisposable
             await Task.Delay(60);
         }
         throw new InvalidOperationException(Capture == CaptureMode.Tun
-            ? "全流量网卡未能启动，请检查管理员权限和内核日志。" : "代理内核未能监听本机端口。");
+            ? L10n.Text("全流量网卡未能启动，请检查管理员权限和内核日志。") : L10n.Text("代理内核未能监听本机端口。"));
     }
 
     internal async Task<TrafficSample?> ReadTrafficAsync()
@@ -231,7 +231,7 @@ internal sealed class Core : IDisposable
     internal async Task<T> PrivateNetworkAsync<T>(string? action = null, string? value = null)
     {
         if (telemetry is null || !Running)
-            throw new InvalidOperationException("私网尚未连接。");
+            throw new InvalidOperationException(L10n.Text("私网尚未连接。"));
         using var request = ControllerRequest(action is null ? HttpMethod.Get : HttpMethod.Post, "/byway/private-network");
         if (action is not null)
             request.Content = new StringContent(JsonSerializer.Serialize(new { action, value }), Encoding.UTF8, "application/json");
@@ -239,14 +239,14 @@ internal sealed class Core : IDisposable
         {
             using var response = await PrivateHttp.SendAsync(request);
             if (!response.IsSuccessStatusCode)
-                throw new InvalidOperationException(action == "probe" ? "设备未响应或私网尚未就绪。" : "私网操作未完成。");
+                throw new InvalidOperationException(action == "probe" ? L10n.Text("设备未响应或私网尚未就绪。") : L10n.Text("私网操作未完成。"));
             await using var stream = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<T>(stream, JsonSerializerOptions.Web)
-                ?? throw new InvalidDataException("私网状态暂不可用。");
+                ?? throw new InvalidDataException(L10n.Text("私网状态暂不可用。"));
         }
         catch (TaskCanceledException)
         {
-            throw new InvalidOperationException("私网操作超时。");
+            throw new InvalidOperationException(L10n.Text("私网操作超时。"));
         }
     }
 
@@ -305,8 +305,8 @@ internal sealed class Core : IDisposable
                 string text = await client.GetStringAsync(url, completed.Token);
                 return ProbeResult.FromResponse(text, cloudflareTrace, timer.ElapsedMilliseconds);
             }
-            catch (OperationCanceledException) { return new(null, null, "HTTPS 探测超时"); }
-            catch (HttpRequestException) { return new(null, null, "HTTPS 连接失败"); }
+            catch (OperationCanceledException) { return new(null, null, L10n.Text("HTTPS 探测超时")); }
+            catch (HttpRequestException) { return new(null, null, L10n.Text("HTTPS 连接失败")); }
         }
     }
 
@@ -339,7 +339,7 @@ internal sealed class Core : IDisposable
         Process? process = null;
         try
         {
-            process = Process.Start(info) ?? throw new InvalidOperationException("无法启动 sing-box。");
+            process = Process.Start(info) ?? throw new InvalidOperationException(L10n.Text("无法启动 sing-box。"));
             job.Attach(process);
             if (diagnostics is not null)
             {

@@ -10,23 +10,23 @@ struct TrafficHistoryView: View {
 
     var body: some View {
         List {
-            Picker("时段", selection: $range) {
+            Picker(L10n.text("时段"), selection: $range) {
                 ForEach(TrafficRange.allCases) { Text($0.title).tag($0) }
             }
             if let report {
-                Section("流量") {
-                    if range == .all { LabeledContent("累计用量", value: format(report.lifetime.total)) }
-                    LabeledContent("下载", value: format(report.total.download))
-                    LabeledContent("上传", value: format(report.total.upload))
+                Section(L10n.text("流量")) {
+                    if range == .all { LabeledContent(L10n.text("累计用量"), value: format(report.lifetime.total)) }
+                    LabeledContent(L10n.text("下载"), value: format(report.total.download))
+                    LabeledContent(L10n.text("上传"), value: format(report.total.upload))
                 }
                 if report.recordedSince != nil {
-                    Section("流量走势") {
+                    Section(L10n.text("流量走势")) {
                         Chart(report.bins) { bin in
                             if let usage = bin.usage {
-                                BarMark(x: .value("时段", bin.start), y: .value("用量", usage.download))
-                                    .foregroundStyle(by: .value("方向", "下载"))
-                                BarMark(x: .value("时段", bin.start), y: .value("用量", usage.upload))
-                                    .foregroundStyle(by: .value("方向", "上传"))
+                                BarMark(x: .value(L10n.text("时段"), bin.start), y: .value(L10n.text("用量"), usage.download))
+                                    .foregroundStyle(by: .value(L10n.text("方向"), L10n.text("下载")))
+                                BarMark(x: .value(L10n.text("时段"), bin.start), y: .value(L10n.text("用量"), usage.upload))
+                                    .foregroundStyle(by: .value(L10n.text("方向"), L10n.text("上传")))
                             }
                         }
                         .chartXScale(domain: chartRange(report))
@@ -37,43 +37,43 @@ struct TrafficHistoryView: View {
                             }
                         }
                         .frame(minHeight: 150)
-                        .accessibilityLabel("上传与下载流量柱形图")
+                        .accessibilityLabel(L10n.text("上传与下载流量柱形图"))
                     }
-                    Section("时段明细") {
+                    Section(L10n.text("时段明细")) {
                         ForEach(report.bins.reversed()) { bin in
                             Button { selected = bin } label: {
                                 LabeledContent(label(bin.start), value: bin.usage.map { format($0.total) }
-                                                ?? (bin.state == .future ? "尚未到达" : "无采样"))
+                                                ?? (bin.state == .future ? L10n.text("尚未到达") : L10n.text("无采样")))
                             }.buttonStyle(.plain)
                         }
                     }
                 } else {
-                    Text("连接 VPN 后开始记录分时流量。").foregroundStyle(.secondary)
+                    Text(L10n.text("连接 VPN 后开始记录分时流量。")).foregroundStyle(.secondary)
                 }
             } else if error == nil {
                 ProgressView()
             }
             if let error { Text(error).foregroundStyle(.red) }
         }
-        .navigationTitle("流量历史")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("流量历史"))
+        .bywayInlineTitle()
         .task(id: range) { await reload() }
         .refreshable { await reload() }
         .sheet(item: $selected) { bin in
             NavigationStack {
                 Form {
                     if let usage = bin.usage {
-                        LabeledContent("下载", value: format(usage.download))
-                        LabeledContent("上传", value: format(usage.upload))
-                        LabeledContent("合计", value: format(usage.total))
+                        LabeledContent(L10n.text("下载"), value: format(usage.download))
+                        LabeledContent(L10n.text("上传"), value: format(usage.upload))
+                        LabeledContent(L10n.text("合计"), value: format(usage.total))
                     } else {
-                        Text(bin.state == .future ? "尚未到达该时段" : "该时段没有采样记录")
+                        Text(bin.state == .future ? L10n.text("尚未到达该时段") : L10n.text("该时段没有采样记录"))
                     }
                 }
                 .navigationTitle(label(bin.start))
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { selected = nil } } }
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("完成")) { selected = nil } } }
             }
-            .presentationDetents([.medium, .large])
+            .bywaySheetDetents()
         }
     }
 
@@ -117,19 +117,19 @@ struct ConnectionDiagnosticsView: View {
     var body: some View {
         List {
             Section {
-                NavigationLink("内核日志") { EngineLogView(controller: controller) }
+                NavigationLink(L10n.text("内核日志")) { EngineLogView(controller: controller) }
                 if !connections.isEmpty {
-                    Button("断开全部连接", role: .destructive) { confirmCloseAll = true }
+                    Button(L10n.text("断开全部连接"), role: .destructive) { confirmCloseAll = true }
                 }
             }
-            Section("活跃连接") {
+            Section(L10n.text("活跃连接")) {
                 if loading && connections.isEmpty { ProgressView() }
                 if !available && !loading {
-                    Text(controller.connected ? "当前无法读取连接" : "连接 VPN 后可查看活跃连接")
+                    Text(controller.connected ? L10n.text("当前无法读取连接") : L10n.text("连接 VPN 后可查看活跃连接"))
                         .foregroundStyle(.secondary)
                 }
                 if available && connections.isEmpty && !loading {
-                    Text("当前没有活跃连接").foregroundStyle(.secondary)
+                    Text(L10n.text("当前没有活跃连接")).foregroundStyle(.secondary)
                 }
                 ForEach(connections) { connection in
                     NavigationLink {
@@ -142,34 +142,34 @@ struct ConnectionDiagnosticsView: View {
                         }
                     }
                     .swipeActions {
-                        Button("断开", role: .destructive) { close(connection.id) }
+                        Button(L10n.text("断开"), role: .destructive) { close(connection.id) }
                     }
                 }
             }
             if let error { Text(error).foregroundStyle(.red) }
         }
-        .navigationTitle("连接与排障")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("连接与排障"))
+        .bywayInlineTitle()
         .task { await reload() }
         .refreshable { await reload() }
         .toolbar { ToolbarItem(placement: .primaryAction) {
-            Button("刷新", systemImage: "arrow.clockwise") { Task { await reload() } }.disabled(loading)
+            Button(L10n.text("刷新"), systemImage: "arrow.clockwise") { Task { await reload() } }.disabled(loading)
         } }
-        .confirmationDialog("断开全部活跃连接？", isPresented: $confirmCloseAll) {
-            Button("断开全部连接", role: .destructive) { close(nil) }
+        .confirmationDialog(L10n.text("断开全部活跃连接？"), isPresented: $confirmCloseAll) {
+            Button(L10n.text("断开全部连接"), role: .destructive) { close(nil) }
         }
     }
 
     private func connectionDetails(_ connection: MobileConnection) -> some View {
         Form {
-            LabeledContent("来源", value: connection.source)
-            LabeledContent("目标", value: connection.destination)
-            LabeledContent("协议", value: connection.network.uppercased())
-            LabeledContent("命中规则", value: connection.rule)
-            LabeledContent("出口", value: connection.outbound)
-            LabeledContent("下载", value: ByteCountFormatter.string(fromByteCount: connection.traffic.download, countStyle: .decimal))
-            LabeledContent("上传", value: ByteCountFormatter.string(fromByteCount: connection.traffic.upload, countStyle: .decimal))
-        }.navigationTitle("连接详情")
+            LabeledContent(L10n.text("来源"), value: connection.source)
+            LabeledContent(L10n.text("目标"), value: connection.destination)
+            LabeledContent(L10n.text("协议"), value: connection.network.uppercased())
+            LabeledContent(L10n.text("命中规则"), value: connection.rule)
+            LabeledContent(L10n.text("出口"), value: connection.outbound)
+            LabeledContent(L10n.text("下载"), value: ByteCountFormatter.string(fromByteCount: connection.traffic.download, countStyle: .decimal))
+            LabeledContent(L10n.text("上传"), value: ByteCountFormatter.string(fromByteCount: connection.traffic.upload, countStyle: .decimal))
+        }.navigationTitle(L10n.text("连接详情"))
     }
 
     private func reload() async {
@@ -201,7 +201,7 @@ struct ConnectionDiagnosticsView: View {
 private struct EngineLogView: View {
     @ObservedObject var controller: VPNController
     @State private var logs: [String] = []
-    @State private var state = "正在读取"
+    @State private var state = L10n.text("正在读取")
 
     var body: some View {
         List {
@@ -210,8 +210,8 @@ private struct EngineLogView: View {
                 Text(line).font(.system(.footnote, design: .monospaced)).textSelection(.enabled)
             }
         }
-        .navigationTitle("内核日志")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("内核日志"))
+        .bywayInlineTitle()
         .task { await reload() }
         .refreshable { await reload() }
     }
@@ -221,7 +221,7 @@ private struct EngineLogView: View {
             let data = try await controller.manage("GET", "/v1/diagnostics/engine")
             let result = try JSONDecoder().decode(Report.self, from: data)
             logs = result.logs
-            state = result.available ? "当前没有日志" : "当前无法读取内核日志"
+            state = result.available ? L10n.text("当前没有日志") : L10n.text("当前无法读取内核日志")
         } catch { state = error.localizedDescription }
     }
 
@@ -234,7 +234,7 @@ private struct EngineLogView: View {
 struct LANCallLogView: View {
     @ObservedObject var controller: VPNController
     @State private var calls: [LANCall] = []
-    @State private var message = "正在读取"
+    @State private var message = L10n.text("正在读取")
 
     var body: some View {
         List {
@@ -247,8 +247,8 @@ struct LANCallLogView: View {
                 }
             }
         }
-        .navigationTitle("AI 调用日志")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(L10n.text("AI 调用日志"))
+        .bywayInlineTitle()
         .task { await reload() }
         .refreshable { await reload() }
     }
@@ -257,7 +257,7 @@ struct LANCallLogView: View {
         do {
             let data = try await controller.manage("GET", "/v1/diagnostics/api-calls")
             calls = try JSONDecoder().decode([LANCall].self, from: data)
-            message = "暂无调用记录"
+            message = L10n.text("暂无调用记录")
         } catch { message = error.localizedDescription }
     }
 }

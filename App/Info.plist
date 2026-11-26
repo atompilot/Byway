@@ -18,10 +18,10 @@
     <key>BywayTunnelIdentifier</key>
     <string>$(BYWAY_BUNDLE_ID).tunnel</string>
     <key>NSCameraUsageDescription</key>
-    <string>扫描节点二维码，将链接导入 Byway。</string>
+    <string>Scan a proxy node QR code to import its link into Byway.</string>
     <key>NSBonjourServices</key>
     <array><string>_http._tcp</string></array>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>在你开启局域网控制后，允许同一 Wi‑Fi 内的设备访问 Byway 的管理接口。</string>
+    <string>Let devices on the same Wi-Fi access Byway when you enable LAN control.</string>
 </dict>
 </plist>

@@ -121,7 +121,7 @@ internal sealed class AiServer(Func<HttpContext, bool, Task<IResult>> handle, st
             HttpRequest request = context.Request;
             bool asset = ManagementPage.IsAsset(request);
             if (!AllowedAddress(context, isLan) || !ManagementPage.AllowsRequest(request, asset))
-                throw new ApiError(403, "此地址或来源无法访问 Byway API。");
+                throw new ApiError(403, L10n.Text("此地址或来源无法访问 Byway API。"));
             if (asset)
             {
                 await ManagementPage.Asset(context).ExecuteAsync(context);
@@ -130,7 +130,7 @@ internal sealed class AiServer(Func<HttpContext, bool, Task<IResult>> handle, st
             if (!MatchesToken(request))
             {
                 context.Response.Headers.WWWAuthenticate = "Bearer";
-                throw new ApiError(401, "请提供有效的 Byway 访问令牌。");
+                throw new ApiError(401, L10n.Text("请提供有效的 Byway 访问令牌。"));
             }
             authorized = true;
             await (await handle(context, isLan)).ExecuteAsync(context);
@@ -141,18 +141,18 @@ internal sealed class AiServer(Func<HttpContext, bool, Task<IResult>> handle, st
             var (status, message) = error switch
             {
                 ApiError failure => (failure.Status, failure.Message),
-                Microsoft.AspNetCore.Http.BadHttpRequestException failure => (failure.StatusCode, "HTTP 请求无法读取。"),
-                JsonException => (400, "JSON 正文或字段格式无效。"),
+                Microsoft.AspNetCore.Http.BadHttpRequestException failure => (failure.StatusCode, L10n.Text("HTTP 请求无法读取。")),
+                JsonException => (400, L10n.Text("JSON 正文或字段格式无效。")),
                 InvalidDataException => (422, error.Message),
                 InvalidOperationException => (409, error.Message),
-                TimeoutException => (504, "操作超时。"),
-                _ => (500, "操作失败，请查询 Byway 当前状态。")
+                TimeoutException => (504, L10n.Text("操作超时。")),
+                _ => (500, L10n.Text("操作失败，请查询 Byway 当前状态。"))
             };
             await Results.Json(new { error = message }, statusCode: status).ExecuteAsync(context);
         }
         finally
         {
-            string source = isLan ? $"局域网 · {context.Connection.RemoteIpAddress}" : "本机";
+            string source = isLan ? L10n.Format($"局域网 · {context.Connection.RemoteIpAddress}") : L10n.Text("本机");
             int status = context.RequestAborted.IsCancellationRequested ? 499 : context.Response.StatusCode;
             calls.Record(startedAt, source, context.Request.Method, authorized ? context.Request.Path.Value : null,
                 status, (long)Stopwatch.GetElapsedTime(start).TotalMilliseconds);

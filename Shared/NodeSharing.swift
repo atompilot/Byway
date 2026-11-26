@@ -50,10 +50,10 @@ extension ProxyNode {
             url.user = outbound["username"] as? String
             url.password = outbound["password"] as? String
         default:
-            throw BywayError.message("此节点不能生成分享链接")
+            throw BywayError.message(L10n.text("此节点不能生成分享链接"))
         }
         if !fields.isEmpty { url.queryItems = fields.filter { !$0.1.isEmpty }.map { URLQueryItem(name: $0.0, value: $0.1) } }
-        guard let link = url.string else { throw BywayError.message("无法生成节点链接") }
+        guard let link = url.string else { throw BywayError.message(L10n.text("无法生成节点链接")) }
         return link
     }
 }
@@ -70,26 +70,26 @@ enum NodeShare {
     }
 
     static func group(name: String, nodes: [ProxyNode]) throws -> String {
-        guard !nodes.isEmpty else { throw BywayError.message("节点组为空") }
+        guard !nodes.isEmpty else { throw BywayError.message(L10n.text("节点组为空")) }
         let payload = try JSONEncoder().encode(GroupPayload(Name: name, Links: nodes.map { try $0.shareLink() }))
-        guard payload.count <= NodeImport.maxBytes else { throw BywayError.message("节点组超过分享上限") }
+        guard payload.count <= NodeImport.maxBytes else { throw BywayError.message(L10n.text("节点组超过分享上限")) }
         let value = groupPrefix + base64URL(try gzip(payload, compress: true))
-        guard value.utf8.count <= maxCodeBytes else { throw BywayError.message("节点组超过分享上限") }
+        guard value.utf8.count <= maxCodeBytes else { throw BywayError.message(L10n.text("节点组超过分享上限")) }
         return value
     }
 
     static func readGroup(_ value: String) throws -> (String, NodeImport) {
         guard value.lowercased().hasPrefix(groupPrefix), value.utf8.count <= maxCodeBytes,
               let bytes = NodeImport.decodeBase64(String(value.dropFirst(groupPrefix.count))) else {
-            throw BywayError.message("无法读取节点组分享码")
+            throw BywayError.message(L10n.text("无法读取节点组分享码"))
         }
         let payload = try JSONDecoder().decode(GroupPayload.self, from: gzip(bytes, compress: false))
         guard !payload.Links.isEmpty, payload.Links.count <= NodeSubscription.maxNodes,
               payload.Links.allSatisfy({ !$0.contains(where: \.isNewline) }) else {
-            throw BywayError.message("节点组分享码无效")
+            throw BywayError.message(L10n.text("节点组分享码无效"))
         }
         let result = try NodeImport(payload.Links.joined(separator: "\n"))
-        guard result.skipped == 0 else { throw BywayError.message("节点组包含不支持的节点") }
+        guard result.skipped == 0 else { throw BywayError.message(L10n.text("节点组包含不支持的节点")) }
         return (payload.Name, result)
     }
 
@@ -125,7 +125,7 @@ enum NodeShare {
         let initialized = compress
             ? deflateInit2_(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
             : inflateInit2_(&stream, 31, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
-        guard initialized == Z_OK else { throw BywayError.message("无法处理压缩数据") }
+        guard initialized == Z_OK else { throw BywayError.message(L10n.text("无法处理压缩数据")) }
         defer { if compress { deflateEnd(&stream) } else { inflateEnd(&stream) } }
         var result = Data()
         var buffer = [UInt8](repeating: 0, count: 16_384)
@@ -141,7 +141,7 @@ enum NodeShare {
                 }
                 let written = capacity - Int(stream.avail_out)
                 guard result.count + written <= NodeImport.maxBytes,
-                      status == Z_OK || status == Z_STREAM_END else { throw BywayError.message("压缩数据损坏或过大") }
+                      status == Z_OK || status == Z_STREAM_END else { throw BywayError.message(L10n.text("压缩数据损坏或过大")) }
                 result.append(contentsOf: buffer.prefix(written))
                 if status == Z_STREAM_END { return result }
             }
@@ -153,7 +153,7 @@ struct NodeShareParts {
     private var hash = ""
     private var fragments: [Int: String] = [:]
     private var count = 0
-    var progress: String { "已读取 \(fragments.count) / \(count) 张" }
+    var progress: String { L10n.text("已读取 {0} / {1} 张", fragments.count, count) }
 
     mutating func accept(_ value: String) throws -> String? {
         guard value.lowercased().hasPrefix(NodeShare.partPrefix) else { return value }
@@ -161,7 +161,7 @@ struct NodeShareParts {
         guard fields.count == 4, fields[0].count == 16, fields[0].allSatisfy(\.isHexDigit),
               let index = Int(fields[1]), let total = Int(fields[2]), (2...1500).contains(total),
               (1...total).contains(index), (1...NodeShare.partSize).contains(fields[3].utf8.count) else {
-            throw BywayError.message("分段二维码无效")
+            throw BywayError.message(L10n.text("分段二维码无效"))
         }
         if hash != fields[0].lowercased() || count != total {
             hash = fields[0].lowercased()
@@ -173,7 +173,7 @@ struct NodeShareParts {
         let full = (1...count).compactMap { fragments[$0] }.joined()
         guard full.utf8.count <= NodeShare.maxCodeBytes, NodeShare.checksum(full) == hash else {
             fragments = [:]
-            throw BywayError.message("整组二维码校验失败，请重新扫描")
+            throw BywayError.message(L10n.text("整组二维码校验失败，请重新扫描"))
         }
         return full
     }

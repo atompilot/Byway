@@ -65,7 +65,8 @@ with tempfile.TemporaryDirectory(prefix="byway-lan-handoff-") as folder, ExitSta
     wait_for(token, 200, False)
     origin = f"http://127.0.0.1:{port}"
     browser = {"Origin": origin, "Sec-Fetch-Site": "same-origin"}
-    assert "连接设备" in request("", "/", extra_headers={"Sec-Fetch-Site": "none"})[1]
+    code, page = request("", "/", extra_headers={"Sec-Fetch-Site": "none"})
+    assert code == 200 and 'data-message="connectDevice"' in page
     assert request("", "/management.js")[0] == 200
     assert request("", "/management.css")[0] == 200
     assert request("", "/v1/device", extra_headers=browser)[0] == 401

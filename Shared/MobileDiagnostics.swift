@@ -5,11 +5,11 @@ enum TrafficRange: String, CaseIterable, Codable, Sendable, Identifiable {
     var id: Self { self }
     var title: String {
         switch self {
-        case .today: "今天"
-        case .yesterday: "昨天"
-        case .last7days: "近 7 天"
-        case .last30days: "近 30 天"
-        case .all: "全部"
+        case .today: L10n.text("今天")
+        case .yesterday: L10n.text("昨天")
+        case .last7days: L10n.text("近 7 天")
+        case .last30days: L10n.text("近 30 天")
+        case .all: L10n.text("全部")
         }
     }
 

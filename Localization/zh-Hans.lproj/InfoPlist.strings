@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "扫描节点二维码，将链接导入 Byway。";
+"NSLocalNetworkUsageDescription" = "在你开启局域网控制后，允许同一 Wi-Fi 内的设备访问 Byway 的管理接口。";

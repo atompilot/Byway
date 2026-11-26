@@ -19,7 +19,7 @@ public partial class MainWindow
             ImportCode.SubscriptionCode subscription => AddSubscriptionAsync(subscription.Link),
             ImportCode.NodeCode single => ImportSharedNodesAsync([single.Node]),
             ImportCode.GroupCode group => ImportSharedNodesAsync(group.Nodes, group.Name),
-            _ => throw new InvalidDataException("无法导入这个二维码。")
+            _ => throw new InvalidDataException(L10n.Text("无法导入这个二维码。"))
         };
 
     private async Task<Guid> ImportSharedNodesAsync(IReadOnlyList<Node> incoming, string? groupName = null)
@@ -30,7 +30,7 @@ public partial class MainWindow
         for (int index = 0; index < incoming.Count; index++)
         {
             Node node = incoming[index];
-            Status.Text = $"正在校验节点 {index + 1} / {incoming.Count}…";
+            Status.Text = L10n.Format($"正在校验节点 {index + 1} / {incoming.Count}…");
             var existing = existingLocal.Find(item => NodeImport.SameNode(item, node));
             if (existing is not null)
             {
@@ -38,7 +38,7 @@ public partial class MainWindow
                 continue;
             }
             if (!await Core.CheckAsync(node))
-                throw new InvalidDataException($"「{node.Name}」未通过代理内核校验。");
+                throw new InvalidDataException(L10n.Format($"「{node.Name}」未通过代理内核校验。"));
             added.Add(node);
             members.Add(node.Id);
         }
@@ -56,7 +56,7 @@ public partial class MainWindow
 
             NodeList.SelectedItem = visibleNodes.Find(row => row.Node.Id == members[0]);
             NodeList.ScrollIntoView(NodeList.SelectedItem);
-            Status.Text = added.Count > 0 ? $"已导入「{incoming[0].Name}」。" : $"「{incoming[0].Name}」已在本地节点中。";
+            Status.Text = added.Count > 0 ? L10n.Format($"已导入「{incoming[0].Name}」。") : L10n.Format($"「{incoming[0].Name}」已在本地节点中。");
             return members[0];
         }
 
@@ -65,12 +65,12 @@ public partial class MainWindow
         if (sameGroup is not null)
         {
             GroupBox.SelectedItem = ((IEnumerable<GroupChoice>)GroupBox.ItemsSource).First(choice => choice.Id == sameGroup.Id);
-            Status.Text = "该分享组已添加。";
+            Status.Text = L10n.Text("该分享组已添加。");
             return sameGroup.Id;
         }
         var newGroup = new NodeGroup(Guid.NewGuid(), UniqueGroupName(groupName), null, members);
         CommitProfile(next with { Groups = [..Groups, newGroup] }, newGroup.Id);
-        Status.Text = $"已添加「{newGroup.Name}」 · {newGroup.Members.Count} 个节点。";
+        Status.Text = L10n.Format($"已添加「{newGroup.Name}」 · {newGroup.Members.Count} 个节点。");
         return newGroup.Id;
     }
 
@@ -122,7 +122,7 @@ public partial class MainWindow
         try { new ShareDialog(this, name, encode(), bywayOnly).ShowDialog(); }
         catch (Exception error) when (error is InvalidDataException or ArgumentException)
         {
-            ShowError("无法生成分享二维码。" + (error is InvalidDataException ? error.Message : ""));
+            ShowError(L10n.Text("无法生成分享二维码。") + (error is InvalidDataException ? error.Message : ""));
         }
     }
 }

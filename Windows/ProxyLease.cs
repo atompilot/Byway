@@ -48,7 +48,7 @@ internal static class ProxyLease
     internal static void Activate(Core core, ProcessIdentity guard, string endpoint, string bypass, Action commit) => Locked(() =>
     {
         if (!guard.IsAlive() || !core.Running)
-            throw new InvalidOperationException("代理内核或恢复进程已停止。");
+            throw new InvalidOperationException(L10n.Text("代理内核或恢复进程已停止。"));
 
         Lease? previous = Read();
         ProxySettings before = WinProxy.Read();
@@ -84,7 +84,7 @@ internal static class ProxyLease
     {
         var before = ProxySettings.ForByway(endpoint, previous);
         if (Read() is not { } lease || lease.Core.Pid != core.Pid || !core.Running || WinProxy.Read() != before)
-            throw new InvalidOperationException("系统代理已变化，请重新开启 Byway 代理后再保存。");
+            throw new InvalidOperationException(L10n.Text("系统代理已变化，请重新开启 Byway 代理后再保存。"));
 
         var updated = lease with { Managed = ProxySettings.ForByway(endpoint, next), PreviousManaged = before };
         Save(updated);
@@ -222,7 +222,7 @@ internal static class ProxyLease
 
     private static Lease? Read() => File.Exists(Path)
         ? JsonSerializer.Deserialize<Lease>(File.ReadAllBytes(Path)) ??
-          throw new InvalidDataException("无法读取代理恢复记录。")
+          throw new InvalidDataException(L10n.Text("无法读取代理恢复记录。"))
         : null;
 
     private static void Save(Lease lease) => Program.WriteAtomic(Path, JsonSerializer.SerializeToUtf8Bytes(lease));
@@ -235,7 +235,7 @@ internal static class ProxyLease
         try
         {
             if (!mutex.WaitOne(TimeSpan.FromSeconds(5)))
-                throw new TimeoutException("等待 Windows 系统代理设置超时。");
+                throw new TimeoutException(L10n.Text("等待 Windows 系统代理设置超时。"));
         }
         catch (AbandonedMutexException) { } // The journal was written atomically before any proxy change.
         try { return action(); }

@@ -16,6 +16,14 @@ SwiftUI 主 App 管理界面和设备配置。主 App 与 VPN 扩展通过 App G
 
 移动端界面和局域网请求使用同一套配置及节点操作。VPN 连接期间，主 App 将管理请求转发给扩展，由扩展校验和保存配置。扩展把累计流量和按 UTC 记录的采样一起写入共享容器，内核连接和日志由扩展按需返回。
 
+## macOS
+
+- **进程内内核。** 主 App 直接加载与 iPhone 相同的内核绑定。`Scripts/build-core.sh --macos` 在 iOS 与模拟器切片之外追加 macOS 切片，并把 gomobile 的 `Libbox-Macos` 统一重命名为 `Libbox`，两端共用 `import Libbox`。
+- **入站与接管。** 内核以本机混合端口入站运行（`EngineInbound.mixed`），不使用 Network Extension。系统代理由用户触发，经 `networksetup` 写入 HTTP、HTTPS 与 SOCKS 三项并请求一次管理员授权，关闭时逐项恢复。未接管时应用可直接使用 `127.0.0.1:7890`。
+- **共享实现。** 主 App 复用 iPad 的分栏工作区与 `Shared` 中的节点、订阅、分流、DNS、全局路由和局域网接口；平台差异集中在 `App/PlatformCompat.swift`、`Mac/` 与条件编译的少量入口。
+- **配置目录。** macOS 不依赖 App Group，配置写入 `~/Library/Application Support/Byway`。
+- **未接入 TUN。** 全流量接管需要签名内核服务或系统扩展，列入后续迭代。
+
 ## Linux 热点网关
 
 - 配置生成器复用 Byway 的 Shadowrocket 节点导入器，生成 sing-box 的节点选择器和本机控制 API。DNS 经选中的节点查询 DoH，节点服务器的域名由主机解析。

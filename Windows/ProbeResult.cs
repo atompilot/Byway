@@ -24,7 +24,7 @@ internal sealed record ProbeResult(long? Milliseconds, string? ExitIp, string? E
         string[] lines = cloudflareTrace ? text.Split('\n') : [];
         string? ip = cloudflareTrace ? TraceValue("ip=") : text.Trim();
         if (!IPAddress.TryParse(ip, out _))
-            return new(null, null, "HTTPS 响应缺少出口 IP");
+            return new(null, null, L10n.Text("HTTPS 响应缺少出口 IP"));
 
         string? code = TraceValue("loc=");
         if (code is not { Length: 2 } || code is "XX" or "ZZ" || !code.All(char.IsAsciiLetterUpper))

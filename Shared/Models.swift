@@ -22,7 +22,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
     var outboundConfiguration: [String: Any] {
         get throws {
             guard var options = try JSONSerialization.jsonObject(with: outbound) as? [String: Any] else {
-                throw BywayError.message("节点配置损坏")
+                throw BywayError.message(L10n.text("节点配置损坏"))
             }
             options["tag"] = tag
             return options
@@ -40,7 +40,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
               let type = url.scheme?.lowercased(),
               let host = url.host?.trimmingCharacters(in: CharacterSet(charactersIn: "[]")), !host.isEmpty,
               let port = url.port, (1...65535).contains(port) else {
-            throw BywayError.message("节点链接需要包含主机和有效端口")
+            throw BywayError.message(L10n.text("节点链接需要包含主机和有效端口"))
         }
         self.id = id
         self.name = try name.map(Self.validName) ?? url.fragment?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -54,34 +54,34 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
         case "ss":
             try Self.configureShadowsocks(url, fields: fields, options: &options)
         case "socks", "socks5":
-            guard fields.isEmpty else { throw BywayError.message("SOCKS5 链接包含未知选项") }
+            guard fields.isEmpty else { throw BywayError.message(L10n.text("SOCKS5 链接包含未知选项")) }
             options["type"] = "socks"
             options["version"] = "5"
             options["username"] = url.user
             options["password"] = url.password
         case "vless":
             guard let user = url.user, let uuid = UUID(uuidString: user), url.password == nil else {
-                throw BywayError.message("VLESS 节点需要有效的 UUID")
+                throw BywayError.message(L10n.text("VLESS 节点需要有效的 UUID"))
             }
             let transport = fields["type"] ?? "tcp"
             guard ["tcp", "raw", "ws"].contains(transport),
                   ["none", ""].contains(fields["headerType"] ?? "none"),
                   ["none", ""].contains(fields["encryption"] ?? "none") else {
-                throw BywayError.message("此版本支持 TCP / RAW VLESS")
+                throw BywayError.message(L10n.text("此版本支持 TCP / RAW VLESS"))
             }
             let flow = fields["flow"] ?? ""
             guard ["", "xtls-rprx-vision"].contains(flow) else {
-                throw BywayError.message("VLESS 流控类型不受支持")
+                throw BywayError.message(L10n.text("VLESS 流控类型不受支持"))
             }
             options["uuid"] = uuid.uuidString.lowercased()
             if transport == "ws" {
-                guard flow.isEmpty else { throw BywayError.message("WebSocket 节点不可使用 VLESS Vision 流控") }
+                guard flow.isEmpty else { throw BywayError.message(L10n.text("WebSocket 节点不可使用 VLESS Vision 流控")) }
                 options["transport"] = Self.webSocket(path: fields["path"], host: fields["host"])
             }
             if !flow.isEmpty { options["flow"] = flow }
             options["tls"] = try Self.tlsConfiguration(fields: fields, host: host)
         default:
-            throw BywayError.message("支持 VLESS、VMess、Shadowsocks 和 SOCKS5 链接")
+            throw BywayError.message(L10n.text("支持 VLESS、VMess、Shadowsocks 和 SOCKS5 链接"))
         }
         self.outbound = try JSONSerialization.data(withJSONObject: options, options: [.sortedKeys])
     }
@@ -113,24 +113,24 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
     private static func configureShadowsocks(_ url: URLComponents, fields: [String: String],
                                            options: inout [String: Any]) throws {
         guard let user = url.user, ["", "/"].contains(url.path) else {
-            throw BywayError.message("Shadowsocks 链接缺少加密方式或密码")
+            throw BywayError.message(L10n.text("Shadowsocks 链接缺少加密方式或密码"))
         }
         let credentials = url.password.map { [user, $0] }
             ?? decodeBase64(user)?.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
         guard let credentials, credentials.count == 2, !credentials[1].isEmpty else {
-            throw BywayError.message("Shadowsocks 链接缺少加密方式或密码")
+            throw BywayError.message(L10n.text("Shadowsocks 链接缺少加密方式或密码"))
         }
         let method = credentials[0].lowercased()
         let supported = ["aes-128-gcm", "aes-192-gcm", "aes-256-gcm", "chacha20-ietf-poly1305",
                          "xchacha20-ietf-poly1305", "2022-blake3-aes-128-gcm",
                          "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"]
-        guard supported.contains(method) else { throw BywayError.message("此 Shadowsocks 加密方式不受支持") }
+        guard supported.contains(method) else { throw BywayError.message(L10n.text("此 Shadowsocks 加密方式不受支持")) }
         if method.hasPrefix("2022-") {
             let keyLength = method == "2022-blake3-aes-128-gcm" ? 16 : 32
             let keys = credentials[1].split(separator: ":", omittingEmptySubsequences: false)
             guard keys.allSatisfy({ Data(base64Encoded: String($0))?.count == keyLength }),
                   method != "2022-blake3-chacha20-poly1305" || keys.count == 1 else {
-                throw BywayError.message("Shadowsocks 2022 密钥格式无效")
+                throw BywayError.message(L10n.text("Shadowsocks 2022 密钥格式无效"))
             }
         }
         options["type"] = "shadowsocks"
@@ -139,7 +139,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
         if let plugin = fields["plugin"] {
             let parts = plugin.split(separator: ";", maxSplits: 1, omittingEmptySubsequences: false)
             guard let name = parts.first, ["obfs-local", "v2ray-plugin"].contains(String(name)) else {
-                throw BywayError.message("此 Shadowsocks 插件不受支持")
+                throw BywayError.message(L10n.text("此 Shadowsocks 插件不受支持"))
             }
             options["plugin"] = String(name)
             if parts.count == 2 { options["plugin_opts"] = String(parts[1]) }
@@ -167,7 +167,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
     private static func vmess(_ link: String, id: UUID, name: String?) throws -> Self {
         guard link.utf8.count <= 4096, let data = NodeImport.decodeBase64(String(link.dropFirst(8))),
               let fields = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw BywayError.message("VMess 链接无法读取")
+            throw BywayError.message(L10n.text("VMess 链接无法读取"))
         }
         func text(_ key: String) -> String { fields[key].map { String(describing: $0) } ?? "" }
         let host = text("add").trimmingCharacters(in: ["[", "]"])
@@ -179,7 +179,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
               let uuid = UUID(uuidString: text("id")), let alterID, (0...65535).contains(alterID),
               ["tcp", "raw", "ws"].contains(network), ["", "none"].contains(text("type")),
               ["", "none", "tls"].contains(tls), ["auto", "none", "zero", "aes-128-gcm", "chacha20-poly1305", "aes-128-ctr"].contains(cipher) else {
-            throw BywayError.message("VMess 节点参数无效，支持 TCP / WebSocket")
+            throw BywayError.message(L10n.text("VMess 节点参数无效，支持 TCP / WebSocket"))
         }
         var options: [String: Any] = ["type": "vmess", "server": host, "server_port": port,
                                       "uuid": uuid.uuidString.lowercased(), "security": cipher, "alter_id": alterID]
@@ -204,7 +204,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
         let name = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (1...80).contains(name.count), name.utf8.count <= 320,
               name.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }) else {
-            throw BywayError.message("节点名称需要 1 至 80 个字符")
+            throw BywayError.message(L10n.text("节点名称需要 1 至 80 个字符"))
         }
         return name
     }
@@ -213,7 +213,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
         let security = fields["security"] ?? "none"
         guard security != "none" else { return nil }
         guard ["tls", "reality"].contains(security), fields["allowInsecure"] != "1" else {
-            throw BywayError.message("TLS 安全设置不受支持")
+            throw BywayError.message(L10n.text("TLS 安全设置不受支持"))
         }
         var tls: [String: Any] = ["enabled": true, "server_name": fields["sni"]?.nonEmpty ?? host]
         if let alpn = fields["alpn"]?.nonEmpty {
@@ -221,7 +221,7 @@ struct ProxyNode: Codable, Identifiable, Equatable, Sendable {
         }
         if security == "reality" {
             guard let publicKey = fields["pbk"], !publicKey.isEmpty else {
-                throw BywayError.message("REALITY 节点需要公钥")
+                throw BywayError.message(L10n.text("REALITY 节点需要公钥"))
             }
             tls["reality"] = ["enabled": true, "public_key": publicKey, "short_id": fields["sid"] ?? ""]
         }
@@ -241,12 +241,12 @@ struct RelayConfiguration: Codable, Equatable, Sendable {
         guard let parts = URLComponents(string: text), parts.scheme == "https", let url = parts.url,
               let host = parts.host, !host.isEmpty, parts.user == nil, parts.password == nil,
               parts.query == nil, parts.fragment == nil else {
-            throw BywayError.message("请输入控制服务的 HTTPS 地址")
+            throw BywayError.message(L10n.text("请输入控制服务的 HTTPS 地址"))
         }
         let key = deviceKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (32...128).contains(key.utf8.count),
               key.utf8.allSatisfy({ (33...126).contains($0) }) else {
-            throw BywayError.message("设备密钥至少需要 32 个字符")
+            throw BywayError.message(L10n.text("设备密钥至少需要 32 个字符"))
         }
         self.address = url
         self.deviceKey = key
@@ -255,6 +255,12 @@ struct RelayConfiguration: Codable, Equatable, Sendable {
     var exchangeURL: URL {
         address.appending(path: "device/exchange")
     }
+}
+
+/// 代理内核的入站方式。iOS 由 VPN 扩展提供 TUN，macOS 在进程内使用本机混合端口。
+enum EngineInbound: Equatable, Sendable {
+    case tun
+    case mixed(port: Int)
 }
 
 struct BywayProfile: Codable, Equatable, Sendable {
@@ -287,11 +293,12 @@ struct BywayProfile: Codable, Equatable, Sendable {
     }
 
     func engineConfiguration(geoIPPath: String? = Bundle.main.path(forResource: "geoip-cn", ofType: "srs"),
-                             network: RoutingNetwork = .other, privateStateRoot: URL? = nil) throws -> String {
+                             network: RoutingNetwork = .other, privateStateRoot: URL? = nil,
+                             inbound: EngineInbound = .tun) throws -> String {
         let candidates = routingCandidates(on: network)
         let selected = candidates.first(where: { $0.id == selectedID }) ?? candidates.first
         guard selected != nil || privateNetwork != nil && nodes.isEmpty else {
-            throw BywayError.message("请先添加代理节点")
+            throw BywayError.message(L10n.text("请先添加代理节点"))
         }
         let selector: [[String: Any]] = selected.map { selected in
             [["type": "selector", "tag": "byway", "outbounds": candidates.map(\.tag),
@@ -355,34 +362,50 @@ struct BywayProfile: Codable, Equatable, Sendable {
             "final": exit, "rules": rules
         ]
         if mode == .rules, imported?.usesGeoIP == true {
-            guard let geoIPPath else { throw BywayError.message("缺少 GEOIP,CN 数据") }
+            guard let geoIPPath else { throw BywayError.message(L10n.text("缺少 GEOIP,CN 数据")) }
             route["rule_set"] = [["type": "local", "tag": "geoip-cn", "format": "binary", "path": geoIPPath]]
         }
-        var tun: [String: Any] = [
-            "type": "tun", "tag": "tun-in", "auto_route": true, "stack": "gvisor",
-            "address": ["172.28.80.1/30", "fd3b:a18e:a7e9::1/126"], "mtu": 1400
-        ]
-        if privateEnabled {
-            tun["route_address"] = PrivateNetworkSettings.addressRanges.map(\.0)
-        }
-        if let imported {
-            let excluded = privateEnabled
-                ? imported.excludedRoutes.filter { !PrivateNetworkSettings.excludesPrivateAddress($0) }
-                : imported.excludedRoutes
-            if !excluded.isEmpty { tun["route_exclude_address"] = excluded }
+        var inboundConfiguration: [String: Any]
+        switch inbound {
+        case .tun:
+            // IPv6 地址只在配置确实要求 IPv6 时才挂进 TUN。
+            // 之前无条件分配 fd3b:a18e:a7e9::1/126：系统把 IPv6 流量全送进隧道，
+            // 而节点的 IPv6 出站通常不可用，IPv6 于是变成黑洞——浏览器优先 IPv6，
+            // 整站打不开，curl 回退 IPv4 却看起来一切正常，极难定位。
+            var tunAddress = ["172.28.80.1/30"]
+            if imported?.ipv6 ?? false { tunAddress.append("fd3b:a18e:a7e9::1/126") }
+            var tun: [String: Any] = [
+                "type": "tun", "tag": "tun-in", "auto_route": true, "stack": "gvisor",
+                "address": tunAddress, "mtu": 1400
+            ]
+            if privateEnabled {
+                tun["route_address"] = PrivateNetworkSettings.addressRanges.map(\.0)
+            }
+            if let imported {
+                let excluded = privateEnabled
+                    ? imported.excludedRoutes.filter { !PrivateNetworkSettings.excludesPrivateAddress($0) }
+                    : imported.excludedRoutes
+                if !excluded.isEmpty { tun["route_exclude_address"] = excluded }
+            }
+            inboundConfiguration = tun
+        case .mixed(let port):
+            inboundConfiguration = [
+                "type": "mixed", "tag": "mixed-in", "listen": "127.0.0.1", "listen_port": port
+            ]
         }
         let direct: [String: Any] = ["type": "direct", "tag": "direct"]
         var configuration: [String: Any] = [
-            "log": ["level": "warn"],
+            // 内核日志级别：全流量接管出问题时，warn 会把「为什么连不上」全部吞掉。
+            "log": ["level": inbound == .tun ? "info" : "warn"],
             "dns": try dnsConfiguration(imported: imported, exit: exit),
-            "inbounds": [tun],
+            "inbounds": [inboundConfiguration],
             "outbounds": selector + [direct] + (try nodes.map { try $0.outboundConfiguration }),
             "route": route
         ]
         if privateEnabled, let privateNetwork, let privateStateRoot {
             configuration["endpoints"] = [privateNetwork.endpoint(in: privateStateRoot)]
         } else if privateEnabled {
-            throw BywayError.message("私网身份目录不可用")
+            throw BywayError.message(L10n.text("私网身份目录不可用"))
         }
         let data = try JSONSerialization.data(withJSONObject: configuration, options: [.sortedKeys])
         return String(decoding: data, as: UTF8.self)
@@ -398,7 +421,7 @@ struct BywayProfile: Codable, Equatable, Sendable {
         var rules: [[String: Any]] = []
         var dns: [String: Any] = ["final": "bootstrap"]
         if settings.mode == .manual {
-            guard let server = settings.selected else { throw BywayError.message("请选择加密 DNS") }
+            guard let server = settings.selected else { throw BywayError.message(L10n.text("请选择加密 DNS")) }
             servers.append(try server.engineConfiguration(tag: "tunnel-dns", exit: exit))
             dns["final"] = "tunnel-dns"
         } else if resolver == nil, !usesLegacyDNS {
@@ -463,11 +486,11 @@ struct ProxyRouting: Codable, Equatable, Sendable {
         result.dnsServer = dnsServer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard IPv4Address(result.dnsServer) != nil || IPv6Address(result.dnsServer) != nil ||
             Self.isDomain(result.dnsServer) else {
-            throw BywayError.message("DNS 服务器需要 IP 地址或域名")
+            throw BywayError.message(L10n.text("DNS 服务器需要 IP 地址或域名"))
         }
         result.directDomains = directDomains.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
         guard result.directDomains.count <= 32, result.directDomains.allSatisfy(Self.isDomain) else {
-            throw BywayError.message("直连域名最多 32 个，请填写有效域名")
+            throw BywayError.message(L10n.text("直连域名最多 32 个，请填写有效域名"))
         }
         return result
     }

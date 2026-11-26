@@ -15,14 +15,14 @@ internal sealed record SubscriptionLink(Uri Address, string Name)
         if (text.StartsWith("sub://", StringComparison.OrdinalIgnoreCase))
         {
             string[] parts = text[6..].Split('#', 2);
-            text = Subscription.Decode(parts[0]) ?? throw new InvalidDataException("订阅链接的 Base64 地址无法读取。");
+            text = Subscription.Decode(parts[0]) ?? throw new InvalidDataException(L10n.Text("订阅链接的 Base64 地址无法读取。"));
             if (parts.Length == 2)
                 name = Uri.UnescapeDataString(parts[1]);
         }
 
         if (!Uri.TryCreate(text, UriKind.Absolute, out var url) || url.Scheme != Uri.UriSchemeHttps ||
             url.UserInfo.Length != 0 || url.Host.Length == 0)
-            throw new InvalidDataException("请输入 sub:// 或 HTTPS 订阅链接。");
+            throw new InvalidDataException(L10n.Text("请输入 sub:// 或 HTTPS 订阅链接。"));
 
         if (name.Length == 0)
             name = Uri.UnescapeDataString(url.Fragment.TrimStart('#'));
@@ -60,9 +60,9 @@ internal static class Subscription
         {
             using var response = await Download.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, expiry.Token);
             if (!response.IsSuccessStatusCode)
-                throw new InvalidDataException($"订阅服务器返回 HTTP {(int)response.StatusCode}。");
+                throw new InvalidDataException(L10n.Format($"订阅服务器返回 HTTP {(int)response.StatusCode}。"));
             if (response.Content.Headers.ContentLength > maxBytes)
-                throw new InvalidDataException($"订阅大小超过 {maxBytes / (1024 * 1024)} MB。");
+                throw new InvalidDataException(L10n.Format($"订阅大小超过 {maxBytes / (1024 * 1024)} MB。"));
 
             using var stream = await response.Content.ReadAsStreamAsync(expiry.Token);
             using var data = new MemoryStream();
@@ -71,15 +71,15 @@ internal static class Subscription
             while ((read = await stream.ReadAsync(buffer, expiry.Token)) != 0)
             {
                 if (data.Length + read > maxBytes)
-                    throw new InvalidDataException($"订阅大小超过 {maxBytes / (1024 * 1024)} MB。");
+                    throw new InvalidDataException(L10n.Format($"订阅大小超过 {maxBytes / (1024 * 1024)} MB。"));
                 data.Write(buffer, 0, read);
             }
             return (Encoding.UTF8.GetString(data.GetBuffer(), 0, (int)data.Length),
                 response.Headers.TryGetValues("subscription-userinfo", out var metadata) ? SubscriptionInfo.Parse(metadata) : null);
         }
-        catch (OperationCanceledException) { throw new InvalidDataException("订阅下载超时，请重试。"); }
-        catch (HttpRequestException) { throw new InvalidDataException("无法访问订阅服务器，请检查网络后重试。"); }
-        catch (HttpIOException) { throw new InvalidDataException("订阅下载中断，请重试。"); }
+        catch (OperationCanceledException) { throw new InvalidDataException(L10n.Text("订阅下载超时，请重试。")); }
+        catch (HttpRequestException) { throw new InvalidDataException(L10n.Text("无法访问订阅服务器，请检查网络后重试。")); }
+        catch (HttpIOException) { throw new InvalidDataException(L10n.Text("订阅下载中断，请重试。")); }
     }
 
     internal static SubscriptionNodes ParseNodes(string content, int maxNodes = 512)
@@ -112,10 +112,10 @@ internal static class Subscription
             catch (JsonException) { skipped++; }
 
             if (nodes.Count > maxNodes)
-                throw new InvalidDataException($"当前每个订阅支持最多 {maxNodes} 个节点。");
+                throw new InvalidDataException(L10n.Format($"当前每个订阅支持最多 {maxNodes} 个节点。"));
         }
         if (nodes.Count == 0)
-            throw new InvalidDataException("订阅没有可导入的 VMess、VLESS 或 Shadowsocks 节点。");
+            throw new InvalidDataException(L10n.Text("订阅没有可导入的 VMess、VLESS 或 Shadowsocks 节点。"));
         return new(nodes, skipped);
     }
 

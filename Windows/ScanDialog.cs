@@ -15,11 +15,11 @@ namespace Byway;
 internal sealed class ScanDialog : Window
 {
     private readonly QrParts parts = new();
-    private readonly Button cameraButton = new() { Content = "开启相机", Margin = new Thickness(0, 0, 8, 0) };
-    private readonly Button imageButton = new() { Content = "选择本地图片…", Margin = new Thickness(0, 0, 8, 0) };
+    private readonly Button cameraButton = new() { Content = L10n.Text("开启相机"), Margin = new Thickness(0, 0, 8, 0) };
+    private readonly Button imageButton = new() { Content = L10n.Text("选择本地图片…"), Margin = new Thickness(0, 0, 8, 0) };
     private readonly ComboBox cameras = new() { DisplayMemberPath = "DisplayName", Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, 0, 10) };
     private readonly Image preview = new() { Height = 294, Stretch = Stretch.Uniform, Visibility = Visibility.Collapsed };
-    private readonly TextBlock status = new() { Text = "扫描节点或订阅二维码，或选择保存的二维码图片。", TextWrapping = TextWrapping.Wrap };
+    private readonly TextBlock status = new() { Text = L10n.Text("扫描节点或订阅二维码，或选择保存的二维码图片。"), TextWrapping = TextWrapping.Wrap };
     private MediaCapture? camera;
     private MediaFrameReader? reader;
     private long lastFrame;
@@ -31,14 +31,14 @@ internal sealed class ScanDialog : Window
     internal ScanDialog(Window owner)
     {
         Owner = owner;
-        Title = "扫码导入";
+        Title = L10n.Text("扫码导入");
         Width = 578;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var content = new StackPanel { Margin = new Thickness(20) };
         Content = content;
-        System.Windows.Automation.AutomationProperties.SetName(cameras, "相机");
+        System.Windows.Automation.AutomationProperties.SetName(cameras, L10n.Text("相机"));
         System.Windows.Automation.AutomationProperties.SetAutomationId(status, "ScanStatus");
         System.Windows.Automation.AutomationProperties.SetLiveSetting(status, System.Windows.Automation.AutomationLiveSetting.Polite);
         content.Children.Add(cameras);
@@ -47,19 +47,19 @@ internal sealed class ScanDialog : Window
         content.Children.Add(status);
         var controls = new DockPanel { LastChildFill = false };
         content.Children.Add(controls);
-        var cancel = new Button { Content = "取消", IsCancel = true };
+        var cancel = new Button { Content = L10n.Text("取消"), IsCancel = true };
         DockPanel.SetDock(cancel, Dock.Right);
         controls.Children.Add(cancel);
         controls.Children.Add(cameraButton);
         controls.Children.Add(imageButton);
-        var paste = new Button { Content = "粘贴链接" };
+        var paste = new Button { Content = L10n.Text("粘贴链接") };
         controls.Children.Add(paste);
         cameraButton.Click += async (_, _) => await ToggleCameraAsync();
         imageButton.Click += async (_, _) => await OpenImageAsync();
         paste.Click += (_, _) =>
         {
             try { Accept(Clipboard.GetText()); }
-            catch (ExternalException) { status.Text = "无法读取剪贴板，请重试。"; }
+            catch (ExternalException) { status.Text = L10n.Text("无法读取剪贴板，请重试。"); }
         };
         Closed += async (_, _) =>
         {
@@ -90,8 +90,8 @@ internal sealed class ScanDialog : Window
     {
         var picker = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "选择二维码图片",
-            Filter = "图片 (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff"
+            Title = L10n.Text("选择二维码图片"),
+            Filter = L10n.Text("图片 (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff")
         };
         choosingImage = true;
         imageButton.IsEnabled = false;
@@ -105,7 +105,7 @@ internal sealed class ScanDialog : Window
         catch (InvalidDataException error) { status.Text = error.Message; }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or FormatException)
         {
-            status.Text = "无法读取这张图片。";
+            status.Text = L10n.Text("无法读取这张图片。");
         }
         finally
         {
@@ -124,12 +124,12 @@ internal sealed class ScanDialog : Window
                 await StopCameraAsync();
                 preview.Source = null;
                 preview.Visibility = Visibility.Collapsed;
-                cameraButton.Content = "开启相机";
+                cameraButton.Content = L10n.Text("开启相机");
                 cameras.IsEnabled = true;
-                status.Text = "相机已关闭，可继续选择图片或粘贴链接。";
+                status.Text = L10n.Text("相机已关闭，可继续选择图片或粘贴链接。");
                 return;
             }
-            status.Text = "正在查找相机…";
+            status.Text = L10n.Text("正在查找相机…");
             if (cameras.ItemsSource is null)
             {
                 var options = (await MediaFrameSourceGroup.FindAllAsync())
@@ -138,28 +138,28 @@ internal sealed class ScanDialog : Window
                     return;
                 if (options.Count == 0)
                 {
-                    status.Text = "未找到可用相机，可以选择本地图片扫码。";
+                    status.Text = L10n.Text("未找到可用相机，可以选择本地图片扫码。");
                     return;
                 }
                 cameras.ItemsSource = options;
                 cameras.SelectedIndex = 0;
                 cameras.Visibility = options.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
             }
-            status.Text = "正在开启相机…";
+            status.Text = L10n.Text("正在开启相机…");
             await StartCameraAsync((MediaFrameSourceGroup)cameras.SelectedItem);
             if (!closed)
             {
                 preview.Visibility = Visibility.Visible;
                 cameras.IsEnabled = false;
-                cameraButton.Content = "关闭相机";
-                status.Text = "将二维码对准相机。";
+                cameraButton.Content = L10n.Text("关闭相机");
+                status.Text = L10n.Text("将二维码对准相机。");
             }
         }
         catch (Exception error) when (error is UnauthorizedAccessException or COMException or InvalidOperationException)
         {
             status.Text = error is UnauthorizedAccessException
-                ? "相机权限不可用，请检查 Windows 的桌面应用相机权限，或选择本地图片。"
-                : "无法开启相机，请检查设备是否可用，或选择本地图片。";
+                ? L10n.Text("相机权限不可用，请检查 Windows 的桌面应用相机权限，或选择本地图片。")
+                : L10n.Text("无法开启相机，请检查设备是否可用，或选择本地图片。");
         }
         finally { cameraButton.IsEnabled = true; }
     }

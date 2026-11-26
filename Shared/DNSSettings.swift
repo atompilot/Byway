@@ -13,14 +13,14 @@ struct DNSServer: Codable, Equatable, Sendable, Identifiable {
         server.address = address.trimmingCharacters(in: .whitespacesAndNewlines)
         server.connectionIP = connectionIP?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
         guard (1...64).contains(server.name.count), (1...64).contains(server.id.utf8.count) else {
-            throw BywayError.message("请输入 DNS 名称，最多 64 个字符")
+            throw BywayError.message(L10n.text("请输入 DNS 名称，最多 64 个字符"))
         }
         guard let endpoint = server.endpoint else {
-            throw BywayError.message("请输入有效的 HTTPS DNS 地址，如 https://dns.google/dns-query")
+            throw BywayError.message(L10n.text("请输入有效的 HTTPS DNS 地址，如 https://dns.google/dns-query"))
         }
         server.address = endpoint.string ?? server.address
         if let ip = server.connectionIP, IPv4Address(ip) == nil, IPv6Address(ip) == nil {
-            throw BywayError.message("连接地址需要有效的 IPv4 或 IPv6 地址")
+            throw BywayError.message(L10n.text("连接地址需要有效的 IPv4 或 IPv6 地址"))
         }
         return server
     }
@@ -43,7 +43,7 @@ struct DNSServer: Codable, Equatable, Sendable, Identifiable {
 
     func engineConfiguration(tag: String, exit: String) throws -> [String: Any] {
         guard let endpoint, let host = endpoint.host?.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) else {
-            throw BywayError.message("加密 DNS 地址无效")
+            throw BywayError.message(L10n.text("加密 DNS 地址无效"))
         }
         var options: [String: Any] = ["type": "https", "tag": tag, "server": connectionIP ?? host,
                                      "path": endpoint.percentEncodedPath, "domain_resolver": "bootstrap", "detour": exit]
@@ -60,9 +60,9 @@ struct DNSSettings: Codable, Equatable, Sendable {
         var id: Self { self }
         var title: String {
             switch self {
-            case .configuration: "跟随分流配置"
-            case .automatic: "自动选择"
-            case .manual: "手动指定"
+            case .configuration: L10n.text("跟随分流配置")
+            case .automatic: L10n.text("自动选择")
+            case .manual: L10n.text("手动指定")
             }
         }
     }
@@ -83,17 +83,17 @@ struct DNSSettings: Codable, Equatable, Sendable {
 
     func validated() throws -> Self {
         guard (1...Self.maxServers).contains(servers.count) else {
-            throw BywayError.message("请保留 1 至 \(Self.maxServers) 个加密 DNS")
+            throw BywayError.message(L10n.text("请保留 1 至 {0} 个加密 DNS", Self.maxServers))
         }
         var settings = self
         settings.servers = try servers.map { try $0.validated() }
         let ids = Set(settings.servers.map(\.id))
         let addresses = Set(settings.servers.map { [$0.address, $0.connectionIP ?? ""] })
         guard ids.count == servers.count, addresses.count == servers.count else {
-            throw BywayError.message("请移除重复的 DNS 地址")
+            throw BywayError.message(L10n.text("请移除重复的 DNS 地址"))
         }
         if mode == .manual, settings.selected == nil {
-            throw BywayError.message("请选择要使用的 DNS 服务器")
+            throw BywayError.message(L10n.text("请选择要使用的 DNS 服务器"))
         }
         if settings.selected == nil { settings.selectedID = settings.servers.first?.id }
         return settings

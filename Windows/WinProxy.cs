@@ -36,7 +36,7 @@ internal static partial class WinProxy
         {
             if (InternetQueryOption(0, PerConnection, &list, &size))
                 return new((uint)options[0].Value, ReadString(options[1]), ReadString(options[2]), ReadString(options[3]));
-            throw new Win32Exception(Marshal.GetLastPInvokeError(), "无法读取 Windows 系统代理。");
+            throw new Win32Exception(Marshal.GetLastPInvokeError(), L10n.Text("无法读取 Windows 系统代理。"));
         }
         finally
         {
@@ -50,7 +50,7 @@ internal static partial class WinProxy
     {
         using var policy = Registry.LocalMachine.OpenSubKey(@"Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings");
         if (policy?.GetValue("ProxySettingsPerUser") is 0)
-            throw new InvalidOperationException("此 PC 使用统一的设备代理策略，Byway 需要当前用户的代理设置。");
+            throw new InvalidOperationException(L10n.Text("此 PC 使用统一的设备代理策略，Byway 需要当前用户的代理设置。"));
 
         fixed (char* server = settings.Server, bypass = settings.Bypass, pac = settings.PacUrl)
         {
@@ -61,13 +61,13 @@ internal static partial class WinProxy
             };
             var list = new OptionList(options);
             if (!InternetSetOption(0, PerConnection, &list, list.Size))
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), "无法设置 Windows 系统代理。");
+                throw new Win32Exception(Marshal.GetLastPInvokeError(), L10n.Text("无法设置 Windows 系统代理。"));
         }
         InternetSetOption(0, 95, null, 0); // INTERNET_OPTION_PROXY_SETTINGS_CHANGED
         InternetSetOption(0, 39, null, 0); // INTERNET_OPTION_SETTINGS_CHANGED
         InternetSetOption(0, 37, null, 0); // INTERNET_OPTION_REFRESH
         if (Read() != settings)
-            throw new InvalidOperationException("Windows 系统代理的回读结果与预期不同。");
+            throw new InvalidOperationException(L10n.Text("Windows 系统代理的回读结果与预期不同。"));
     }
 
     private static string ReadString(Option option) => Marshal.PtrToStringUni(option.Value) ?? "";
